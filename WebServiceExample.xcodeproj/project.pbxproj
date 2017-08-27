@@ -15,11 +15,11 @@
 		501D2ADB1F4E8DF5000E3FA3 /* WebServiceSwift.h in Headers */ = {isa = PBXBuildFile; fileRef = 501D2AD91F4E8DF5000E3FA3 /* WebServiceSwift.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		501D2ADE1F4E8DF5000E3FA3 /* WebServiceSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 501D2AD71F4E8DF5000E3FA3 /* WebServiceSwift.framework */; };
 		501D2ADF1F4E8DF5000E3FA3 /* WebServiceSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 501D2AD71F4E8DF5000E3FA3 /* WebServiceSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		501D2AE61F4E9053000E3FA3 /* WebService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AE41F4E8FA2000E3FA3 /* WebService.swift */; };
-		501D2AEA1F4E917A000E3FA3 /* WebServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AE91F4E917A000E3FA3 /* WebServiceProtocols.swift */; };
 		501D2AEC1F4E92A1000E3FA3 /* WebServiceSimpleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AEB1F4E92A1000E3FA3 /* WebServiceSimpleStore.swift */; };
 		501D2AF11F518762000E3FA3 /* WebServiceRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AED1F4E9BE5000E3FA3 /* WebServiceRequest.swift */; };
 		501D2AF21F5188CC000E3FA3 /* WebService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AEF1F4EA1EC000E3FA3 /* WebService.swift */; };
+		501D2AFA1F527D03000E3FA3 /* WebServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AE91F4E917A000E3FA3 /* WebServiceProtocols.swift */; };
+		501D2AFB1F527D05000E3FA3 /* WebService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AE41F4E8FA2000E3FA3 /* WebService.swift */; };
 		F453EA236A3F776E9CF4C183 /* Pods_WebServiceExample.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F1924AD271EBC436C8C75A4 /* Pods_WebServiceExample.framework */; };
 /* End PBXBuildFile section */
 
@@ -331,8 +331,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				501D2AE61F4E9053000E3FA3 /* WebService.swift in Sources */,
-				501D2AEA1F4E917A000E3FA3 /* WebServiceProtocols.swift in Sources */,
+				501D2AFB1F527D05000E3FA3 /* WebService.swift in Sources */,
+				501D2AFA1F527D03000E3FA3 /* WebServiceProtocols.swift in Sources */,
 				501D2AEC1F4E92A1000E3FA3 /* WebServiceSimpleStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

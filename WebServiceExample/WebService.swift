@@ -39,45 +39,49 @@ private struct WebServiceStatic {
 
 class WebServiceSitesEngine: WebServiceEngining {
     
+    let queueForRequest:DispatchQueue? = nil
+    let queueForDataHandler:DispatchQueue? = nil
+    let queueForDataHandlerFromStorage:DispatchQueue? = DispatchQueue.global(qos: .default)
+    
+    
     func isSupportedRequest(_ request: WebServiceRequesting, rawDataForRestoreFromStorage: Any?) -> Bool {
         return request is RequestMethod
     }
 
-    func request(requestId: UInt64, request: WebServiceRequesting, saveRawDataToStorage: @escaping (Any) -> Void, completionResponse: @escaping (WebServiceResponse) -> Void) throws {
+    
+    func request(requestId:UInt64, request:WebServiceRequesting,
+                 completionWithData:@escaping (_ data:Any) -> Void,
+                 completionWithError:@escaping (_ error:Error) -> Void,
+                 canceled:@escaping () -> Void) {
         
         guard let method = (request as? RequestMethod)?.method else {
-            completionResponse(.error(WebServiceRequestError.notSupportRequest))
+            completionWithError(WebServiceRequestError.notSupportRequest)
             return
         }
-        
+
         Alamofire.request(method.url).responseData { response in
             switch response.result {
             case .success(let data):
-                saveRawDataToStorage(data)
-                
-                let html = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .windowsCP1251)
-                completionResponse(.data(html))
+                completionWithData(data)
                 
             case .failure(let error):
-                completionResponse(.error(error))
+                completionWithError(error)
             }
         }
     }
-    
+
     
     func cancelRequest(requestId: UInt64) {
         
     }
     
-    func processRawDataFromStorage(rawData: Any, request: WebServiceRequesting, completeResponse: @escaping (WebServiceResponse) -> Void) throws {
-        
-        if request is RequestMethod, let data = rawData as? Data {
-            let html = String(data: data, encoding: .utf8)
-            completeResponse(.data(html))
+    
+    func dataHandler(request:WebServiceRequesting, data:Any, isRawFromStorage:Bool) throws -> Any? {
+        guard request is RequestMethod, let data = data as? Data else {
+            throw WebServiceRequestError.notSupportDataHandler
         }
-        else {
-            completeResponse(.error(WebServiceRequestError.notSupportDataHandler))
-        }
+
+        return String(data: data, encoding: .utf8) ?? String(data: data, encoding: .windowsCP1251)
     }
     
 }

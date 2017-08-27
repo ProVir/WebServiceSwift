@@ -1,8 +1,9 @@
 //
 //  WebServiceProtocols.swift
-//  WebService 2.0.swift
+//  WebService 2.1.swift
 //
 //  Created by ViR (Короткий Виталий) on 14.06.17.
+//  Updated to 2.1 by ViR (Короткий Виталий) on 27.08.17.
 //  Copyright © 2017 ProVir. All rights reserved.
 //
 
@@ -27,6 +28,17 @@ public protocol WebServiceRequesting {
 /// Protocol for engines in WebService.
 public protocol WebServiceEngining: class {
     
+    /// Thread Dispatch Queue for `request()` and `cancelRequest()` methods.
+    var queueForRequest:DispatchQueue? { get }
+    
+    /// Thread Dispatch Queue for `dataHandler()` method with data from `request()` method.
+    var queueForDataHandler:DispatchQueue? { get }
+    
+    /// Thread Dispatch Queue for `dataHandler()` method with data from store.
+    var queueForDataHandlerFromStorage:DispatchQueue? { get }
+    
+    
+    
     /**
      Asks whether the request supports this engine.
      
@@ -41,23 +53,30 @@ public protocol WebServiceEngining: class {
     
     
     /**
-     Request for server
+     Request data from server. Need call `completionWithData` or `completionWithError` or `canceled` and only one.
      
-     - Parameters: 
+     If `queueForRequest != nil`, thread use from `queueForRequest`, else default thread (usually main).
+     
+     - Parameters:
         - requestId: Unique id for request. ID generated always unique for all Engines and WebServices. Use for `cancelRequest()`.
         - request: Original request with data.
-        - saveRawDataToStorage: When success request - call for save raw data. It is not necessary to call in the main thread.
-        - rawData: Usually binary Data from server (As in `WebServiceSimpleStore`).
-        - completionResponse: When complete request - need call. This closure need call and only one. Be sure to call in the main thread.
-        - response: Result response enum with data.
-     
-     - Throws: Error request equivalent call `completionResponse(.error())` and not need call `completionResponse()`. The performance is higher with this error call.
+        - completionWithData: After success get data from server - call this closure with raw data from server.
+        - data: Usually binary data and this data saved as rawData in storage.
+        - completionWithError: Call if error get data from server or other error. 
+        - error: Response as error.
+        - canceled: Call after called method `cancelRequest()` if support this operation.
      */
-    func request(requestId:UInt64, request:WebServiceRequesting, saveRawDataToStorage:@escaping (_ rawData:Any) -> Void, completionResponse:@escaping (_ response:WebServiceResponse) -> Void) throws
+    func request(requestId:UInt64, request:WebServiceRequesting,
+                 completionWithData:@escaping (_ data:Any) -> Void,
+                 completionWithError:@escaping (_ error:Error) -> Void,
+                 canceled:@escaping () -> Void)
+    
     
     
     /**
      Cancel request if this operation is supported. This method is optional.
+     
+     If `queueForRequest != nil`, thread use from `queueForRequest`, else default thread (usually main).
  
      - Parameter requestId: Id for canceled.
     */
@@ -65,17 +84,21 @@ public protocol WebServiceEngining: class {
     
     
     /**
-     Restore raw data from store helper.
+     Process data from server or store (rawData). 
+     
+     For data from server (`isRawFromStorage == false`): if `queueForDataHandler != nil`, thread use from `queueForDataHandler`, else default thread (usually main).
+     
+     For data from storage (`isRawFromStorage == true`): use `queueForDataHandlerFromStorage` if != nil.
      
      - Parameters:
-        - rawData: Usually binary Data (As in `WebServiceSimpleStore`).
-        - request: Original request for storage.
-        - completeResponse: After process rawData need call with result. This closure need call and only one. Be sure to call in the main thread.
-        - response: Result response enum with data. Can only be .data or .error
+        - request: Original request.
+        - data: Type data form closure request.completionWithData(). Usually binary Data.
+        - isRawFromStorage: If `true`: data from storage, else data from closure `request.completionWithData()`.
      
-    - Throws: Error request equivalent call `completionResponse(.error())` and not need call `completionResponse()`. The performance is higher with this error call.
-    */
-    func processRawDataFromStorage(rawData:Any, request:WebServiceRequesting, completeResponse:@escaping (_ response:WebServiceResponse) -> Void) throws
+     - Throws: Error proccess data from server to end data. Data from server (rawData) don't save to storage.
+     - Returns: Result data for response. If == nil, data from server (rawData) don't save to storage.
+     */
+    func dataHandler(request:WebServiceRequesting, data:Any, isRawFromStorage:Bool) throws -> Any?
 }
 
 

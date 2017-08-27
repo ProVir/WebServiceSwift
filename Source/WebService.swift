@@ -1,8 +1,9 @@
 //
 //  WebService.swift
-//  WebService 2.0.swift
+//  WebService 2.1.swift
 //
 //  Created by ViR (Короткий Виталий) on 14.06.17.
+//  Updated to 2.1 by ViR (Короткий Виталий) on 27.08.17.
 //  Copyright © 2017 ProVir. All rights reserved.
 //
 
@@ -101,10 +102,16 @@ public class WebService {
      - Parameters:
         - engines: All sorted engines that support all requests.
         - storages: All sorted storages that support all requests.
+        - queueForResponse: Dispatch Queue for results response. Thread for public method call and queueForResponse recommended be equal. Default: main thread.
     */
-    public init(engines:[WebServiceEngining], storages:[WebServiceStoraging]) {
+    public init(engines:[WebServiceEngining],
+                storages:[WebServiceStoraging],
+                queueForResponse:DispatchQueue = DispatchQueue.main) {
+        
         self.engines = engines
         self.storages = storages
+        
+        self.queueForResponse = queueForResponse
     }
     
     private let engines:[WebServiceEngining]
@@ -115,6 +122,8 @@ public class WebService {
     
     
     
+    
+    
     // MARK: Settings
     
     /// Default delegate for responses. Apply before call new request.
@@ -122,6 +131,10 @@ public class WebService {
     
     /// Test to equal requests and send error if this request in process and wait data from server. Apply before call new request. Default: false.
     public var excludeDuplicateRequests = false
+    
+    /// Call response closures and delegates in dispath queue. Default: main thread.
+    public let queueForResponse:DispatchQueue
+    
     
     
     
@@ -169,7 +182,17 @@ public class WebService {
         if let list = listRequest(requestKey: requestKey) {
             for requestId in list {
                 if let engine = requestUseEngines[requestId] {
-                    engine.cancelRequest(requestId: requestId)
+                    
+                    //Cancel in queue
+                    if let queue = engine.queueForRequest {
+                        queue.async {
+                            engine.cancelRequest(requestId: requestId)
+                        }
+                    } else {
+                        //Or in current thread
+                        engine.cancelRequest(requestId: requestId)
+                    }
+                    
                 }
             }
         }
@@ -187,7 +210,17 @@ public class WebService {
         
         for requestId in allList {
             if let engine = requestUseEngines[requestId] {
-                engine.cancelRequest(requestId: requestId)
+                
+                //Cancel in queue
+                if let queue = engine.queueForRequest {
+                    queue.async {
+                        engine.cancelRequest(requestId: requestId)
+                    }
+                } else {
+                    //Or in current thread
+                    engine.cancelRequest(requestId: requestId)
+                }
+                
             }
         }
     }
@@ -225,41 +258,101 @@ public class WebService {
         let requestId = newRequestId()
         addRequest(requestId: requestId, requestKey: requestKey, engine: engine)
         
+        
         //Request in work
         var requestStatus = RequestStatus.inWork
         
-        do {
-            try engine.request(requestId: requestId,
-                               request: request,
-                               saveRawDataToStorage: { rawData in
-                                storage?.writeData(request: request, data: rawData, isRaw: true)
-                                
-            },
-                               completionResponse: { response in
-                                
-                                if requestStatus != .inWork {
-                                    return
-                                }
-                                
-                                
-                                self.removeRequest(requestId: requestId, requestKey: requestKey)
-                                
-                                
-                                switch response {
-                                case .canceledRequest: requestStatus = .canceled
-                                case .duplicateRequest, .error: requestStatus = .error
-                                case .data(let data): requestStatus = .completed
-                                if let storage = storage, let data = data {
-                                    storage.writeData(request: request, data: data, isRaw: false)
-                                    }
-                                }
-                                
-                                completionResponse?(response)
-            })
-        } catch {
-            removeRequest(requestId: requestId, requestKey: requestKey)
-            completionResponse?(.error(error))
+        
+        //Step #3: Call this closure with result response
+        let completeHandlerResponse:(WebServiceResponse) -> Void = { [weak self] response in
+            
+            //Usually main thread
+            self?.queueForResponse.async {
+                guard requestStatus == .inWork else {
+                    return
+                }
+                
+                self?.removeRequest(requestId: requestId, requestKey: requestKey)
+                
+                switch response {
+                case .data(let data):
+                    requestStatus = .completed
+                    completionResponse?(.data(data))
+                    
+                case .error(let error):
+                    requestStatus = .error
+                    completionResponse?(.error(error))
+                    
+                case .canceledRequest, .duplicateRequest:
+                    requestStatus = .canceled
+                    completionResponse?(.canceledRequest)
+                }
+                
+            }
         }
+        
+        //Step #2: Data handler closure for raw data from server
+        let dataHandler:(Any) -> Void = { data in
+            do {
+                let resultData = try engine.dataHandler(request: request,
+                                                        data: data,
+                                                        isRawFromStorage: false)
+                
+                if let resultData = resultData {
+                    storage?.writeData(request: request, data: data, isRaw: true)
+                    storage?.writeData(request: request, data: resultData, isRaw: false)
+                }
+                
+                completeHandlerResponse(.data(resultData))
+            }
+            catch {
+                completeHandlerResponse(.error(error))
+            }
+        }
+        
+        
+        //Step #1: Beginer request closure
+        let requestHandler = {
+            engine.request(requestId: requestId,
+                           request: request,
+                           completionWithData: { data in
+                            
+                            //Raw data from server
+                            guard requestStatus == .inWork else {
+                                return
+                            }
+                            
+                            if let queue = engine.queueForDataHandler {
+                                queue.async {
+                                    dataHandler(data)
+                                }
+                            }
+                            else {
+                                dataHandler(data)
+                            }
+                            
+            },
+                           completionWithError: { error in
+                            //Error request
+                            completeHandlerResponse(.error(error))
+            },
+                           canceled: {
+                            //Canceled request
+                            completeHandlerResponse(.canceledRequest)
+            })
+        }
+        
+        
+        //Step #0: Call request in queue
+        if let queue = engine.queueForRequest {
+            queue.async {
+                requestHandler()
+            }
+        }
+        else {
+            requestHandler()
+        }
+        
         
         
         //Read from storage
@@ -311,16 +404,16 @@ public class WebService {
         - customDelegate: Optional. Unique delegate for current request.
      */
     public func request(_ request:WebServiceRequesting, includeResponseStorage:Bool = false, customDelegate:WebServiceDelegate? = nil) {
-        if let weakDelegate = customDelegate ?? self.delegate {
+        if let delegate = customDelegate ?? self.delegate {
             self.request(request,
                          dataFromStorage: includeResponseStorage
-                            ? { [weak weakDelegate] data in
-                                if let delegate = weakDelegate {
+                            ? { [weak delegate] data in
+                                if let delegate = delegate {
                                     delegate.webServiceResponse(request:request, isStorageRequest:true, response:.data(data))
                                 }
                                 } : nil,
-                         completionResponse: { [weak weakDelegate] response in
-                            if let delegate = weakDelegate {
+                         completionResponse: { [weak delegate] response in
+                            if let delegate = delegate {
                                 delegate.webServiceResponse(request:request, isStorageRequest:false, response:response)
                             }
             })
@@ -339,10 +432,10 @@ public class WebService {
         - customDelegate: Optional. Unique delegate for current request.
      */
     public func requestReadStorage(_ request:WebServiceRequesting, customDelegate:WebServiceDelegate? = nil) {
-        if let weakDelegate = customDelegate ?? self.delegate {
+        if let delegate = customDelegate ?? self.delegate {
             self.requestReadStorage(request,
-                                    completionResponse: { [weak weakDelegate] response in
-                                        if let delegate = weakDelegate {
+                                    completionResponse: { [weak delegate] response in
+                                        if let delegate = delegate {
                                             delegate.webServiceResponse(request:request, isStorageRequest:true, response:response)
                                         }
             })
@@ -354,22 +447,44 @@ public class WebService {
     // MARK: - Private functions
     private func requestReadStorage(storage:WebServiceStoraging, request:WebServiceRequesting, completionResponse:@escaping (_ response:WebServiceResponse) -> Void) {
         do {
-            try storage.readData(request: request) { isRawData, response in
+            try storage.readData(request: request) { [weak self] isRawData, response in
                 if isRawData, let rawData = response.dataResponse() {
-                    if let engine = self.engineForRequest(request, rawDataForRestoreFromStorage: rawData) {
-                        do {
-                            try engine.processRawDataFromStorage(rawData: rawData, request: request, completeResponse: completionResponse)
-                            
-                        } catch {
-                            completionResponse(.error(error))
+                    if let engine = self?.engineForRequest(request, rawDataForRestoreFromStorage: rawData) {
+                        
+                        let handler = {
+                            do {
+                                let data = try engine.dataHandler(request: request, data: rawData, isRawFromStorage: true)
+                                
+                                self?.queueForResponse.async {
+                                    completionResponse(.data(data))
+                                }
+                            } catch {
+                                self?.queueForResponse.async {
+                                    completionResponse(.error(error))
+                                }
+                            }
+                        }
+                        
+                        //Call handler
+                        if let queue = engine.queueForDataHandlerFromStorage {
+                            queue.async {
+                                handler()
+                            }
+                        }
+                        else {
+                            handler()
                         }
                     }
                     else {
-                        completionResponse(.error(WebServiceRequestError.noFoundEngine))
+                        self?.queueForResponse.async {
+                            completionResponse(.error(WebServiceRequestError.noFoundEngine))
+                        }
                     }
                 }
                 else {
-                    completionResponse(response)
+                    self?.queueForResponse.async {
+                        completionResponse(response)
+                    }
                 }
             }
         } catch {
