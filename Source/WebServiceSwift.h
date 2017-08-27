@@ -6,7 +6,7 @@
 //  Copyright © 2017 ProVir. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 
 //! Project version number for WebServiceSwift.
 FOUNDATION_EXPORT double WebServiceSwiftVersionNumber;
