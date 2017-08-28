@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "501D2AD61F4E8DF5000E3FA3"
-               BuildableName = "WebService.framework"
-               BlueprintName = "WebService"
+               BuildableName = "WebServiceSwift.framework"
+               BlueprintName = "WebServiceSwift"
                ReferencedContainer = "container:WebServiceExample.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -46,8 +46,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "501D2AD61F4E8DF5000E3FA3"
-            BuildableName = "WebService.framework"
-            BlueprintName = "WebService"
+            BuildableName = "WebServiceSwift.framework"
+            BlueprintName = "WebServiceSwift"
             ReferencedContainer = "container:WebServiceExample.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -64,8 +64,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "501D2AD61F4E8DF5000E3FA3"
-            BuildableName = "WebService.framework"
-            BlueprintName = "WebService"
+            BuildableName = "WebServiceSwift.framework"
+            BlueprintName = "WebServiceSwift"
             ReferencedContainer = "container:WebServiceExample.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

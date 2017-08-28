@@ -7,7 +7,7 @@
 //
 
 import UIKit
-import WebService
+import WebServiceSwift
 
 class ViewController: UIViewController, WebServiceDelegate {
     

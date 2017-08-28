@@ -13,8 +13,8 @@
 		501D2AC81F4E8DD0000E3FA3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 501D2AC71F4E8DD0000E3FA3 /* Assets.xcassets */; };
 		501D2ACB1F4E8DD0000E3FA3 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 501D2AC91F4E8DD0000E3FA3 /* LaunchScreen.storyboard */; };
 		501D2ADB1F4E8DF5000E3FA3 /* WebService.h in Headers */ = {isa = PBXBuildFile; fileRef = 501D2AD91F4E8DF5000E3FA3 /* WebService.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		501D2ADE1F4E8DF5000E3FA3 /* WebService.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 501D2AD71F4E8DF5000E3FA3 /* WebService.framework */; };
-		501D2ADF1F4E8DF5000E3FA3 /* WebService.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 501D2AD71F4E8DF5000E3FA3 /* WebService.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		501D2ADE1F4E8DF5000E3FA3 /* WebServiceSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 501D2AD71F4E8DF5000E3FA3 /* WebServiceSwift.framework */; };
+		501D2ADF1F4E8DF5000E3FA3 /* WebServiceSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 501D2AD71F4E8DF5000E3FA3 /* WebServiceSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		501D2AEC1F4E92A1000E3FA3 /* WebServiceSimpleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AEB1F4E92A1000E3FA3 /* WebServiceSimpleStore.swift */; };
 		501D2AF11F518762000E3FA3 /* WebServiceRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AED1F4E9BE5000E3FA3 /* WebServiceRequest.swift */; };
 		501D2AF21F5188CC000E3FA3 /* WebService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AEF1F4EA1EC000E3FA3 /* WebService.swift */; };
@@ -40,7 +40,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				501D2ADF1F4E8DF5000E3FA3 /* WebService.framework in Embed Frameworks */,
+				501D2ADF1F4E8DF5000E3FA3 /* WebServiceSwift.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -56,7 +56,7 @@
 		501D2AC71F4E8DD0000E3FA3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		501D2ACA1F4E8DD0000E3FA3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		501D2ACC1F4E8DD0000E3FA3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		501D2AD71F4E8DF5000E3FA3 /* WebService.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = WebService.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		501D2AD71F4E8DF5000E3FA3 /* WebServiceSwift.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = WebServiceSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		501D2AD91F4E8DF5000E3FA3 /* WebService.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WebService.h; sourceTree = "<group>"; };
 		501D2ADA1F4E8DF5000E3FA3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		501D2AE41F4E8FA2000E3FA3 /* WebService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebService.swift; sourceTree = "<group>"; };
@@ -73,7 +73,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				501D2ADE1F4E8DF5000E3FA3 /* WebService.framework in Frameworks */,
+				501D2ADE1F4E8DF5000E3FA3 /* WebServiceSwift.framework in Frameworks */,
 				F453EA236A3F776E9CF4C183 /* Pods_WebServiceExample.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -111,7 +111,7 @@
 			isa = PBXGroup;
 			children = (
 				501D2ABD1F4E8DD0000E3FA3 /* WebServiceExample.app */,
-				501D2AD71F4E8DF5000E3FA3 /* WebService.framework */,
+				501D2AD71F4E8DF5000E3FA3 /* WebServiceSwift.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -189,9 +189,9 @@
 			productReference = 501D2ABD1F4E8DD0000E3FA3 /* WebServiceExample.app */;
 			productType = "com.apple.product-type.application";
 		};
-		501D2AD61F4E8DF5000E3FA3 /* WebService */ = {
+		501D2AD61F4E8DF5000E3FA3 /* WebServiceSwift */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 501D2AE01F4E8DF5000E3FA3 /* Build configuration list for PBXNativeTarget "WebService" */;
+			buildConfigurationList = 501D2AE01F4E8DF5000E3FA3 /* Build configuration list for PBXNativeTarget "WebServiceSwift" */;
 			buildPhases = (
 				501D2AD21F4E8DF5000E3FA3 /* Sources */,
 				501D2AD31F4E8DF5000E3FA3 /* Frameworks */,
@@ -202,9 +202,9 @@
 			);
 			dependencies = (
 			);
-			name = WebService;
+			name = WebServiceSwift;
 			productName = WebService;
-			productReference = 501D2AD71F4E8DF5000E3FA3 /* WebService.framework */;
+			productReference = 501D2AD71F4E8DF5000E3FA3 /* WebServiceSwift.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
@@ -242,7 +242,7 @@
 			projectRoot = "";
 			targets = (
 				501D2ABC1F4E8DD0000E3FA3 /* WebServiceExample */,
-				501D2AD61F4E8DF5000E3FA3 /* WebService */,
+				501D2AD61F4E8DF5000E3FA3 /* WebServiceSwift */,
 			);
 		};
 /* End PBXProject section */
@@ -342,7 +342,7 @@
 /* Begin PBXTargetDependency section */
 		501D2ADD1F4E8DF5000E3FA3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 501D2AD61F4E8DF5000E3FA3 /* WebService */;
+			target = 501D2AD61F4E8DF5000E3FA3 /* WebServiceSwift */;
 			targetProxy = 501D2ADC1F4E8DF5000E3FA3 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -566,7 +566,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		501D2AE01F4E8DF5000E3FA3 /* Build configuration list for PBXNativeTarget "WebService" */ = {
+		501D2AE01F4E8DF5000E3FA3 /* Build configuration list for PBXNativeTarget "WebServiceSwift" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				501D2AE11F4E8DF5000E3FA3 /* Debug */,

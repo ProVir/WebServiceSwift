@@ -123,7 +123,7 @@ To use the library, you need:
 3. If desired, you can create a class for storing hashes or use the existing one - `WebServiceSimpleStore`.
 4. Write a factory to generate a WebService object or write an extension for it with a convenience constructor. 
 
-**Note:** To use the library, remember to include it in each file: `import WebService`.
+**Note:** To use the library, remember to include it in each file: `import WebServiceSwift`.
 
 The project has a less abstract example of using the library, which can be downloaded separately.
 

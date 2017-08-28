@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import WebService
+import WebServiceSwift
 
 
 struct RequestMethod: WebServiceRequesting {
