@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import WebServiceSwift
+import WebService
 import Alamofire
 
 

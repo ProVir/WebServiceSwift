@@ -1,6 +1,6 @@
 //
 //  WebService.swift
-//  WebService 2.1.swift
+//  WebServiceSwift 2.1.0
 //
 //  Created by ViR (Короткий Виталий) on 14.06.17.
 //  Updated to 2.1 by ViR (Короткий Виталий) on 27.08.17.

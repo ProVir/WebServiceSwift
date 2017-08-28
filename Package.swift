@@ -3,6 +3,6 @@
 import PackageDescription
 
 let package = Package(
-    name: "WebServiceSwift",
+    name: "WebService",
     exclude: ["WebServiceExample"]
 )

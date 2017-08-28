@@ -1,6 +1,6 @@
 //
 //  WebServiceSimpleStore.swift
-//  WebService 2.0.swift
+//  WebServiceSwift 2.0.0
 //
 //  Created by ViR (Короткий Виталий) on 29.07.17.
 //  Copyright © 2017 ProVir. All rights reserved.
