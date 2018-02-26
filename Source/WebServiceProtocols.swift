@@ -42,6 +42,9 @@ public protocol WebServiceEngining: class {
     /// Thread Dispatch Queue for `dataHandler()` method with data from store.
     var queueForDataHandlerFromStorage:DispatchQueue? { get }
     
+    /// When `true`, showed networkActivityIndicator in statusBar when requests in process.
+    var useNetworkActivityIndicator:Bool { get }
+    
     
     
     /**

@@ -118,6 +118,13 @@ public class WebService {
         self.queueForResponse = queueForResponse
     }
     
+    deinit {
+        //End networkActivityIndicator for all requests
+        for (_, listRequests) in requestList {
+            WebService.networkActivityIndicatorRequestIds.subtract(listRequests)
+        }
+    }
+    
     private let engines:[WebServiceEngining]
     private let storages:[WebServiceStoraging]
     
@@ -526,6 +533,14 @@ public class WebService {
         return WebService.lastRequestId
     }
     
+    private static var networkActivityIndicatorRequestIds = Set<UInt64>() {
+        didSet {
+            if #available(iOS 8, *) {
+                UIApplication.shared.isNetworkActivityIndicatorVisible = !networkActivityIndicatorRequestIds.isEmpty
+            }
+        }
+    }
+    
     private func addRequest(requestId:UInt64, requestKey:AnyHashable?, engine:WebServiceEngining) {
         let key = requestKey ?? AnyHashable(EmptyKey())
         
@@ -534,6 +549,10 @@ public class WebService {
         requestList[key] = list
         
         requestUseEngines[requestId] = engine
+        
+        if engine.useNetworkActivityIndicator {
+            WebService.networkActivityIndicatorRequestIds.insert(requestId)
+        }
     }
     
     private func removeRequest(requestId:UInt64, requestKey:AnyHashable?) {
@@ -548,6 +567,7 @@ public class WebService {
         }
         
         requestUseEngines.removeValue(forKey: requestId)
+        WebService.networkActivityIndicatorRequestIds.remove(requestId)
     }
     
     private func listRequest(requestKey:AnyHashable?) -> Set<UInt64>? {
