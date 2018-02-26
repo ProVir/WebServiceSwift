@@ -120,8 +120,28 @@ public class WebService {
     
     deinit {
         //End networkActivityIndicator for all requests
+        
+        let requestList = mutex.synchronized({ self.requestList })
+        
+        WebService.staticMutex.lock()
+        defer { WebService.staticMutex.unlock() }
+        
         for (_, listRequests) in requestList {
             WebService.networkActivityIndicatorRequestIds.subtract(listRequests)
+        }
+    }
+    
+    
+    //MARK: Private data
+    private static var staticMutex = PThreadMutexLock()
+    private var mutex = PThreadMutexLock()
+    
+    private static var networkActivityIndicatorRequestIds = Set<UInt64>() {
+        didSet {
+            if #available(iOS 8, *) {
+                let isVisible = !networkActivityIndicatorRequestIds.isEmpty
+                DispatchQueue.main.async { UIApplication.shared.isNetworkActivityIndicatorVisible = isVisible }
+            }
         }
     }
     
@@ -168,7 +188,9 @@ public class WebService {
      - Returns: `true` if the request with requestKey was found in the current queue; otherwise, `false`.
      */
     public func containsRequest(requestKey:AnyHashable?) -> Bool {
-        return (listRequest(requestKey:requestKey)?.count ?? 0) > 0
+        return mutex.synchronized() {
+            (listRequest(requestKey:requestKey)?.count ?? 0) > 0
+        }
     }
     
     /**
@@ -192,7 +214,7 @@ public class WebService {
     public func cancelRequest(requestKey:AnyHashable?) {
         if let list = listRequest(requestKey: requestKey) {
             for requestId in list {
-                if let engine = requestUseEngines[requestId] {
+                if let engine = mutex.synchronized({ self.requestUseEngines[requestId] }) {
                     
                     //Cancel in queue
                     if let queue = engine.queueForRequest {
@@ -215,12 +237,14 @@ public class WebService {
     public func cancelAllRequests() {
         var allList = Set<UInt64>()
         
-        for (_, list) in requestList {
-            allList.formUnion(list)
+        mutex.synchronized() {
+            for (_, list) in requestList {
+                allList.formUnion(list)
+            }
         }
         
         for requestId in allList {
-            if let engine = requestUseEngines[requestId] {
+            if let engine = mutex.synchronized({ self.requestUseEngines[requestId] }) {
                 
                 //Cancel in queue
                 if let queue = engine.queueForRequest {
@@ -529,19 +553,24 @@ public class WebService {
     // MARK: Request Ids
     private static var lastRequestId:UInt64 = 0
     private func newRequestId() -> UInt64 {
+        WebService.staticMutex.lock()
+        defer { WebService.staticMutex.unlock() }
+        
         WebService.lastRequestId = WebService.lastRequestId &+ 1
         return WebService.lastRequestId
     }
     
-    private static var networkActivityIndicatorRequestIds = Set<UInt64>() {
-        didSet {
-            if #available(iOS 8, *) {
-                UIApplication.shared.isNetworkActivityIndicatorVisible = !networkActivityIndicatorRequestIds.isEmpty
-            }
-        }
-    }
-    
     private func addRequest(requestId:UInt64, requestKey:AnyHashable?, engine:WebServiceEngining) {
+        if engine.useNetworkActivityIndicator {
+            WebService.staticMutex.lock()
+            WebService.networkActivityIndicatorRequestIds.insert(requestId)
+            WebService.staticMutex.unlock()
+        }
+        
+        //Thread safe
+        mutex.lock()
+        defer { mutex.unlock() }
+        
         let key = requestKey ?? AnyHashable(EmptyKey())
         
         var list = requestList[key] ?? Set<UInt64>()
@@ -549,13 +578,18 @@ public class WebService {
         requestList[key] = list
         
         requestUseEngines[requestId] = engine
-        
-        if engine.useNetworkActivityIndicator {
-            WebService.networkActivityIndicatorRequestIds.insert(requestId)
-        }
     }
     
     private func removeRequest(requestId:UInt64, requestKey:AnyHashable?) {
+        WebService.staticMutex.lock()
+        WebService.networkActivityIndicatorRequestIds.remove(requestId)
+        WebService.staticMutex.unlock()
+        
+        
+        //Thread safe
+        mutex.lock()
+        defer { mutex.unlock() }
+        
         let key = requestKey ?? AnyHashable(EmptyKey())
         
         if var list = requestList[key] {
@@ -567,10 +601,12 @@ public class WebService {
         }
         
         requestUseEngines.removeValue(forKey: requestId)
-        WebService.networkActivityIndicatorRequestIds.remove(requestId)
     }
     
     private func listRequest(requestKey:AnyHashable?) -> Set<UInt64>? {
+        mutex.lock()
+        defer { mutex.unlock() }
+        
         let key = requestKey ?? AnyHashable(EmptyKey())
         return requestList[key]
     }
@@ -590,4 +626,34 @@ public class WebService {
         case canceled
     }
     
+}
+
+
+private class PThreadMutexLock: NSObject, NSLocking {
+    private var mutex = pthread_mutex_t()
+    
+    override init() {
+        super.init()
+        
+        pthread_mutex_init(&mutex, nil)
+    }
+    
+    deinit {
+        pthread_mutex_destroy(&mutex)
+    }
+    
+    func lock() {
+        pthread_mutex_lock(&mutex)
+    }
+    
+    func unlock() {
+        pthread_mutex_unlock(&mutex)
+    }
+    
+    @discardableResult
+    func synchronized<T>(_ handler: () throws -> T) rethrows -> T {
+        pthread_mutex_lock(&mutex)
+        defer { pthread_mutex_unlock(&mutex) }
+        return try handler()
+    }
 }
