@@ -25,6 +25,10 @@ public enum WebServiceRequestError: Error {
     case notSupportRequest
     case notSupportDataHandler
     
+    
+    ///General error http status code
+    case httpStatusCode(Int)
+    
     /// Code + data
     case general(Int, Any?)
 }

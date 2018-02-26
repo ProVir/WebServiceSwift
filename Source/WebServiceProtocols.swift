@@ -24,6 +24,11 @@ public protocol WebServiceRequesting {
     var requestKey:AnyHashable? { get }
 }
 
+public extension WebServiceRequesting {
+    var requestKey: AnyHashable? { return nil }
+}
+
+
 
 /// Protocol for engines in WebService.
 public protocol WebServiceEngining: class {
