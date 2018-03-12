@@ -42,7 +42,7 @@ class WebServiceSitesEngine: WebServiceEngining {
     let queueForRequest:DispatchQueue? = nil
     let queueForDataHandler:DispatchQueue? = nil
     let queueForDataHandlerFromStorage:DispatchQueue? = DispatchQueue.global(qos: .default)
-    
+    let useNetworkActivityIndicator = false
     
     func isSupportedRequest(_ request: WebServiceRequesting, rawDataForRestoreFromStorage: Any?) -> Bool {
         return request is RequestMethod

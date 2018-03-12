@@ -1,15 +1,20 @@
 //
 //  WebService.swift
-//  WebServiceSwift 2.1.0
+//  WebServiceSwift 2.2.0
 //
-//  Created by ViR (Короткий Виталий) on 14.06.17.
-//  Updated to 2.1 by ViR (Короткий Виталий) on 27.08.17.
+//  Created by ViR (Короткий Виталий) on 14.06.2017.
+//  Updated to 2.2 by ViR (Короткий Виталий) on 12.03.2018.
 //  Copyright © 2017 ProVir. All rights reserved.
 //
 
 
 
 import Foundation
+
+#if os(iOS)
+import UIKit
+#endif
+
 
 /**
  WebService general error enum for requests
@@ -138,10 +143,10 @@ public class WebService {
     
     private static var networkActivityIndicatorRequestIds = Set<UInt64>() {
         didSet {
-            if #available(iOS 8, *) {
-                let isVisible = !networkActivityIndicatorRequestIds.isEmpty
-                DispatchQueue.main.async { UIApplication.shared.isNetworkActivityIndicatorVisible = isVisible }
-            }
+#if os(iOS)
+            let isVisible = !networkActivityIndicatorRequestIds.isEmpty
+            DispatchQueue.main.async { UIApplication.shared.isNetworkActivityIndicatorVisible = isVisible }
+#endif
         }
     }
     

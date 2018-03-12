@@ -1,14 +1,13 @@
 //
 //  WebServiceProtocols.swift
-//  WebServiceSwift 2.1.0
+//  WebServiceSwift 2.2.0
 //
-//  Created by ViR (Короткий Виталий) on 14.06.17.
-//  Updated to 2.1 by ViR (Короткий Виталий) on 27.08.17.
+//  Created by ViR (Короткий Виталий) on 14.06.2017.
+//  Updated to 2.2 by ViR (Короткий Виталий) on 26.02.2018.
 //  Copyright © 2017 ProVir. All rights reserved.
 //
 
 import Foundation
-
 
 
 /// Base protocol for all types request.
