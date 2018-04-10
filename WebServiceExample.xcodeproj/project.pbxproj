@@ -20,7 +20,8 @@
 		501D2AF21F5188CC000E3FA3 /* WebService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AEF1F4EA1EC000E3FA3 /* WebService.swift */; };
 		501D2AFA1F527D03000E3FA3 /* WebServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AE91F4E917A000E3FA3 /* WebServiceProtocols.swift */; };
 		501D2AFB1F527D05000E3FA3 /* WebService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AE41F4E8FA2000E3FA3 /* WebService.swift */; };
-		50F4943220565FD1004F1E08 /* WebServiceMockEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50F4943120565FD1004F1E08 /* WebServiceMockEngine.swift */; };
+		50844338207D244900C757C7 /* WebServiceMockEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50F4943120565FD1004F1E08 /* WebServiceMockEngine.swift */; };
+		5084433A207D24D800C757C7 /* WebServiceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50844339207D24D800C757C7 /* WebServiceProvider.swift */; };
 		F453EA236A3F776E9CF4C183 /* Pods_WebServiceExample.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F1924AD271EBC436C8C75A4 /* Pods_WebServiceExample.framework */; };
 /* End PBXBuildFile section */
 
@@ -65,6 +66,7 @@
 		501D2AEB1F4E92A1000E3FA3 /* WebServiceSimpleStore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceSimpleStore.swift; sourceTree = "<group>"; };
 		501D2AED1F4E9BE5000E3FA3 /* WebServiceRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceRequest.swift; sourceTree = "<group>"; };
 		501D2AEF1F4EA1EC000E3FA3 /* WebService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebService.swift; sourceTree = "<group>"; };
+		50844339207D24D800C757C7 /* WebServiceProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceProvider.swift; sourceTree = "<group>"; };
 		50F4943120565FD1004F1E08 /* WebServiceMockEngine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceMockEngine.swift; sourceTree = "<group>"; };
 		85924404FE98C539DF31A8DB /* Pods-WebServiceExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WebServiceExample.debug.xcconfig"; path = "Pods/Target Support Files/Pods-WebServiceExample/Pods-WebServiceExample.debug.xcconfig"; sourceTree = "<group>"; };
 		F4B8A17FA11DD9EA2D2B9A1B /* Pods-WebServiceExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WebServiceExample.release.xcconfig"; path = "Pods/Target Support Files/Pods-WebServiceExample/Pods-WebServiceExample.release.xcconfig"; sourceTree = "<group>"; };
@@ -141,6 +143,7 @@
 				501D2ADA1F4E8DF5000E3FA3 /* Info.plist */,
 				501D2AE41F4E8FA2000E3FA3 /* WebService.swift */,
 				501D2AE91F4E917A000E3FA3 /* WebServiceProtocols.swift */,
+				50844339207D24D800C757C7 /* WebServiceProvider.swift */,
 				501D2AEB1F4E92A1000E3FA3 /* WebServiceSimpleStore.swift */,
 				50F4943120565FD1004F1E08 /* WebServiceMockEngine.swift */,
 			);
@@ -217,7 +220,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0830;
-				LastUpgradeCheck = 0920;
+				LastUpgradeCheck = 0930;
 				ORGANIZATIONNAME = ProVir;
 				TargetAttributes = {
 					501D2ABC1F4E8DD0000E3FA3 = {
@@ -331,7 +334,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				501D2AF11F518762000E3FA3 /* WebServiceRequest.swift in Sources */,
-				50F4943220565FD1004F1E08 /* WebServiceMockEngine.swift in Sources */,
 				501D2AC31F4E8DD0000E3FA3 /* ViewController.swift in Sources */,
 				501D2AF21F5188CC000E3FA3 /* WebService.swift in Sources */,
 				501D2AC11F4E8DD0000E3FA3 /* AppDelegate.swift in Sources */,
@@ -342,6 +344,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				50844338207D244900C757C7 /* WebServiceMockEngine.swift in Sources */,
+				5084433A207D24D800C757C7 /* WebServiceProvider.swift in Sources */,
 				501D2AFB1F527D05000E3FA3 /* WebService.swift in Sources */,
 				501D2AFA1F527D03000E3FA3 /* WebServiceProtocols.swift in Sources */,
 				501D2AEC1F4E92A1000E3FA3 /* WebServiceSimpleStore.swift in Sources */,
@@ -392,6 +396,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -399,6 +404,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
@@ -450,6 +456,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -457,6 +464,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;

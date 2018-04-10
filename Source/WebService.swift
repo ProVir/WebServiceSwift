@@ -30,6 +30,8 @@ public enum WebServiceRequestError: Error {
     case notSupportRequest
     case notSupportDataHandler
     
+    case invalidData
+    
     
     ///General error http status code
     case httpStatusCode(Int)
@@ -55,7 +57,7 @@ public enum WebServiceResponse {
     
     
     /// Data if success response
-    func dataResponse() -> Any? {
+    public func dataResponse() -> Any? {
         switch self {
         case .data(let d): return d
         default: return nil
@@ -63,7 +65,7 @@ public enum WebServiceResponse {
     }
     
     /// Error if response completed with error
-    func errorResponse() -> Error? {
+    public func errorResponse() -> Error? {
         switch self {
         case .error(let err): return err
         default: return nil
@@ -71,7 +73,7 @@ public enum WebServiceResponse {
     }
     
     /// Is canceled request
-    var isCanceled:Bool {
+    public var isCanceled:Bool {
         switch self {
         case .canceledRequest: return true
         default: return false
@@ -79,7 +81,7 @@ public enum WebServiceResponse {
     }
     
     /// Error duplicate for request
-    var isDuplicateError:Bool {
+    public var isDuplicateError:Bool {
         switch self {
         case .duplicateRequest: return true
         default: return false

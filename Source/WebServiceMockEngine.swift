@@ -7,11 +7,10 @@
 //
 
 import Foundation
-import WebServiceSwift
 
 
 //MARK: Mock Request
-protocol WebServiceMockRequesting: WebServiceRequesting {
+public protocol WebServiceMockRequesting: WebServiceRequesting {
     var isSupportedRequest:Bool { get }
     
     var timeWait:TimeInterval? { get }
@@ -22,7 +21,7 @@ protocol WebServiceMockRequesting: WebServiceRequesting {
     func responseHandler(helper:Any?) throws -> Any?
 }
 
-extension WebServiceMockRequesting {
+public extension WebServiceMockRequesting {
     var isSupportedRequest:Bool { return true }
     
     var requestKey: AnyHashable? { return nil }
@@ -34,27 +33,27 @@ extension WebServiceMockRequesting {
 
 
 //MARK: Mock Engine
-class WebServiceMockEngine: WebServiceEngining {
+public class WebServiceMockEngine: WebServiceEngining {
     struct RequestItem {
         var workItem:DispatchWorkItem
         var canceled:() -> Void
     }
     
-    let queueForRequest: DispatchQueue? = nil
-    let queueForDataHandler: DispatchQueue? = nil
-    let queueForDataHandlerFromStorage: DispatchQueue? = nil
-    let useNetworkActivityIndicator = false
+    public let queueForRequest: DispatchQueue? = nil
+    public let queueForDataHandler: DispatchQueue? = nil
+    public let queueForDataHandlerFromStorage: DispatchQueue? = nil
+    public let useNetworkActivityIndicator = false
     
     
     var helpersArray = [String : Any]()
     var requests = [UInt64 : RequestItem]()
     
     
-    func isSupportedRequest(_ request: WebServiceRequesting, rawDataForRestoreFromStorage: Any?) -> Bool {
+    public func isSupportedRequest(_ request: WebServiceRequesting, rawDataForRestoreFromStorage: Any?) -> Bool {
         return rawDataForRestoreFromStorage == nil && ((request as? WebServiceMockRequesting)?.isSupportedRequest ?? false)
     }
     
-    func request(requestId: UInt64, request: WebServiceRequesting, completionWithData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void, canceled: @escaping () -> Void) {
+    public func request(requestId: UInt64, request: WebServiceRequesting, completionWithData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void, canceled: @escaping () -> Void) {
         
         guard let request = request as? WebServiceMockRequesting else {
             completionWithError(WebServiceRequestError.notSupportRequest)
@@ -94,14 +93,14 @@ class WebServiceMockEngine: WebServiceEngining {
         DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + (request.timeWait ?? 0), execute: workItem)
     }
     
-    func cancelRequest(requestId: UInt64) {
+    public func cancelRequest(requestId: UInt64) {
         if let requestItem = requests[requestId] {
             requests.removeValue(forKey: requestId)
             requestItem.canceled()
         }
     }
     
-    func dataHandler(request: WebServiceRequesting, data: Any, isRawFromStorage: Bool) throws -> Any? {
+    public func dataHandler(request: WebServiceRequesting, data: Any, isRawFromStorage: Bool) throws -> Any? {
         if isRawFromStorage { return nil }
         else if data is NSNull { return nil }
         else { return data }

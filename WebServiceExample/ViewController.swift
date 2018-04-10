@@ -9,20 +9,20 @@
 import UIKit
 import WebServiceSwift
 
-class ViewController: UIViewController, WebServiceDelegate {
+class ViewController: UIViewController {
     
     @IBOutlet weak var rawTextView: UITextView!
     @IBOutlet weak var webView: UIWebView!
     
     @IBOutlet weak var rawSwitch: UISwitch!
     
-    let webService = WebService()
+    let webService = WebServiceProvider<RequestMethod>.init(webService: WebService())
     
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        webService.delegate = self
+//        webService.delegate = self
     }
 
     
@@ -83,19 +83,21 @@ class ViewController: UIViewController, WebServiceDelegate {
     
     
     func requestMethod(_ method:WebServiceMethod) {
-        webService.request(RequestMethod(method))
+        //Use closure
+        webService.request(RequestMethod(method)) { [weak self] in
+            self?.webServiceResponse(method: method, response: $0)
+        }
+        
+        //Use delegate
+//        webService.request(RequestMethod(method))
     }
     
     
-    func webServiceResponse(request: WebServiceRequesting, isStorageRequest: Bool, response: WebServiceResponse) {
-        
+    
+    func webServiceResponse(method: WebServiceMethod, response: WebServiceProviderResponse<String>) {
         switch response {
-        case .data(let data):
-            guard let html = data as? String else {
-                break
-            }
-            
-            let baseUrl = (request as? RequestMethod)?.method.url
+        case .data(let html):
+            let baseUrl = method.url
             
             rawTextView.text = html
             webView.loadHTMLString(html, baseURL: baseUrl)
