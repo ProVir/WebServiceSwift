@@ -21,7 +21,8 @@ import UIKit
  
  - `noFoundEngine`: If engine not found in `[engines]` for request
  - `noFoundStorage`: If storage not found in `[storages]` for request
- - `general(code, data)`: Custom error with code and data
+ - `notSupportRequest`: If request after test fot engine contains invalid query or etc.
+ - `notSupportDataHandler`: If request don't support data handler
  */
 public enum WebServiceRequestError: Error {
     case noFoundEngine
@@ -29,9 +30,19 @@ public enum WebServiceRequestError: Error {
     
     case notSupportRequest
     case notSupportDataHandler
-    
+}
+
+
+/**
+ WebService general error enum for response
+ 
+ - `invalidData`: If data from server or decoder invalid
+ - `httpStatusCode(Code)`: HTTP Status code != 200 and as error
+ - `general(code, data)`: Custom error with code and data
+ */
+public enum WebServiceResponseError: Error {
+    ///Data from server invalid
     case invalidData
-    
     
     ///General error http status code
     case httpStatusCode(Int)

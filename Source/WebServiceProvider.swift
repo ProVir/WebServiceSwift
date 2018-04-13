@@ -206,7 +206,7 @@ extension WebServiceProviderResponse {
             if let data = data as? T {
                 self = .data(data)
             } else {
-                self = .error(WebServiceRequestError.invalidData)
+                self = .error(WebServiceResponseError.invalidData)
             }
             
         case .error(let error):
