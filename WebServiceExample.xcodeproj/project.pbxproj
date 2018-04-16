@@ -20,6 +20,7 @@
 		501D2AF21F5188CC000E3FA3 /* WebService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AEF1F4EA1EC000E3FA3 /* WebService.swift */; };
 		501D2AFA1F527D03000E3FA3 /* WebServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AE91F4E917A000E3FA3 /* WebServiceProtocols.swift */; };
 		501D2AFB1F527D05000E3FA3 /* WebService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AE41F4E8FA2000E3FA3 /* WebService.swift */; };
+		506CAFCF2084D729008AB016 /* WebServiceTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 506CAFCD2084D707008AB016 /* WebServiceTypes.swift */; };
 		50844338207D244900C757C7 /* WebServiceMockEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50F4943120565FD1004F1E08 /* WebServiceMockEngine.swift */; };
 		5084433A207D24D800C757C7 /* WebServiceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50844339207D24D800C757C7 /* WebServiceProvider.swift */; };
 		F453EA236A3F776E9CF4C183 /* Pods_WebServiceExample.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F1924AD271EBC436C8C75A4 /* Pods_WebServiceExample.framework */; };
@@ -66,6 +67,7 @@
 		501D2AEB1F4E92A1000E3FA3 /* WebServiceSimpleStore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceSimpleStore.swift; sourceTree = "<group>"; };
 		501D2AED1F4E9BE5000E3FA3 /* WebServiceRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceRequest.swift; sourceTree = "<group>"; };
 		501D2AEF1F4EA1EC000E3FA3 /* WebService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebService.swift; sourceTree = "<group>"; };
+		506CAFCD2084D707008AB016 /* WebServiceTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceTypes.swift; sourceTree = "<group>"; };
 		50844339207D24D800C757C7 /* WebServiceProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceProvider.swift; sourceTree = "<group>"; };
 		50F4943120565FD1004F1E08 /* WebServiceMockEngine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceMockEngine.swift; sourceTree = "<group>"; };
 		85924404FE98C539DF31A8DB /* Pods-WebServiceExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WebServiceExample.debug.xcconfig"; path = "Pods/Target Support Files/Pods-WebServiceExample/Pods-WebServiceExample.debug.xcconfig"; sourceTree = "<group>"; };
@@ -142,6 +144,7 @@
 				501D2AD91F4E8DF5000E3FA3 /* WebService.h */,
 				501D2ADA1F4E8DF5000E3FA3 /* Info.plist */,
 				501D2AE41F4E8FA2000E3FA3 /* WebService.swift */,
+				506CAFCD2084D707008AB016 /* WebServiceTypes.swift */,
 				501D2AE91F4E917A000E3FA3 /* WebServiceProtocols.swift */,
 				50844339207D24D800C757C7 /* WebServiceProvider.swift */,
 				501D2AEB1F4E92A1000E3FA3 /* WebServiceSimpleStore.swift */,
@@ -344,6 +347,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				506CAFCF2084D729008AB016 /* WebServiceTypes.swift in Sources */,
 				50844338207D244900C757C7 /* WebServiceMockEngine.swift in Sources */,
 				5084433A207D24D800C757C7 /* WebServiceProvider.swift in Sources */,
 				501D2AFB1F527D05000E3FA3 /* WebService.swift in Sources */,
