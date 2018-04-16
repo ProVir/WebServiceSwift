@@ -3,7 +3,7 @@
 //  WebServiceSwift 2.2.0
 //
 //  Created by ViR (Короткий Виталий) on 14.06.2017.
-//  Updated to 2.2 by ViR (Короткий Виталий) on 26.02.2018.
+//  Updated to 2.2.0 by ViR (Короткий Виталий) on 16.04.2018.
 //  Copyright © 2017 ProVir. All rights reserved.
 //
 
@@ -14,7 +14,7 @@ import Foundation
 public protocol WebServiceRequesting {
     
     /**
-     Unique key for request or groups requests.
+     Unique key for request or groups requests (Optional). Default: for Hashable Requests equal self Request, else without key (= nil).
      
      Use in `WebService.containsRequest()` and `WebService.cancelRequest()` methods.
      
@@ -25,6 +25,10 @@ public protocol WebServiceRequesting {
 
 public extension WebServiceRequesting {
     var requestKey: AnyHashable? { return nil }
+}
+
+public extension WebServiceRequesting where Self: Hashable {
+    var requestKey: AnyHashable? { return self }
 }
 
 

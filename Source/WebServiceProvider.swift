@@ -55,14 +55,10 @@ public enum WebServiceProviderResponse<T> {
 open class WebServiceProvider<RequestType: WebServiceRequesting> {
     private let service: WebService
     
-    /// Default delegate for responses. Apply before call new request.
-    public weak var delegate:WebServiceDelegate?
-    
 
     /// Constructor for WebServiceProvider. Require setuped WebService.
-    public init(webService:WebService, delegate:WebServiceDelegate? = nil) {
+    public init(webService:WebService) {
         self.service = webService
-        self.delegate = delegate
     }
     
     
@@ -179,8 +175,8 @@ open class WebServiceProvider<RequestType: WebServiceRequesting> {
      - includeResponseStorage: `true` if need read data from storage. if read data after data from server - delegate not call. Default: false.
      - customDelegate: Optional. Unique delegate for current request.
      */
-    public func request(_ request:RequestType, includeResponseStorage:Bool = false, customDelegate:WebServiceDelegate? = nil) {
-        service.request(request, includeResponseStorage: includeResponseStorage, customDelegate: customDelegate ?? delegate)
+    public func request(_ request:RequestType, includeResponseStorage:Bool = false, standartDelegate:WebServiceDelegate? = nil) {
+        service.request(request, includeResponseStorage: includeResponseStorage, customDelegate: standartDelegate ?? self)
     }
     
     
@@ -191,15 +187,30 @@ open class WebServiceProvider<RequestType: WebServiceRequesting> {
      - request: The request data.
      - customDelegate: Optional. Unique delegate for current request.
      */
-    public func requestReadStorage(_ request:RequestType, customDelegate:WebServiceDelegate? = nil) {
-        service.requestReadStorage(request, customDelegate: customDelegate ?? delegate)
+    public func requestReadStorage(_ request:RequestType, standartDelegate:WebServiceDelegate? = nil) {
+        service.requestReadStorage(request, customDelegate: standartDelegate ?? self)
     }
     
+    
+    
+    //MARK: Override
+    open func webServiceResponse(request: RequestType, isStorageRequest: Bool, response: WebServiceResponse) {
+        
+    }
 }
 
 
-//MARK: - Internal helpers
-extension WebServiceProviderResponse {
+//MARK: - Internal
+extension WebServiceProvider: WebServiceDelegate {
+    public func webServiceResponse(request: WebServiceRequesting, isStorageRequest: Bool, response: WebServiceResponse) {
+        if let request = request as? RequestType {
+            webServiceResponse(request: request, isStorageRequest: isStorageRequest, response: response)
+        }
+    }
+}
+
+
+public extension WebServiceProviderResponse {
     init(response: WebServiceResponse) {
         switch response {
         case .data(let data):
