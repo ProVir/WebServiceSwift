@@ -8,7 +8,6 @@
 
 import Foundation
 
-
 /**
  WebService general error enum for requests
  
@@ -92,3 +91,16 @@ public enum WebServiceResponse {
         }
     }
 }
+
+
+///Wrapper for WebServiceRequesting for use requestKey if WebServiceRequesting conform to Equatable, but don't conform Hashable.
+public struct WebServiceRequestKeyWrapper<T: Equatable>: Hashable {
+    public let request: T
+    public let hashValue: Int
+    
+    public init(request: T, hashValue: Int = 0) {
+        self.request = request
+        self.hashValue = hashValue
+    }
+}
+

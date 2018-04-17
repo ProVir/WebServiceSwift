@@ -24,7 +24,6 @@ public protocol WebServiceMockRequesting: WebServiceRequesting {
 public extension WebServiceMockRequesting {
     var isSupportedRequest:Bool { return true }
     
-    var requestKey: AnyHashable? { return nil }
     var timeWait:TimeInterval? { return nil }
     
     var helperIdentifier:String? { return nil }
@@ -48,6 +47,7 @@ public class WebServiceMockEngine: WebServiceEngining {
     var helpersArray = [String : Any]()
     var requests = [UInt64 : RequestItem]()
     
+    public init() { }
     
     public func isSupportedRequest(_ request: WebServiceRequesting, rawDataForRestoreFromStorage: Any?) -> Bool {
         return rawDataForRestoreFromStorage == nil && ((request as? WebServiceMockRequesting)?.isSupportedRequest ?? false)

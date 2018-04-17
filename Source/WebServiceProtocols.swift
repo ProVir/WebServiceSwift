@@ -3,7 +3,7 @@
 //  WebServiceSwift 2.2.0
 //
 //  Created by ViR (Короткий Виталий) on 14.06.2017.
-//  Updated to 2.2.0 by ViR (Короткий Виталий) on 16.04.2018.
+//  Updated to 2.2.0 by ViR (Короткий Виталий) on 17.04.2018.
 //  Copyright © 2017 ProVir. All rights reserved.
 //
 
@@ -20,11 +20,19 @@ public protocol WebServiceRequesting {
      
      Requests with equal `requestKey` are a group and controls by together in the methods of `containsRequest()` and `cancelRequest()`.
     */
-    var requestKey:AnyHashable? { get }
+    var requestKey: AnyHashable? { get }
+    
+    /// Test to equal request and send error if this request in process and wait data from server. Default = `nil` - use `WebService.excludeDuplicateRequests`.
+    var excludeDuplicate: Bool? { get }
 }
 
 public extension WebServiceRequesting {
     var requestKey: AnyHashable? { return nil }
+    var excludeDuplicate: Bool? { return nil }
+}
+
+public extension WebServiceRequesting where Self: Equatable {
+    var requestKey: AnyHashable? { return WebServiceRequestKeyWrapper(request: self) }
 }
 
 public extension WebServiceRequesting where Self: Hashable {

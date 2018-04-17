@@ -94,7 +94,7 @@ public class WebService {
     /// Default delegate for responses. Apply before call new request.
     public weak var delegate: WebServiceDelegate?
     
-    /// Test to equal requests and send error if this request in process and wait data from server. Apply before call new request. Default: false.
+    /// Test to equal requests and send error if this request in process and wait data from server. Apply before call new request. Use only if `WebServiceRequesting.excludeDuplicate == nil`. Default: false.
     public var excludeDuplicateRequests = false
     
     /// Call response closures and delegates in dispath queue. Default: main thread.
@@ -210,7 +210,7 @@ public class WebService {
         
         
         //Duplicate requests
-        if requestKey != nil && excludeDuplicateRequests && containsRequest(requestKey: requestKey) {
+        if requestKey != nil && (request.excludeDuplicate ?? excludeDuplicateRequests) && containsRequest(requestKey: requestKey) {
             completionResponse?(.duplicateRequest)
             return
         }
