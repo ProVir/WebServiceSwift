@@ -13,7 +13,7 @@ import Alamofire
 
 extension WebService {
     
-    convenience init(delegate:WebServiceDelegate? = nil) {
+    convenience init() {
         let engine = WebServiceSitesEngine()
         
         var storages:[WebServiceStoraging] = []
@@ -22,8 +22,6 @@ extension WebService {
         }
         
         self.init(engines: [engine], storages:storages)
-        
-        self.delegate = delegate
     }
     
     static var `default`: WebService {
@@ -39,13 +37,13 @@ private struct WebServiceStatic {
 
 class WebServiceSitesEngine: WebServiceEngining {
     
-    let queueForRequest:DispatchQueue? = nil
+    let queueForRequest:DispatchQueue? = DispatchQueue.global(qos: .background)
     let queueForDataHandler:DispatchQueue? = nil
     let queueForDataHandlerFromStorage:DispatchQueue? = DispatchQueue.global(qos: .default)
     let useNetworkActivityIndicator = false
     
     func isSupportedRequest(_ request: WebServiceRequesting, rawDataForRestoreFromStorage: Any?) -> Bool {
-        return request is RequestMethod
+        return request is SiteWebServiceRequest
     }
 
     
@@ -54,7 +52,7 @@ class WebServiceSitesEngine: WebServiceEngining {
                  completionWithError:@escaping (_ error:Error) -> Void,
                  canceled:@escaping () -> Void) {
         
-        guard let method = (request as? RequestMethod)?.method else {
+        guard let method = request as? SiteWebServiceRequest else {
             completionWithError(WebServiceRequestError.notSupportRequest)
             return
         }
@@ -77,7 +75,7 @@ class WebServiceSitesEngine: WebServiceEngining {
     
     
     func dataHandler(request:WebServiceRequesting, data:Any, isRawFromStorage:Bool) throws -> Any? {
-        guard request is RequestMethod, let data = data as? Data else {
+        guard request is SiteWebServiceRequest, let data = data as? Data else {
             throw WebServiceRequestError.notSupportDataHandler
         }
 
@@ -86,39 +84,3 @@ class WebServiceSitesEngine: WebServiceEngining {
     
 }
 
-
-//Method urls
-extension SiteSearchType {
-    func url(domain:String) -> URL {
-        switch self {
-        case .google: return URL(string: "http://google.\(domain)")!
-        case .yandex: return URL(string: "http://yandex.\(domain)")!
-        }
-    }
-}
-
-extension SiteMailType {
-    func url() -> URL {
-        switch self {
-        case .google: return URL(string: "http://mail.google.com")!
-        case .yandex: return URL(string: "http://mail.yandex.ru")!
-        case .mail: return URL(string: "http://e.mail.ru")!
-        }
-    }
-}
-
-
-extension WebServiceMethod {
-    var url:URL {
-        switch self {
-        case .siteSearch(let type, domain: let domain):
-            return type.url(domain: domain)
-            
-        case .siteMail(let type):
-            return type.url()
-            
-        case .siteYouTube:
-            return URL(string: "http://youtube.ru")!
-        }
-    }
-}

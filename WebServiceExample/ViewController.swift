@@ -16,13 +16,14 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var rawSwitch: UISwitch!
     
-    let webService = WebServiceProvider<RequestMethod>.init(webService: WebService())
+    let siteWebProvider = SiteWebServiceProvider(webService: WebService())
     
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-//        webService.delegate = self
+
+        siteWebProvider.delegate = self
     }
 
     
@@ -82,40 +83,91 @@ class ViewController: UIViewController {
     }
     
     
-    func requestMethod(_ method:WebServiceMethod) {
-        //Use closure
-        webService.request(RequestMethod(method)) { [weak self] in
-            self?.webServiceResponse(method: method, response: $0)
-        }
+    func requestMethod(_ site:SiteWebServiceRequest) {
+        /*
+            1. Use closure recommendation variant
+        */
+//        siteWebProvider.requestHtmlData(site, dataFromStorage: { [weak self] html in
+//            self?.rawTextView.text = html
+//            self?.webView.loadHTMLString(html, baseURL: site.url)
+//
+//        }) { [weak self] response in
+//            switch response {
+//            case .data(let html):
+//                self?.rawTextView.text = html
+//                self?.webView.loadHTMLString(html, baseURL: site.url)
+//
+//            case .error(let error):
+//                let text = (error as NSError).localizedDescription
+//
+//                let alert = UIAlertController(title: "Error", message: text, preferredStyle: .alert)
+//                alert.addAction(UIAlertAction(title: "OK",
+//                                              style: .default,
+//                                              handler: nil))
+//
+//                self?.present(alert, animated: true, completion: nil)
+//
+//            case .canceledRequest, .duplicateRequest:
+//                break
+//            }
+//        }
         
-        //Use delegate
-//        webService.request(RequestMethod(method))
+        /*
+            2. Use closure without SiteWebServiceProvider variant - as siteWebProvider: WebServiceProvider<SiteWebServiceRequest>
+        */
+//        siteWebProvider.request(site, dataFromStorage: { [weak self] (html:String) in
+//            self?.rawTextView.text = html
+//            self?.webView.loadHTMLString(html, baseURL: site.url)
+//
+//        }) { [weak self] (response: WebServiceProviderResponse<String>) in
+//            switch response {
+//            case .data(let html):
+//                self?.rawTextView.text = html
+//                self?.webView.loadHTMLString(html, baseURL: site.url)
+//
+//            case .error(let error):
+//                let text = (error as NSError).localizedDescription
+//
+//                let alert = UIAlertController(title: "Error", message: text, preferredStyle: .alert)
+//                alert.addAction(UIAlertAction(title: "OK",
+//                                              style: .default,
+//                                              handler: nil))
+//
+//                self?.present(alert, animated: true, completion: nil)
+//
+//            case .canceledRequest, .duplicateRequest:
+//                break
+//            }
+//        }
+        
+        
+        
+        /*
+            3. Use delegate
+        */
+        siteWebProvider.requestHtmlData(site, includeResponseStorage: true)
     }
     
-    
-    
-    func webServiceResponse(method: WebServiceMethod, response: WebServiceProviderResponse<String>) {
-        switch response {
-        case .data(let html):
-            let baseUrl = method.url
-            
-            rawTextView.text = html
-            webView.loadHTMLString(html, baseURL: baseUrl)
-            
-        case .error(let error):
-            let text = (error as NSError).localizedDescription
-            
-            let alert = UIAlertController(title: "Error", message: text, preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "OK",
-                                          style: .default,
-                                          handler: nil))
-            
-            present(alert, animated: true, completion: nil)
-            
-        case .duplicateRequest, .canceledRequest:
-            break
-        }
-    }
+
     
 }
 
+extension ViewController: SiteWebServiceProviderDelegate {
+    func webServiceResponse(request: SiteWebServiceRequest, isStorageRequest: Bool, html: String) {
+        let baseUrl = request.url
+        
+        rawTextView.text = html
+        webView.loadHTMLString(html, baseURL: baseUrl)
+    }
+    
+    func webServiceResponse(request: SiteWebServiceRequest, isStorageRequest: Bool, error: Error) {
+        let text = (error as NSError).localizedDescription
+        
+        let alert = UIAlertController(title: "Error", message: text, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK",
+                                      style: .default,
+                                      handler: nil))
+        
+        present(alert, animated: true, completion: nil)
+    }
+}
