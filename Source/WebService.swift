@@ -122,9 +122,7 @@ public class WebService {
      - Returns: `true` if the request with requestKey was found in the current queue; otherwise, `false`.
      */
     public func containsRequest(requestKey:AnyHashable?) -> Bool {
-        return mutex.synchronized() {
-            (listRequest(requestKey:requestKey)?.count ?? 0) > 0
-        }
+        return (listRequest(requestKey:requestKey)?.count ?? 0) > 0
     }
     
     /**
