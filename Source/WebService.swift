@@ -3,7 +3,7 @@
 //  WebServiceSwift 2.2.0
 //
 //  Created by ViR (Короткий Виталий) on 14.06.2017.
-//  Updated to 2.2 by ViR (Короткий Виталий) on 12.03.2018.
+//  Updated to 2.2.0 by ViR (Короткий Виталий) on 18.04.2018.
 //  Copyright © 2017 ProVir. All rights reserved.
 //
 
@@ -53,15 +53,29 @@ public class WebService {
     }
     
     deinit {
+        let (requestList, requestUseEngines) = mutex.synchronized({ (self.requestList, self.requestUseEngines) })
+        
         //End networkActivityIndicator for all requests
+        WebService.staticMutex.synchronized {
+            for (_, listRequests) in requestList {
+                WebService.networkActivityIndicatorRequestIds.subtract(listRequests)
+            }
+        }
         
-        let requestList = mutex.synchronized({ self.requestList })
         
-        WebService.staticMutex.lock()
-        defer { WebService.staticMutex.unlock() }
-        
-        for (_, listRequests) in requestList {
-            WebService.networkActivityIndicatorRequestIds.subtract(listRequests)
+        //Cancel all requests for engine
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            for (requestId, engine) in requestUseEngines {
+                //Cancel in queue
+                if let queue = engine.queueForRequest {
+                    queue.async {
+                        engine.cancelRequest(requestId: requestId)
+                    }
+                } else {
+                    //Or in main thread
+                    engine.cancelRequest(requestId: requestId)
+                }
+            }
         }
     }
     
@@ -231,10 +245,10 @@ public class WebService {
         
         
         //Step #3: Call this closure with result response
-        let completeHandlerResponse:(WebServiceResponse) -> Void = { [weak self] response in
+        let completeHandlerResponse:(WebServiceResponse) -> Void = { [weak self, queueForResponse = self.queueForResponse] response in
             
             //Usually main thread
-            self?.queueForResponse.async {
+            queueForResponse.async {
                 guard requestStatus == .inWork else {
                     return
                 }
@@ -259,7 +273,7 @@ public class WebService {
         }
         
         //Step #2: Data handler closure for raw data from server
-        let dataHandler:(Any) -> Void = { data in
+        let dataHandler:(Any) -> Void = { (data) in
             do {
                 let resultData = try engine.dataHandler(request: request,
                                                         data: data,
@@ -414,7 +428,7 @@ public class WebService {
     // MARK: - Private functions
     private func requestReadStorage(storage:WebServiceStoraging, request:WebServiceRequesting, completionResponse:@escaping (_ response:WebServiceResponse) -> Void) {
         do {
-            try storage.readData(request: request) { [weak self] isRawData, response in
+            try storage.readData(request: request) { [weak self, queueForResponse = self.queueForResponse] isRawData, response in
                 if isRawData, let rawData = response.dataResponse() {
                     if let engine = self?.engineForRequest(request, rawDataForRestoreFromStorage: rawData) {
                         
@@ -422,11 +436,11 @@ public class WebService {
                             do {
                                 let data = try engine.dataHandler(request: request, data: rawData, isRawFromStorage: true)
                                 
-                                self?.queueForResponse.async {
+                                queueForResponse.async {
                                     completionResponse(.data(data))
                                 }
                             } catch {
-                                self?.queueForResponse.async {
+                                queueForResponse.async {
                                     completionResponse(.error(error))
                                 }
                             }
@@ -443,7 +457,7 @@ public class WebService {
                         }
                     }
                     else {
-                        self?.queueForResponse.async {
+                        queueForResponse.async {
                             completionResponse(.error(WebServiceRequestError.noFoundEngine))
                         }
                     }
