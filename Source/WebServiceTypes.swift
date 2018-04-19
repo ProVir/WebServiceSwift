@@ -44,53 +44,6 @@ public enum WebServiceResponseError: Error {
 }
 
 
-/**
- WebService result response from engine
- 
- - `data(Any?)`: Success response with data
- - `error(Error)`: Error response
- - `canceledRequest`: Reqest canceled (called `WebService.cancelRequest()` method for this request or group requests)
- - `duplicateRequest`: If `excludeDuplicateRequests == true` and this request contained in queue
- */
-public enum WebServiceResponse {
-    case data(Any?)
-    case error(Error)
-    case canceledRequest
-    case duplicateRequest
-    
-    
-    /// Data if success response
-    public func dataResponse() -> Any? {
-        switch self {
-        case .data(let d): return d
-        default: return nil
-        }
-    }
-    
-    /// Error if response completed with error
-    public func errorResponse() -> Error? {
-        switch self {
-        case .error(let err): return err
-        default: return nil
-        }
-    }
-    
-    /// Is canceled request
-    public var isCanceled:Bool {
-        switch self {
-        case .canceledRequest: return true
-        default: return false
-        }
-    }
-    
-    /// Error duplicate for request
-    public var isDuplicateError:Bool {
-        switch self {
-        case .duplicateRequest: return true
-        default: return false
-        }
-    }
-}
 
 
 /**
@@ -141,6 +94,21 @@ public enum WebServiceTypeResponse<T> {
 }
 
 
+/// WebService result response from engine without information for type
+public typealias WebServiceResponse = WebServiceTypeResponse<Any?>
+
+extension WebServiceTypeResponse where T == Any? {
+    /// Data if success response
+    public func dataResponse() -> Any? {
+        switch self {
+        case .data(let d): return d
+        default: return nil
+        }
+    }
+}
+
+
+
 ///Wrapper for WebServiceRequesting for use requestKey if WebServiceRequesting conform to Equatable, but don't conform Hashable.
 public struct WebServiceRequestKeyWrapper<T: Equatable>: Hashable {
     public let request: T
@@ -154,25 +122,33 @@ public struct WebServiceRequestKeyWrapper<T: Equatable>: Hashable {
 
 
 
-///Converter from general response for with type
+///Response from other type
 public extension WebServiceTypeResponse {
-    init(response: WebServiceResponse) {
-        switch response {
+    
+    ///Convert to response with other type data automatic.
+    func convert<T>() -> WebServiceTypeResponse<T> {
+        return convert(T.self)
+    }
+    
+    
+    ///Convert to response with concrete other type data.
+    func convert<T>(_ typeData: T.Type) -> WebServiceTypeResponse<T> {
+        switch self {
         case .data(let data):
             if let data = data as? T {
-                self = .data(data)
+                return .data(data)
             } else {
-                self = .error(WebServiceResponseError.invalidData)
+                return .error(WebServiceResponseError.invalidData)
             }
             
         case .error(let error):
-            self = .error(error)
+            return .error(error)
             
         case .canceledRequest:
-            self = .canceledRequest
+            return .canceledRequest
             
         case .duplicateRequest:
-            self = .duplicateRequest
+            return .duplicateRequest
         }
     }
 }

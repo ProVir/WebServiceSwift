@@ -52,7 +52,7 @@ class SiteWebProvider: WebServiceProvider<SiteWebServiceRequest> {
     
     ///Override needed
     override func webServiceResponse(request: SiteWebServiceRequest, isStorageRequest: Bool, response: WebServiceResponse) {
-        let response = WebServiceTypeResponse<String>(response: response)
+        let response = response.convert(String.self)
         
         switch response {
         case .data(let html):

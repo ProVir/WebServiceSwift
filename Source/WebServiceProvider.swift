@@ -96,7 +96,7 @@ open class WebServiceProvider<RequestType: WebServiceRequesting> {
         //CompletionResponse
         let completionResponseInternal:((_ response:WebServiceResponse) -> Void)?
         if let completionResponse = completionResponse {
-            completionResponseInternal = { completionResponse(WebServiceTypeResponse<T>.init(response: $0)) }
+            completionResponseInternal = { completionResponse( $0.convert() ) }
         } else {
             completionResponseInternal = nil
         }
@@ -115,7 +115,7 @@ open class WebServiceProvider<RequestType: WebServiceRequesting> {
      */
     public func requestReadStorage<T>(_ request:RequestType, completionResponse:@escaping (_ response:WebServiceTypeResponse<T>) -> Void) {
         //CompletionResponse
-        let completionResponseInternal:(_ response:WebServiceResponse) -> Void = { completionResponse(WebServiceTypeResponse<T>.init(response: $0)) }
+        let completionResponseInternal:(_ response:WebServiceResponse) -> Void = { completionResponse($0.convert()) }
         
         //Real request
         service.requestReadStorage(request, completionResponse: completionResponseInternal)
