@@ -163,7 +163,7 @@
 				501D2AC91F4E8DD0000E3FA3 /* LaunchScreen.storyboard */,
 				501D2ACC1F4E8DD0000E3FA3 /* Info.plist */,
 			);
-			path = Support;
+			name = Support;
 			sourceTree = "<group>";
 		};
 		50AB6AB420883FFA00C1E093 /* WebService */ = {
@@ -172,7 +172,7 @@
 				50AB6AB120883F3100C1E093 /* WebService.swift */,
 				501D2AEF1F4EA1EC000E3FA3 /* WebServiceHtmlEngine.swift */,
 			);
-			path = WebService;
+			name = WebService;
 			sourceTree = "<group>";
 		};
 		50AB6AB52088404300C1E093 /* WebServiceRequests */ = {
@@ -180,7 +180,7 @@
 			children = (
 				501D2AED1F4E9BE5000E3FA3 /* SiteWebServiceRequest.swift */,
 			);
-			path = WebServiceRequests;
+			name = WebServiceRequests;
 			sourceTree = "<group>";
 		};
 		9D14E7A17010FD744AF284AD /* Pods */ = {

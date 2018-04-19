@@ -119,7 +119,7 @@ class ViewController: UIViewController {
 //            self?.rawTextView.text = html
 //            self?.webView.loadHTMLString(html, baseURL: site.url)
 //
-//        }) { [weak self] (response: WebServiceProviderResponse<String>) in
+//        }) { [weak self] (response: WebServiceTypeResponse<String>) in
 //            switch response {
 //            case .data(let html):
 //                self?.rawTextView.text = html

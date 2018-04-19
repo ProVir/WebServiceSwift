@@ -9,48 +9,6 @@
 import Foundation
 
 
-
-///Response type
-public enum WebServiceProviderResponse<T> {
-    case data(T)
-    case error(Error)
-    case canceledRequest
-    case duplicateRequest
-    
-    /// Data if success response
-    public func dataResponse() -> T? {
-        switch self {
-        case .data(let d): return d
-        default: return nil
-        }
-    }
-    
-    /// Error if response completed with error
-    public func errorResponse() -> Error? {
-        switch self {
-        case .error(let err): return err
-        default: return nil
-        }
-    }
-    
-    /// Is canceled request
-    public var isCanceled:Bool {
-        switch self {
-        case .canceledRequest: return true
-        default: return false
-        }
-    }
-    
-    /// Error duplicate for request
-    public var isDuplicateError:Bool {
-        switch self {
-        case .duplicateRequest: return true
-        default: return false
-        }
-    }
-}
-
-
 ///Generic Provider for WebService with concrete type Requests and Response
 open class WebServiceProvider<RequestType: WebServiceRequesting> {
     private let service: WebService
@@ -125,7 +83,7 @@ open class WebServiceProvider<RequestType: WebServiceRequesting> {
      - dataFromStorage: Optional. Closure for read data from storage. if read data after data from server - cloure not call. If `closure == nil`, data not read from storage.
      - completionResponse: Optional. Closure for response result from server.
      */
-    public func request<T>(_ request:RequestType, dataFromStorage:((_ data:T) -> Void)? = nil, completionResponse:((_ response:WebServiceProviderResponse<T>) -> Void)?) {
+    public func request<T>(_ request:RequestType, dataFromStorage:((_ data:T) -> Void)? = nil, completionResponse:((_ response:WebServiceTypeResponse<T>) -> Void)?) {
         //DataFromStorage
         let dataFromStorageInternal:((_ data:Any) -> Void)?
         if let dataFromStorage = dataFromStorage {
@@ -138,7 +96,7 @@ open class WebServiceProvider<RequestType: WebServiceRequesting> {
         //CompletionResponse
         let completionResponseInternal:((_ response:WebServiceResponse) -> Void)?
         if let completionResponse = completionResponse {
-            completionResponseInternal = { completionResponse(WebServiceProviderResponse<T>.init(response: $0)) }
+            completionResponseInternal = { completionResponse(WebServiceTypeResponse<T>.init(response: $0)) }
         } else {
             completionResponseInternal = nil
         }
@@ -155,9 +113,9 @@ open class WebServiceProvider<RequestType: WebServiceRequesting> {
      - completionResponse: Closure for read data from storage.
      - response: result read from storage.
      */
-    public func requestReadStorage<T>(_ request:RequestType, completionResponse:@escaping (_ response:WebServiceProviderResponse<T>) -> Void) {
+    public func requestReadStorage<T>(_ request:RequestType, completionResponse:@escaping (_ response:WebServiceTypeResponse<T>) -> Void) {
         //CompletionResponse
-        let completionResponseInternal:(_ response:WebServiceResponse) -> Void = { completionResponse(WebServiceProviderResponse<T>.init(response: $0)) }
+        let completionResponseInternal:(_ response:WebServiceResponse) -> Void = { completionResponse(WebServiceTypeResponse<T>.init(response: $0)) }
         
         //Real request
         service.requestReadStorage(request, completionResponse: completionResponseInternal)
@@ -209,25 +167,3 @@ extension WebServiceProvider: WebServiceDelegate {
     }
 }
 
-
-public extension WebServiceProviderResponse {
-    init(response: WebServiceResponse) {
-        switch response {
-        case .data(let data):
-            if let data = data as? T {
-                self = .data(data)
-            } else {
-                self = .error(WebServiceResponseError.invalidData)
-            }
-            
-        case .error(let error):
-            self = .error(error)
-            
-        case .canceledRequest:
-            self = .canceledRequest
-            
-        case .duplicateRequest:
-            self = .duplicateRequest
-        }
-    }
-}

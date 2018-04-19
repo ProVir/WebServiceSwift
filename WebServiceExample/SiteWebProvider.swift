@@ -46,13 +46,13 @@ class SiteWebProvider: WebServiceProvider<SiteWebServiceRequest> {
     }
     
     ///Request use closures
-    func requestHtmlData(_ request:SiteWebServiceRequest, dataFromStorage:((_ data:String) -> Void)? = nil, completionHandler:((_ response:WebServiceProviderResponse<String>) -> Void)?) {
+    func requestHtmlData(_ request:SiteWebServiceRequest, dataFromStorage:((_ data:String) -> Void)? = nil, completionHandler:((_ response:WebServiceTypeResponse<String>) -> Void)?) {
         self.request(request, dataFromStorage: dataFromStorage, completionResponse: completionHandler)
     }
     
     ///Override needed
     override func webServiceResponse(request: SiteWebServiceRequest, isStorageRequest: Bool, response: WebServiceResponse) {
-        let response = WebServiceProviderResponse<String>(response: response)
+        let response = WebServiceTypeResponse<String>(response: response)
         
         switch response {
         case .data(let html):
