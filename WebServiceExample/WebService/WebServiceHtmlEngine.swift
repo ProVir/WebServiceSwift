@@ -1,5 +1,5 @@
 //
-//  WebService.swift
+//  WebServiceHtmlEngine.swift
 //  WebServiceExample
 //
 //  Created by Короткий Виталий on 24.08.17.
@@ -10,54 +10,36 @@ import Foundation
 import WebServiceSwift
 import Alamofire
 
-
-extension WebService {
-    
-    convenience init() {
-        let engine = WebServiceSitesEngine()
-        
-        var storages:[WebServiceStoraging] = []
-        if let storage = WebServiceSimpleStore() {
-            storages.append(storage)
-        }
-        
-        self.init(engines: [engine], storages:storages)
-    }
-    
-    static var `default`: WebService {
-        return WebServiceStatic.default
-    }
-}
-
-private struct WebServiceStatic {
-    static let `default` = WebService()
+///Base protocol for requests for get html data for URL.
+protocol WebServiceHtmlRequesting: WebServiceRequesting {
+    var url: URL { get }
 }
 
 
-
-class WebServiceSitesEngine: WebServiceEngining {
+///Engine for get html data for URL.
+class WebServiceHtmlEngine: WebServiceEngining {
     
     let queueForRequest:DispatchQueue? = DispatchQueue.global(qos: .background)
     let queueForDataHandler:DispatchQueue? = nil
     let queueForDataHandlerFromStorage:DispatchQueue? = DispatchQueue.global(qos: .default)
     let useNetworkActivityIndicator = false
     
+    
     func isSupportedRequest(_ request: WebServiceRequesting, rawDataForRestoreFromStorage: Any?) -> Bool {
-        return request is SiteWebServiceRequest
+        return request is WebServiceHtmlRequesting
     }
-
     
     func request(requestId:UInt64, request:WebServiceRequesting,
                  completionWithData:@escaping (_ data:Any) -> Void,
                  completionWithError:@escaping (_ error:Error) -> Void,
                  canceled:@escaping () -> Void) {
         
-        guard let method = request as? SiteWebServiceRequest else {
+        guard let url = (request as? WebServiceHtmlRequesting)?.url else {
             completionWithError(WebServiceRequestError.notSupportRequest)
             return
         }
 
-        Alamofire.request(method.url).responseData { response in
+        Alamofire.request(url).responseData { response in
             switch response.result {
             case .success(let data):
                 completionWithData(data)
@@ -75,7 +57,7 @@ class WebServiceSitesEngine: WebServiceEngining {
     
     
     func dataHandler(request:WebServiceRequesting, data:Any, isRawFromStorage:Bool) throws -> Any? {
-        guard request is SiteWebServiceRequest, let data = data as? Data else {
+        guard request is WebServiceHtmlRequesting, let data = data as? Data else {
             throw WebServiceRequestError.notSupportDataHandler
         }
 

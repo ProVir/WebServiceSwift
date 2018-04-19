@@ -1,9 +1,9 @@
 //
-//  WebServiceRequest.swift
+//  SiteWebProvider.swift
 //  WebServiceExample
 //
-//  Created by Короткий Виталий on 24.08.17.
-//  Copyright © 2017 ProVir. All rights reserved.
+//  Created by Короткий Виталий on 19.04.2018.
+//  Copyright © 2018 ProVir. All rights reserved.
 //
 
 import Foundation
@@ -30,14 +30,15 @@ enum SiteMailType: String {
 
 
 
+
 //MARK: Provider
-protocol SiteWebServiceProviderDelegate: class {
+protocol SiteWebProviderDelegate: class {
     func webServiceResponse(request:SiteWebServiceRequest, isStorageRequest:Bool, html:String)
     func webServiceResponse(request:SiteWebServiceRequest, isStorageRequest:Bool, error:Error)
 }
 
-class SiteWebServiceProvider: WebServiceProvider<SiteWebServiceRequest> {
-    weak var delegate: SiteWebServiceProviderDelegate?
+class SiteWebProvider: WebServiceProvider<SiteWebServiceRequest> {
+    weak var delegate: SiteWebProviderDelegate?
     
     ///Request use SiteWebServiceProviderDelegate
     func requestHtmlData(_ request:SiteWebServiceRequest, includeResponseStorage: Bool) {
@@ -67,57 +68,40 @@ class SiteWebServiceProvider: WebServiceProvider<SiteWebServiceRequest> {
 }
 
 
-//MARK: Urls
-extension SiteSearchType {
-    func url(domain:String) -> URL {
+
+//MARK: BaseURL information
+
+///Presentation layer and other don't need dependency from network layer implementation: `baseUrl` don't use `url`, because `url` use only implementation for Engine (protocol `WebServiceHtmlRequesting`). But `url` can use `baseUrl` as part original request.'
+extension SiteWebServiceRequest {
+    var baseUrl:URL {
         switch self {
-        case .google: return URL(string: "http://google.\(domain)")!
-        case .yandex: return URL(string: "http://yandex.\(domain)")!
+        case .siteSearch(let type, domain: let domain):
+            return type.baseUrl(domain: domain)
+            
+        case .siteMail(let type):
+            return type.baseUrl()
+            
+        case .siteYouTube:
+            return URL(string: "https://www.youtube.com")!
+        }
+    }
+}
+
+extension SiteSearchType {
+    func baseUrl(domain:String) -> URL {
+        switch self {
+        case .google: return URL(string: "https://google.\(domain)")!
+        case .yandex: return URL(string: "https://yandex.\(domain)")!
         }
     }
 }
 
 extension SiteMailType {
-    func url() -> URL {
+    func baseUrl() -> URL {
         switch self {
-        case .google: return URL(string: "http://mail.google.com")!
-        case .yandex: return URL(string: "http://mail.yandex.ru")!
-        case .mail: return URL(string: "http://e.mail.ru")!
+        case .google: return URL(string: "https://mail.google.com")!
+        case .yandex: return URL(string: "https://mail.yandex.ru")!
+        case .mail: return URL(string: "https://e.mail.ru")!
         }
     }
 }
-
-
-extension SiteWebServiceRequest {
-    var url:URL {
-        switch self {
-        case .siteSearch(let type, domain: let domain):
-            return type.url(domain: domain)
-            
-        case .siteMail(let type):
-            return type.url()
-            
-        case .siteYouTube:
-            return URL(string: "http://youtube.ru")!
-        }
-    }
-}
-
-
-//MARK: Store support
-extension SiteWebServiceRequest: WebServiceRequestRawStore {
-    func identificatorForRawStore() -> String? {
-        switch self {
-        case .siteSearch(let type, domain: let domain):
-            return type.rawValue + ".\(domain)"
-            
-        case .siteMail(let type):
-            return type.rawValue
-            
-        case .siteYouTube:
-            return "siteYouTube"
-        }
-    }
-}
-
-

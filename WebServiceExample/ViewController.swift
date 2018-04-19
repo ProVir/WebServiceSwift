@@ -16,7 +16,7 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var rawSwitch: UISwitch!
     
-    let siteWebProvider = SiteWebServiceProvider(webService: WebService())
+    let siteWebProvider = SiteWebProvider(webService: WebService())
     
 
     override func viewDidLoad() {
@@ -152,9 +152,9 @@ class ViewController: UIViewController {
     
 }
 
-extension ViewController: SiteWebServiceProviderDelegate {
+extension ViewController: SiteWebProviderDelegate {
     func webServiceResponse(request: SiteWebServiceRequest, isStorageRequest: Bool, html: String) {
-        let baseUrl = request.url
+        let baseUrl = request.baseUrl
         
         rawTextView.text = html
         webView.loadHTMLString(html, baseURL: baseUrl)
