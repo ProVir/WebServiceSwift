@@ -17,7 +17,7 @@ extension WebService {
         let engine = WebServiceHtmlEngine()
         
         var storages:[WebServiceStoraging] = []
-        if let storage = WebServiceSimpleStore() {
+        if let storage = WebServiceSimpleFileStorage() {
             storages.append(storage)
         }
         

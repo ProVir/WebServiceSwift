@@ -30,8 +30,8 @@ extension SiteWebServiceRequest: WebServiceHtmlRequesting {
 
 
 //MARK: Store support
-extension SiteWebServiceRequest: WebServiceRequestRawStore {
-    func identificatorForRawStore() -> String? {
+extension SiteWebServiceRequest: WebServiceRequestRawStorage {
+    func identificatorForRawStorage() -> String? {
         switch self {
         case .siteSearch(let type, domain: let domain):
             return type.rawValue + ".\(domain)"
