@@ -15,6 +15,8 @@ enum SiteWebServiceRequest: WebServiceRequesting, Equatable {
     case siteSearch(SiteSearchType, domain:String)
     case siteMail(SiteMailType)
     case siteYouTube
+    
+    typealias ResultType = String
 }
 
 enum SiteSearchType: String {
@@ -37,23 +39,31 @@ protocol SiteWebProviderDelegate: class {
     func webServiceResponse(request:SiteWebServiceRequest, isStorageRequest:Bool, error:Error)
 }
 
-class SiteWebProvider: WebServiceProvider<SiteWebServiceRequest> {
+class SiteWebProvider: WebServiceDelegate {
+    let requestProvider: WebServiceRequestProvider<SiteWebServiceRequest>
+    
+    init(webService: WebService) {
+        requestProvider = webService.getRequestProvider()
+        requestProvider.delegate = self
+    }
+    
     weak var delegate: SiteWebProviderDelegate?
     
     ///Request use SiteWebServiceProviderDelegate
     func requestHtmlData(_ request:SiteWebServiceRequest, includeResponseStorage: Bool) {
-        self.request(request, includeResponseStorage: includeResponseStorage)
+        requestProvider.performRequest(request, includeResponseStorage: includeResponseStorage)
     }
     
     ///Request use closures
-    func requestHtmlData(_ request:SiteWebServiceRequest, dataFromStorage:((_ data:String) -> Void)? = nil, completionHandler:((_ response:WebServiceTypeResponse<String>) -> Void)?) {
-        self.request(request, dataFromStorage: dataFromStorage, completionResponse: completionHandler)
+    func requestHtmlData(_ request:SiteWebServiceRequest, dataFromStorage:((_ data:String) -> Void)? = nil, completionHandler:@escaping (_ response:WebServiceResponse<String>) -> Void) {
+        requestProvider.performRequest(request, dataFromStorage: dataFromStorage, completionResponse: completionHandler)
     }
     
     ///Override needed
-    override func webServiceResponse(request: SiteWebServiceRequest, isStorageRequest: Bool, response: WebServiceResponse) {
-        let response = response.convert(String.self)
+    func webServiceResponse(request: WebServiceBaseRequesting, isStorageRequest: Bool, response: WebServiceAnyResponse) {
+        guard let request = request as? SiteWebServiceRequest else { return }
         
+        let response = response.convert(request: request)
         switch response {
         case .data(let html):
             delegate?.webServiceResponse(request: request, isStorageRequest: isStorageRequest, html: html)

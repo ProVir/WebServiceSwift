@@ -11,17 +11,17 @@ import Foundation
 
 
 /// Conform to protocol if requests support store raw data.
-public protocol WebServiceRequestRawStorage: WebServiceRequesting {
+public protocol WebServiceRequestRawStorage: WebServiceBaseRequesting {
     
     ///Unique identificator for read and write data if current request support storage as raw data. May contain file type at the end.
-    func identificatorForRawStorage() -> String?
+    var identificatorForRawStorage: String? { get }
 }
 
 /// Conform to protocol if requests support store data.
-public protocol WebServiceRequestValueStorage: WebServiceRequesting {
+public protocol WebServiceRequestValueStorage: WebServiceBaseRequesting {
     
     ///Unique identificator for read and write data if current request support storage as custom data. May contain file type at the end.
-    func identificatorForValueStorage() -> String?
+    var identificatorForValueStorage: String? { get }
     
     /**
      Coding data from custom type to binary data.
@@ -96,13 +96,13 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
     
     
     // MARK: WebServiceStoraging
-    public func isSupportedRequestForStorage(_ request: WebServiceRequesting) -> Bool {
+    public func isSupportedRequestForStorage(_ request: WebServiceBaseRequesting) -> Bool {
         if let request = request as? WebServiceRequestRawStorage,
-            request.identificatorForRawStorage() != nil {
+            request.identificatorForRawStorage != nil {
             return true
         }
         else if let request = request as? WebServiceRequestValueStorage,
-            request.identificatorForValueStorage() != nil {
+            request.identificatorForValueStorage != nil {
             return true
         }
         else {
@@ -110,11 +110,11 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
         }
     }
     
-    public func readData(request: WebServiceRequesting, completionHandler: @escaping (Bool, WebServiceResponse) -> Void) throws {
+    public func readData(request: WebServiceBaseRequesting, completionHandler: @escaping (Bool, WebServiceAnyResponse) -> Void) throws {
         
         //Raw
         if let request = request as? WebServiceRequestRawStorage,
-            let identificator = request.identificatorForRawStorage() {
+            let identificator = request.identificatorForRawStorage {
             
             privateReadData(identificator: identificator, type: .raw, completionHandler: { (data, error) in
                 if let error = error {
@@ -131,7 +131,7 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
         
         //Custom
         if let request = request as? WebServiceRequestValueStorage,
-            let identificator = request.identificatorForValueStorage() {
+            let identificator = request.identificatorForValueStorage {
             
             privateReadData(identificator: identificator, type: .value, completionHandler: { binaryData, error in
                 if let error = error {
@@ -156,11 +156,11 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
         
     }
     
-    public func writeData(request: WebServiceRequesting, data: Any, isRaw: Bool) {
+    public func writeData(request: WebServiceBaseRequesting, data: Any, isRaw: Bool) {
         
         //Raw
         if isRaw, let request = request as? WebServiceRequestRawStorage,
-            let identificator = request.identificatorForRawStorage(),
+            let identificator = request.identificatorForRawStorage,
             let binaryData = data as? Data {
             
             privateWriteData(identificator: identificator, type: .raw, data: binaryData)
@@ -170,7 +170,7 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
         
         //Custom
         if !isRaw, let request = request as? WebServiceRequestValueStorage,
-            let identificator = request.identificatorForValueStorage(),
+            let identificator = request.identificatorForValueStorage,
             let binaryData = request.writeDataToStorage(value: data) {
             
             privateWriteData(identificator: identificator, type: .value, data: binaryData)

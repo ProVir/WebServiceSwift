@@ -8,6 +8,8 @@
 
 import Foundation
 
+
+
 /**
  WebService general error enum for requests
  
@@ -54,7 +56,7 @@ public enum WebServiceResponseError: Error {
  - `canceledRequest`: Reqest canceled (called `WebService.cancelRequest()` method for this request or group requests)
  - `duplicateRequest`: If `excludeDuplicateRequests == true` and this request contained in queue
  */
-public enum WebServiceTypeResponse<T> {
+public enum WebServiceResponse<T> {
     case data(T)
     case error(Error)
     case canceledRequest
@@ -95,9 +97,9 @@ public enum WebServiceTypeResponse<T> {
 
 
 /// WebService result response from engine without information for type
-public typealias WebServiceResponse = WebServiceTypeResponse<Any?>
+public typealias WebServiceAnyResponse = WebServiceResponse<Any?>
 
-extension WebServiceTypeResponse where T == Any? {
+extension WebServiceResponse where T == Any? {
     /// Data if success response
     public func dataResponse() -> Any? {
         switch self {
@@ -109,7 +111,7 @@ extension WebServiceTypeResponse where T == Any? {
 
 
 
-///Wrapper for WebServiceRequesting for use requestKey if WebServiceRequesting conform to Equatable, but don't conform Hashable.
+///Wrapper for WebServiceBaseRequesting for use requestKey if WebServiceBaseRequesting conform to Equatable, but don't conform Hashable.
 public struct WebServiceRequestKeyWrapper<T: Equatable>: Hashable {
     public let request: T
     public let hashValue: Int
@@ -122,17 +124,24 @@ public struct WebServiceRequestKeyWrapper<T: Equatable>: Hashable {
 
 
 
+
 ///Response from other type
-public extension WebServiceTypeResponse {
+public extension WebServiceResponse {
     
     ///Convert to response with other type data automatic.
-    func convert<T>() -> WebServiceTypeResponse<T> {
+    func convert<T>() -> WebServiceResponse<T> {
         return convert(T.self)
     }
     
     
+    ///Convert to response with type from request
+    func convert<RequestType: WebServiceRequesting>(request: RequestType) -> WebServiceResponse<RequestType.ResultType> {
+        return convert(RequestType.ResultType.self)
+    }
+    
+    
     ///Convert to response with concrete other type data.
-    func convert<T>(_ typeData: T.Type) -> WebServiceTypeResponse<T> {
+    func convert<T>(_ typeData: T.Type) -> WebServiceResponse<T> {
         switch self {
         case .data(let data):
             if let data = data as? T {

@@ -10,7 +10,7 @@ import Foundation
 
 
 //MARK: Mock Request
-public protocol WebServiceMockRequesting: WebServiceRequesting {
+public protocol WebServiceMockRequesting: WebServiceBaseRequesting {
     var isSupportedRequest:Bool { get }
     
     var timeWait:TimeInterval? { get }
@@ -49,11 +49,11 @@ public class WebServiceMockEngine: WebServiceEngining {
     
     public init() { }
     
-    public func isSupportedRequest(_ request: WebServiceRequesting, rawDataForRestoreFromStorage: Any?) -> Bool {
+    public func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataForRestoreFromStorage: Any?) -> Bool {
         return rawDataForRestoreFromStorage == nil && ((request as? WebServiceMockRequesting)?.isSupportedRequest ?? false)
     }
     
-    public func request(requestId: UInt64, request: WebServiceRequesting, completionWithData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void, canceled: @escaping () -> Void) {
+    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completionWithData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void, canceled: @escaping () -> Void) {
         
         guard let request = request as? WebServiceMockRequesting else {
             completionWithError(WebServiceRequestError.notSupportRequest)
@@ -100,7 +100,7 @@ public class WebServiceMockEngine: WebServiceEngining {
         }
     }
     
-    public func dataHandler(request: WebServiceRequesting, data: Any, isRawFromStorage: Bool) throws -> Any? {
+    public func dataHandler(request: WebServiceBaseRequesting, data: Any, isRawFromStorage: Bool) throws -> Any? {
         if isRawFromStorage { return nil }
         else if data is NSNull { return nil }
         else { return data }

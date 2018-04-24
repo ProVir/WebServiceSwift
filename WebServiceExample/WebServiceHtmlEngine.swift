@@ -11,7 +11,7 @@ import WebServiceSwift
 import Alamofire
 
 ///Base protocol for requests for get html data for URL.
-protocol WebServiceHtmlRequesting: WebServiceRequesting {
+protocol WebServiceHtmlRequesting: WebServiceBaseRequesting {
     var url: URL { get }
 }
 
@@ -25,14 +25,14 @@ class WebServiceHtmlEngine: WebServiceEngining {
     let useNetworkActivityIndicator = false
     
     
-    func isSupportedRequest(_ request: WebServiceRequesting, rawDataForRestoreFromStorage: Any?) -> Bool {
+    func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataForRestoreFromStorage: Any?) -> Bool {
         return request is WebServiceHtmlRequesting
     }
     
-    func request(requestId:UInt64, request:WebServiceRequesting,
-                 completionWithData:@escaping (_ data:Any) -> Void,
-                 completionWithError:@escaping (_ error:Error) -> Void,
-                 canceled:@escaping () -> Void) {
+    func performRequest(requestId:UInt64, request:WebServiceBaseRequesting,
+                        completionWithData:@escaping (_ data:Any) -> Void,
+                        completionWithError:@escaping (_ error:Error) -> Void,
+                        canceled:@escaping () -> Void) {
         
         guard let url = (request as? WebServiceHtmlRequesting)?.url else {
             completionWithError(WebServiceRequestError.notSupportRequest)
@@ -56,7 +56,7 @@ class WebServiceHtmlEngine: WebServiceEngining {
     }
     
     
-    func dataHandler(request:WebServiceRequesting, data:Any, isRawFromStorage:Bool) throws -> Any? {
+    func dataHandler(request:WebServiceBaseRequesting, data:Any, isRawFromStorage:Bool) throws -> Any? {
         guard request is WebServiceHtmlRequesting, let data = data as? Data else {
             throw WebServiceRequestError.notSupportDataHandler
         }

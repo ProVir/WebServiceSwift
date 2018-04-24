@@ -87,63 +87,36 @@ class ViewController: UIViewController {
         /*
             1. Use closure recommendation variant
         */
-//        siteWebProvider.requestHtmlData(site, dataFromStorage: { [weak self] html in
-//            self?.rawTextView.text = html
-//            self?.webView.loadHTMLString(html, baseURL: site.url)
-//
-//        }) { [weak self] response in
-//            switch response {
-//            case .data(let html):
-//                self?.rawTextView.text = html
-//                self?.webView.loadHTMLString(html, baseURL: site.url)
-//
-//            case .error(let error):
-//                let text = (error as NSError).localizedDescription
-//
-//                let alert = UIAlertController(title: "Error", message: text, preferredStyle: .alert)
-//                alert.addAction(UIAlertAction(title: "OK",
-//                                              style: .default,
-//                                              handler: nil))
-//
-//                self?.present(alert, animated: true, completion: nil)
-//
-//            case .canceledRequest, .duplicateRequest:
-//                break
-//            }
-//        }
-        
         /*
-            2. Use closure without SiteWebServiceProvider variant - as siteWebProvider: WebServiceProvider<SiteWebServiceRequest>
-        */
-//        siteWebProvider.request(site, dataFromStorage: { [weak self] (html:String) in
-//            self?.rawTextView.text = html
-//            self?.webView.loadHTMLString(html, baseURL: site.url)
-//
-//        }) { [weak self] (response: WebServiceTypeResponse<String>) in
-//            switch response {
-//            case .data(let html):
-//                self?.rawTextView.text = html
-//                self?.webView.loadHTMLString(html, baseURL: site.url)
-//
-//            case .error(let error):
-//                let text = (error as NSError).localizedDescription
-//
-//                let alert = UIAlertController(title: "Error", message: text, preferredStyle: .alert)
-//                alert.addAction(UIAlertAction(title: "OK",
-//                                              style: .default,
-//                                              handler: nil))
-//
-//                self?.present(alert, animated: true, completion: nil)
-//
-//            case .canceledRequest, .duplicateRequest:
-//                break
-//            }
-//        }
-        
+        siteWebProvider.requestHtmlData(site, dataFromStorage: { [weak self] html in
+            self?.rawTextView.text = html
+            self?.webView.loadHTMLString(html, baseURL: site.url)
+
+        }) { [weak self] response in
+            switch response {
+            case .data(let html):
+                self?.rawTextView.text = html
+                self?.webView.loadHTMLString(html, baseURL: site.url)
+
+            case .error(let error):
+                let text = (error as NSError).localizedDescription
+
+                let alert = UIAlertController(title: "Error", message: text, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "OK",
+                                              style: .default,
+                                              handler: nil))
+
+                self?.present(alert, animated: true, completion: nil)
+
+            case .canceledRequest, .duplicateRequest:
+                break
+            }
+        }
+ */
         
         
         /*
-            3. Use delegate
+            2. Use delegate
         */
         siteWebProvider.requestHtmlData(site, includeResponseStorage: true)
     }

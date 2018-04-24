@@ -9,10 +9,10 @@
 
 import Foundation
 
+//MARK: Requests
 
 /// Base protocol for all types request.
-public protocol WebServiceRequesting {
-    
+public protocol WebServiceBaseRequesting {
     /**
      Unique key for request or groups requests (Optional). Default: for Hashable Requests equal self Request, else without key (= nil).
      
@@ -26,20 +26,37 @@ public protocol WebServiceRequesting {
     var excludeDuplicate: Bool? { get }
 }
 
-public extension WebServiceRequesting {
+public protocol WebServiceRequesting: WebServiceBaseRequesting {
+    associatedtype ResultType
+
+    /**
+     Result type. Usually as constant. If use `enums`, you can `ResultType = Any` and return many `resultType`.
+     Default don't implementation (use `typealias ResultType`)
+     */
+    var resultType: ResultType.Type { get }
+}
+
+public extension WebServiceBaseRequesting {
     var requestKey: AnyHashable? { return nil }
     var excludeDuplicate: Bool? { return nil }
 }
 
-public extension WebServiceRequesting where Self: Equatable {
+public extension WebServiceBaseRequesting where Self: Equatable {
     var requestKey: AnyHashable? { return WebServiceRequestKeyWrapper(request: self) }
 }
 
-public extension WebServiceRequesting where Self: Hashable {
+public extension WebServiceBaseRequesting where Self: Hashable {
     var requestKey: AnyHashable? { return self }
 }
 
+public extension WebServiceRequesting {
+    var resultType: ResultType.Type { return ResultType.self }
+}
 
+
+
+
+//MARK: Internal - engines and storages
 
 /// Protocol for engines in WebService.
 public protocol WebServiceEngining: class {
@@ -68,7 +85,7 @@ public protocol WebServiceEngining: class {
         - rawDataForRestoreFromStorage: If no nil - request restore raw data from storage with data.
      - Returns: If request support this engine - return true.
      */
-    func isSupportedRequest(_ request:WebServiceRequesting, rawDataForRestoreFromStorage:Any?) -> Bool
+    func isSupportedRequest(_ request:WebServiceBaseRequesting, rawDataForRestoreFromStorage:Any?) -> Bool
     
     
     /**
@@ -85,10 +102,10 @@ public protocol WebServiceEngining: class {
         - error: Response as error.
         - canceled: Call after called method `cancelRequest()` if support this operation.
      */
-    func request(requestId:UInt64, request:WebServiceRequesting,
-                 completionWithData:@escaping (_ data:Any) -> Void,
-                 completionWithError:@escaping (_ error:Error) -> Void,
-                 canceled:@escaping () -> Void)
+    func performRequest(requestId:UInt64, request:WebServiceBaseRequesting,
+                        completionWithData:@escaping (_ data:Any) -> Void,
+                        completionWithError:@escaping (_ error:Error) -> Void,
+                        canceled:@escaping () -> Void)
     
     
     
@@ -117,7 +134,7 @@ public protocol WebServiceEngining: class {
      - Throws: Error proccess data from server to end data. Data from server (rawData) don't save to storage.
      - Returns: Result data for response. If == nil, data from server (rawData) don't save to storage.
      */
-    func dataHandler(request:WebServiceRequesting, data:Any, isRawFromStorage:Bool) throws -> Any?
+    func dataHandler(request:WebServiceBaseRequesting, data:Any, isRawFromStorage:Bool) throws -> Any?
 }
 
 
@@ -133,7 +150,7 @@ public protocol WebServiceStoraging: class {
      - request: Request for test.
      - Returns: If request support this storage - return true.
      */
-    func isSupportedRequestForStorage(_ request:WebServiceRequesting) -> Bool
+    func isSupportedRequestForStorage(_ request:WebServiceBaseRequesting) -> Bool
     
     
     /**
@@ -147,7 +164,7 @@ public protocol WebServiceStoraging: class {
      
      - Throws: Error request equivalent call `completionResponse(.error())` and not need call `completionResponse()`. The performance is higher with this error call.
      */
-    func readData(request:WebServiceRequesting, completionHandler:@escaping (_ isRawData:Bool, _ response:WebServiceResponse) -> Void) throws
+    func readData(request:WebServiceBaseRequesting, completionHandler:@escaping (_ isRawData:Bool, _ response:WebServiceAnyResponse) -> Void) throws
     
     
     /**
@@ -160,7 +177,7 @@ public protocol WebServiceStoraging: class {
         - data: Data for save. Type may be raw or after processed.
         - isRaw: Type data for save.
     */
-    func writeData(request:WebServiceRequesting, data:Any, isRaw:Bool)
+    func writeData(request:WebServiceBaseRequesting, data:Any, isRaw:Bool)
 }
 
 
