@@ -27,7 +27,7 @@ public extension WebServiceMockRequesting {
     var timeWait:TimeInterval? { return nil }
     
     var helperIdentifier:String? { return nil }
-    func createHelper(forIdentifier identifier:String) -> AnyObject? { return nil }
+    func createHelper(forIdentifier identifier:String) -> Any? { return nil }
 }
 
 

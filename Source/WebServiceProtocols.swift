@@ -54,6 +54,24 @@ public extension WebServiceRequesting {
 }
 
 
+//MARK: Provider
+
+/// Base protocol for providers
+public protocol WebServiceProvider {
+    init(webService: WebService)
+}
+
+/// Get request helper
+public extension WebService {
+    func getProvider<T: WebServiceProvider>() -> T {
+        return T.init(webService: self)
+    }
+    
+    func getProvider<T: WebServiceProvider>() -> T? {
+        return T.init(webService: self)
+    }
+}
+
 
 
 //MARK: Internal - engines and storages

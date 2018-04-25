@@ -8,19 +8,11 @@
 
 import Foundation
 
-public extension WebService {
-    
-    /// Get request helper
-    func getRequestProvider<RequestType: WebServiceRequesting>() -> WebServiceRequestProvider<RequestType> {
-        return WebServiceRequestProvider<RequestType>(webService: self)
-    }
-}
 
-
-public class WebServiceRequestProvider<RequestType: WebServiceRequesting> {
+public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebServiceProvider {
     private let service: WebService
     
-    public init(webService: WebService) {
+    public required init(webService: WebService) {
         self.service = webService
     }
     
@@ -135,6 +127,5 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting> {
     public func readStorage(_ request:WebServiceBaseRequesting) {
         service.readStorage(request, customDelegate: delegate)
     }
-    
     
 }

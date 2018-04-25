@@ -43,7 +43,7 @@ class SiteWebProvider: WebServiceDelegate {
     let requestProvider: WebServiceRequestProvider<SiteWebServiceRequest>
     
     init(webService: WebService) {
-        requestProvider = webService.getRequestProvider()
+        requestProvider = webService.getProvider()
         requestProvider.delegate = self
     }
     
