@@ -96,9 +96,8 @@ public class WebService {
     private let engines:[WebServiceEngining]
     private let storages:[WebServiceStoraging]
     
-    private var requestList = Dictionary<AnyHashable, Set<UInt64>>()
-    private var requestUseEngines = Dictionary<UInt64, WebServiceEngining>()
-    
+    private var requestList: [AnyHashable: Set<UInt64>] = [:]
+    private var requestUseEngines: [UInt64: WebServiceEngining] = [:]
     
     
     
@@ -140,6 +139,17 @@ public class WebService {
     }
     
     /**
+     Returns a Boolean value indicating whether the current queue contains the given requests.
+     
+     - Parameter requestKeyType: The type requestKey to find in the all current queue.
+     - Returns: `true` if one request with requestKey.Type was found in the current queue; otherwise, `false`.
+     */
+    public func containsRequest<T: Hashable>(requestKeyType: T.Type) -> Bool {
+        return (internalListRequest(requestKeyType: requestKeyType, onlyFirst: true)?.count ?? 0) > 0
+    }
+    
+    
+    /**
      Cancel all requests with equal this request.
      
      Signal cancel send to engine, but real canceled implementation in engine.
@@ -159,27 +169,30 @@ public class WebService {
      */
     public func cancelRequest(requestKey:AnyHashable?) {
         if let list = internalListRequest(requestKey: requestKey) {
-            for requestId in list {
-                if let engine = mutex.synchronized({ self.requestUseEngines[requestId] }) {
-                    
-                    //Cancel in queue
-                    if let queue = engine.queueForRequest {
-                        queue.async {
-                            engine.cancelRequest(requestId: requestId)
-                        }
-                    } else {
-                        //Or in current thread
-                        engine.cancelRequest(requestId: requestId)
-                    }
-                    
-                }
-            }
+            internalCancelRequests(ids: list)
         }
     }
     
-    /// Cancel all requests in current queue.
-    ///
-    /// Signal cancel send to engine, but real canceled implementation in engine.
+    
+    /**
+     Cancel all requests with requestKey.Type.
+     
+     Signal cancel send to engine, but real canceled implementation in engine.
+     
+     - Parameter requestKeyType: The requestKey.Type to find in the current queue.
+     */
+    public func cancelRequest<T: Hashable>(requestKeyType: T.Type) {
+        if let list = internalListRequest(requestKeyType: requestKeyType, onlyFirst: false) {
+            internalCancelRequests(ids: list)
+        }
+    }
+    
+    
+    /**
+     Cancel all requests in current queue.
+ 
+     Signal cancel send to engine, but real canceled implementation in engine.
+     */
     public func cancelAllRequests() {
         var allList = Set<UInt64>()
         
@@ -189,21 +202,28 @@ public class WebService {
             }
         }
         
-        for requestId in allList {
-            if let engine = mutex.synchronized({ self.requestUseEngines[requestId] }) {
-                
-                //Cancel in queue
-                if let queue = engine.queueForRequest {
-                    queue.async {
-                        engine.cancelRequest(requestId: requestId)
-                    }
-                } else {
-                    //Or in current thread
-                    engine.cancelRequest(requestId: requestId)
-                }
-                
+        internalCancelRequests(ids: allList)
+    }
+    
+    /**
+     List all requestKey in current queue for Type
+     
+     - Parameter type: The requestKey.Type to find in the current queue.
+     - Returns: list requestKeys for Type
+     */
+    public func allRequestKeys<T: Hashable>(type: T.Type = T.self) -> [T] {
+        mutex.lock()
+        defer { mutex.unlock() }
+        
+        var list = [T]()
+        
+        for requestKey in requestList.keys {
+            if let key = requestKey.base as? T {
+                list.append(key)
             }
         }
+        
+        return list
     }
     
     
@@ -603,6 +623,41 @@ public class WebService {
         return requestList[key]
     }
     
+    private func internalListRequest<T: Hashable>(requestKeyType:T.Type, onlyFirst: Bool) -> Set<UInt64>? {
+        mutex.lock()
+        defer { mutex.unlock() }
+        
+        var ids = Set<UInt64>()
+        
+        for (requestKey, requestIds) in requestList {
+            if requestKey.base is T {
+                if onlyFirst {
+                    return requestIds
+                } else {
+                    ids.formUnion(requestIds)
+                }
+            }
+        }
+        
+        return ids.isEmpty ? nil : ids
+    }
+    
+    private func internalCancelRequests(ids: Set<UInt64>) {
+        for requestId in ids {
+            if let engine = mutex.synchronized({ self.requestUseEngines[requestId] }) {
+                
+                //Cancel in queue
+                if let queue = engine.queueForRequest {
+                    queue.async {
+                        engine.cancelRequest(requestId: requestId)
+                    }
+                } else {
+                    //Or in current thread
+                    engine.cancelRequest(requestId: requestId)
+                }
+            }
+        }
+    }
     
     private struct EmptyKey: Hashable {
         var hashValue: Int { return 0 }
