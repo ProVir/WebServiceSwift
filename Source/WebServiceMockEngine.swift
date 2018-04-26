@@ -49,8 +49,8 @@ public class WebServiceMockEngine: WebServiceEngining {
     
     public init() { }
     
-    public func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataForRestoreFromStorage: Any?) -> Bool {
-        return rawDataForRestoreFromStorage == nil && ((request as? WebServiceMockRequesting)?.isSupportedRequest ?? false)
+    public func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
+        return rawDataTypeForRestoreFromStorage == nil && ((request as? WebServiceMockRequesting)?.isSupportedRequest ?? false)
     }
     
     public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completionWithData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void, canceled: @escaping () -> Void) {

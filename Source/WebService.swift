@@ -496,7 +496,7 @@ public class WebService {
         do {
             try storage.readData(request: request) { [weak self, queueForResponse = self.queueForResponse] isRawData, response in
                 if isRawData, let rawData = response.dataResponse() {
-                    if let engine = self?.internalFindEngine(request: request, rawDataForRestoreFromStorage: rawData) {
+                    if let engine = self?.internalFindEngine(request: request, rawDataTypeForRestoreFromStorage: type(of: rawData)) {
                         
                         let handler = {
                             do {
@@ -541,9 +541,9 @@ public class WebService {
     
     
     // MARK: Find engines and storages
-    private func internalFindEngine(request:WebServiceBaseRequesting, rawDataForRestoreFromStorage:Any? = nil) -> WebServiceEngining? {
+    private func internalFindEngine(request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type? = nil) -> WebServiceEngining? {
         for engine in self.engines {
-            if engine.isSupportedRequest(request, rawDataForRestoreFromStorage: rawDataForRestoreFromStorage) {
+            if engine.isSupportedRequest(request, rawDataTypeForRestoreFromStorage: rawDataTypeForRestoreFromStorage) {
                 return engine
             }
         }

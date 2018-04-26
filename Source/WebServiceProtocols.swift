@@ -100,10 +100,10 @@ public protocol WebServiceEngining: class {
      
      - Parameters:
         - request: Request for test.
-        - rawDataForRestoreFromStorage: If no nil - request restore raw data from storage with data.
+        - rawDataTypeForRestoreFromStorage: If no nil - request restore raw data from storage with data.
      - Returns: If request support this engine - return true.
      */
-    func isSupportedRequest(_ request:WebServiceBaseRequesting, rawDataForRestoreFromStorage:Any?) -> Bool
+    func isSupportedRequest(_ request:WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage:Any.Type?) -> Bool
     
     
     /**
