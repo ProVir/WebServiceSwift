@@ -87,7 +87,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
         - dataFromStorage: Optional. Closure for read data from storage. if read data after data from server - cloure not call. If `closure == nil`, data not read from storage.
         - completionResponse: Optional. Closure for response result from server.
      */
-    public func performRequest<RequestType: WebServiceRequesting>(_ request:RequestType, dataFromStorage:((_ data:RequestType.ResultType) -> Void)? = nil, completionResponse:@escaping (_ response:WebServiceResponse<RequestType.ResultType>) -> Void) {
+    public func performRequest(_ request:RequestType, dataFromStorage:((_ data:RequestType.ResultType) -> Void)? = nil, completionResponse:@escaping (_ response:WebServiceResponse<RequestType.ResultType>) -> Void) {
         service.performRequest(request, dataFromStorage: dataFromStorage, completionResponse: completionResponse)
     }
     
@@ -100,7 +100,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
         - completionResponse: Closure for read data from storage.
         - response: result read from storage.
      */
-    public func readStorage<RequestType: WebServiceRequesting>(_ request:RequestType, completionResponse:@escaping (_ response:WebServiceResponse<RequestType.ResultType>) -> Void) {
+    public func readStorage(_ request:RequestType, completionResponse:@escaping (_ response:WebServiceResponse<RequestType.ResultType>) -> Void) {
         service.readStorage(request, completionResponse: completionResponse)
     }
     
@@ -114,7 +114,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
         - request: The request data.
         - includeResponseStorage: `true` if need read data from storage. if read data after data from server - delegate not call. Default: false.
      */
-    public func performRequest(_ request:WebServiceBaseRequesting, includeResponseStorage:Bool = false) {
+    public func performRequest(_ request: RequestType, includeResponseStorage:Bool = false) {
         service.performRequest(request, includeResponseStorage: includeResponseStorage, customDelegate: delegate)
     }
     
@@ -124,7 +124,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
      
      - Parameter request: The request data.
      */
-    public func readStorage(_ request:WebServiceBaseRequesting) {
+    public func readStorage(_ request: RequestType) {
         service.readStorage(request, customDelegate: delegate)
     }
     
