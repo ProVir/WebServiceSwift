@@ -18,14 +18,12 @@ protocol WebServiceHtmlRequesting: WebServiceBaseRequesting {
 
 ///Engine for get html data for URL.
 class WebServiceHtmlEngine: WebServiceEngining {
-    
     let queueForRequest:DispatchQueue? = DispatchQueue.global(qos: .background)
     let queueForDataHandler:DispatchQueue? = nil
     let queueForDataHandlerFromStorage:DispatchQueue? = DispatchQueue.global(qos: .default)
     let useNetworkActivityIndicator = false
     
-    
-    func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataForRestoreFromStorage: Any?) -> Bool {
+    func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
         return request is WebServiceHtmlRequesting
     }
     
@@ -49,12 +47,8 @@ class WebServiceHtmlEngine: WebServiceEngining {
             }
         }
     }
-
     
-    func cancelRequest(requestId: UInt64) {
-        
-    }
-    
+    func cancelRequest(requestId: UInt64) { /* Don't support */ }
     
     func dataHandler(request:WebServiceBaseRequesting, data:Any, isRawFromStorage:Bool) throws -> Any? {
         guard request is WebServiceHtmlRequesting, let data = data as? Data else {
@@ -63,6 +57,5 @@ class WebServiceHtmlEngine: WebServiceEngining {
 
         return String(data: data, encoding: .utf8) ?? String(data: data, encoding: .windowsCP1251)
     }
-    
 }
 

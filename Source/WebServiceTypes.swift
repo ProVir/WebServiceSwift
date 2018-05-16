@@ -3,12 +3,11 @@
 //  WebServiceSwift 2.2.0
 //
 //  Created by ViR (Короткий Виталий) on 16.04.2018.
+//  Updated to 2.2.0 by ViR (Короткий Виталий) on 16.05.2018.
 //  Copyright © 2018 ProVir. All rights reserved.
 //
 
 import Foundation
-
-
 
 /**
  WebService general error enum for requests
@@ -25,7 +24,6 @@ public enum WebServiceRequestError: Error {
     case notSupportRequest
     case notSupportDataHandler
 }
-
 
 /**
  WebService general error enum for response
@@ -44,9 +42,6 @@ public enum WebServiceResponseError: Error {
     /// Code + data
     case general(Int, Any?)
 }
-
-
-
 
 /**
  WebService result response for concrete type from engine
@@ -79,7 +74,7 @@ public enum WebServiceResponse<T> {
     }
     
     /// Is canceled request
-    public var isCanceled:Bool {
+    public var isCanceled: Bool {
         switch self {
         case .canceledRequest: return true
         default: return false
@@ -87,14 +82,13 @@ public enum WebServiceResponse<T> {
     }
     
     /// Error duplicate for request
-    public var isDuplicateError:Bool {
+    public var isDuplicateError: Bool {
         switch self {
         case .duplicateRequest: return true
         default: return false
         }
     }
 }
-
 
 /// WebService result response from engine without information for type
 public typealias WebServiceAnyResponse = WebServiceResponse<Any?>
@@ -109,8 +103,6 @@ extension WebServiceResponse where T == Any? {
     }
 }
 
-
-
 ///Wrapper for WebServiceBaseRequesting for use requestKey if WebServiceBaseRequesting conform to Equatable, but don't conform Hashable.
 public struct WebServiceRequestKeyWrapper<T: Equatable>: Hashable {
     public let request: T
@@ -122,9 +114,6 @@ public struct WebServiceRequestKeyWrapper<T: Equatable>: Hashable {
     }
 }
 
-
-
-
 ///Response from other type
 public extension WebServiceResponse {
     
@@ -133,12 +122,10 @@ public extension WebServiceResponse {
         return convert(T.self)
     }
     
-    
     ///Convert to response with type from request
     func convert<RequestType: WebServiceRequesting>(request: RequestType) -> WebServiceResponse<RequestType.ResultType> {
         return convert(RequestType.ResultType.self)
     }
-    
     
     ///Convert to response with concrete other type data.
     func convert<T>(_ typeData: T.Type) -> WebServiceResponse<T> {

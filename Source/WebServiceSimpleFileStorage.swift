@@ -3,7 +3,7 @@
 //  WebServiceSwift 2.2.0
 //
 //  Created by ViR (Короткий Виталий) on 29.07.17.
-//  Updated to 2.2.0 by ViR (Короткий Виталий) on 20.04.2018.
+//  Updated to 2.2.0 by ViR (Короткий Виталий) on 16.05.2018.
 //  Copyright © 2017 ProVir. All rights reserved.
 //
 
@@ -29,7 +29,7 @@ public protocol WebServiceRequestValueStorage: WebServiceBaseRequesting {
      - Parameter value: Data with type from response.
      - Results: Binary data after coding if supported.
      */
-    func writeDataToStorage(value:Any) -> Data?
+    func writeDataToStorage(value: Any) -> Data?
     
     /**
      Decoding data from binary data to custom type.
@@ -37,7 +37,7 @@ public protocol WebServiceRequestValueStorage: WebServiceBaseRequesting {
      - Parameter data: Binary data from disk.
      - Results: Custom type after decoding if supported.
      */
-    func readDataFromStorage(data:Data) throws -> Any?
+    func readDataFromStorage(data: Data) throws -> Any?
 }
 
 
@@ -49,11 +49,9 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
         case value
     }
     
-    
-    private let fileWorkDispatchQueue:DispatchQueue
-    private let filesDir:URL
-    private let prefixNameFiles:String
-    
+    private let fileWorkDispatchQueue: DispatchQueue
+    private let filesDir: URL
+    private let prefixNameFiles: String
     
     // MARK: Constructors
     
@@ -64,7 +62,7 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
         - filesDir: Directory for store data.
         - prefixNameFiles: Prefix in name files for all data on disk in this store.
      */
-    public init(filesDir:URL, prefixNameFiles:String) {
+    public init(filesDir: URL, prefixNameFiles: String) {
         fileWorkDispatchQueue = DispatchQueue(label: "ru.provir.WebServiceSimpleFileStorage.fileWork",
                                               qos: .default)
         
@@ -77,7 +75,7 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
      
      - Parameter prefixNameFiles: Prefix in name files for all data on disk in this store.
      */
-    public convenience init?(prefixNameFiles:String) {
+    public convenience init?(prefixNameFiles: String) {
         guard let filesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else {
             return nil
         }
@@ -100,18 +98,17 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
         if let request = request as? WebServiceRequestRawStorage,
             request.identificatorForRawStorage != nil {
             return true
-        }
-        else if let request = request as? WebServiceRequestValueStorage,
+            
+        } else if let request = request as? WebServiceRequestValueStorage,
             request.identificatorForValueStorage != nil {
             return true
-        }
-        else {
+            
+        } else {
             return false
         }
     }
     
     public func readData(request: WebServiceBaseRequesting, completionHandler: @escaping (Bool, WebServiceAnyResponse) -> Void) throws {
-        
         //Raw
         if let request = request as? WebServiceRequestRawStorage,
             let identificator = request.identificatorForRawStorage {
@@ -119,71 +116,56 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
             privateReadData(identificator: identificator, type: .raw, completionHandler: { (data, error) in
                 if let error = error {
                     completionHandler(true, .error(error))
-                }
-                else {
+                } else {
                     completionHandler(true, .data(data))
                 }
             })
-            
-            return
         }
         
-        
         //Custom
-        if let request = request as? WebServiceRequestValueStorage,
+        else if let request = request as? WebServiceRequestValueStorage,
             let identificator = request.identificatorForValueStorage {
             
             privateReadData(identificator: identificator, type: .value, completionHandler: { binaryData, error in
                 if let error = error {
                     completionHandler(false, .error(error))
-                }
-                else if let binaryData = binaryData {
+                    
+                } else if let binaryData = binaryData {
                     do {
                         let data = try request.readDataFromStorage(data: binaryData)
                         completionHandler(false, .data(data))
-                    }
-                    catch {
+                    } catch {
                         completionHandler(false, .error(error))
                     }
-                }
-                else {
+                    
+                } else {
                     completionHandler(false, .data(nil))
                 }
             })
-            
-            return
         }
-        
     }
     
     public func writeData(request: WebServiceBaseRequesting, data: Any, isRaw: Bool) {
-        
         //Raw
         if isRaw, let request = request as? WebServiceRequestRawStorage,
             let identificator = request.identificatorForRawStorage,
             let binaryData = data as? Data {
             
             privateWriteData(identificator: identificator, type: .raw, data: binaryData)
-            return
         }
         
-        
         //Custom
-        if !isRaw, let request = request as? WebServiceRequestValueStorage,
+        else if !isRaw, let request = request as? WebServiceRequestValueStorage,
             let identificator = request.identificatorForValueStorage,
             let binaryData = request.writeDataToStorage(value: data) {
             
             privateWriteData(identificator: identificator, type: .value, data: binaryData)
-            return
         }
     }
-    
-    
-    
+
     //MARK: Storage private
-    private func privateReadData(identificator:String, type:FormatType, completionHandler: @escaping (Data?, Error?) -> Void) {
+    private func privateReadData(identificator: String, type: FormatType, completionHandler: @escaping (Data?, Error?) -> Void) {
         let url = filesDir.appendingPathComponent("\(prefixNameFiles)_\(type.rawValue)_\(identificator)")
-        
         
         fileWorkDispatchQueue.async {
             do {
@@ -200,12 +182,11 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
         }
     }
     
-    private func privateWriteData(identificator:String, type:FormatType, data:Data) {
+    private func privateWriteData(identificator: String, type: FormatType, data: Data) {
         let url = filesDir.appendingPathComponent("\(prefixNameFiles)_\(type.rawValue)_\(identificator)")
         
         fileWorkDispatchQueue.async {
             try? data.write(to: url, options: .atomicWrite)
         }
     }
-    
 }

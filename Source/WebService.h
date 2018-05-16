@@ -1,9 +1,9 @@
 //
 //  WebService.h
-//  WebServiceSwift 2.1.0
+//  WebServiceSwift 2.2.0
 //
 //  Created by ViR (Короткий Виталий) on 24.08.17.
-//  Updated to 2.1 by ViR (Короткий Виталий) on 27.08.17.
+//  Updated to 2.2.0 by ViR (Короткий Виталий) on 16.05.18.
 //  Copyright © 2017 ProVir. All rights reserved.
 //
 

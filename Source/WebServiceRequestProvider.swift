@@ -1,14 +1,15 @@
 //
 //  WebServiceRequestProvider.swift
-//  WebServiceExample
+//  WebServiceSwift 2.2.0
 //
-//  Created by Короткий Виталий on 24.04.2018.
+//  Created by ViR (Короткий Виталий) on 24.04.2018.
+//  Updated to 2.2.0 by ViR (Короткий Виталий) on 16.05.2018.
 //  Copyright © 2018 ProVir. All rights reserved.
 //
 
 import Foundation
 
-
+/// Provider for single request type.
 public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebServiceProvider {
     private let service: WebService
     
@@ -28,7 +29,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
      - Parameter request: The request to find in the current queue.
      - Returns: `true` if the request was found in the current queue; otherwise, `false`.
      */
-    public func containsRequest(request:RequestType) -> Bool {
+    public func containsRequest(request: RequestType) -> Bool {
         return service.containsRequest(request: request)
     }
     
@@ -38,7 +39,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
      - Parameter requestKey: The requestKey to find in the current queue.
      - Returns: `true` if the request with requestKey was found in the current queue; otherwise, `false`.
      */
-    public func containsRequest(requestKey:AnyHashable?) -> Bool {
+    public func containsRequest(requestKey: AnyHashable?) -> Bool {
         return service.containsRequest(requestKey: requestKey)
     }
     
@@ -49,10 +50,9 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
      
      - Parameter request: The request to find in the current queue.
      */
-    public func cancelRequest(request:RequestType) {
+    public func cancelRequest(request: RequestType) {
         service.cancelRequest(request: request)
     }
-    
     
     /**
      Cancel all requests with requestKey.
@@ -61,7 +61,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
      
      - Parameter requestKey: The requestKey to find in the current queue.
      */
-    public func cancelRequest(requestKey:AnyHashable?) {
+    public func cancelRequest(requestKey: AnyHashable?) {
         service.cancelRequest(requestKey: requestKey)
     }
     
@@ -76,7 +76,6 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
     }
     
     
-    
     // MARK: Requests with closure
     
     /**
@@ -87,10 +86,9 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
         - dataFromStorage: Optional. Closure for read data from storage. if read data after data from server - cloure not call. If `closure == nil`, data not read from storage.
         - completionResponse: Optional. Closure for response result from server.
      */
-    public func performRequest(_ request:RequestType, dataFromStorage:((_ data:RequestType.ResultType) -> Void)? = nil, completionResponse:@escaping (_ response:WebServiceResponse<RequestType.ResultType>) -> Void) {
+    public func performRequest(_ request: RequestType, dataFromStorage: ((_ data: RequestType.ResultType) -> Void)? = nil, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
         service.performRequest(request, dataFromStorage: dataFromStorage, completionResponse: completionResponse)
     }
-    
     
     /**
      Request for only storage. Response result in closure.
@@ -100,7 +98,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
         - completionResponse: Closure for read data from storage.
         - response: result read from storage.
      */
-    public func readStorage(_ request:RequestType, completionResponse:@escaping (_ response:WebServiceResponse<RequestType.ResultType>) -> Void) {
+    public func readStorage(_ request: RequestType, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
         service.readStorage(request, completionResponse: completionResponse)
     }
     
@@ -114,10 +112,9 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
         - request: The request data.
         - includeResponseStorage: `true` if need read data from storage. if read data after data from server - delegate not call. Default: false.
      */
-    public func performRequest(_ request: RequestType, includeResponseStorage:Bool = false) {
+    public func performRequest(_ request: RequestType, includeResponseStorage: Bool = false) {
         service.performRequest(request, includeResponseStorage: includeResponseStorage, customDelegate: delegate)
     }
-    
     
     /**
      Request for only storage. Response result for delegate in helper or `WebService.delegate`.
@@ -127,5 +124,4 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
     public func readStorage(_ request: RequestType) {
         service.readStorage(request, customDelegate: delegate)
     }
-    
 }

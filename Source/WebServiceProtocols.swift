@@ -3,7 +3,7 @@
 //  WebServiceSwift 2.2.0
 //
 //  Created by ViR (Короткий Виталий) on 14.06.2017.
-//  Updated to 2.2.0 by ViR (Короткий Виталий) on 17.04.2018.
+//  Updated to 2.2.0 by ViR (Короткий Виталий) on 16.05.2018.
 //  Copyright © 2017 ProVir. All rights reserved.
 //
 
@@ -26,12 +26,13 @@ public protocol WebServiceBaseRequesting {
     var excludeDuplicate: Bool? { get }
 }
 
+/// Generic protocol for all types request.
 public protocol WebServiceRequesting: WebServiceBaseRequesting {
     associatedtype ResultType
 
     /**
-     Result type. Usually as constant. If use `enums`, you can `ResultType = Any` and return many `resultType`.
-     Default don't implementation (use `typealias ResultType`)
+     Result type. Usually as constant. If use `enums` with different result types, you can `ResultType = Any` and return many `resultType`.
+     Default don't need implementation (only use `typealias ResultType = *SomeType*`)
      */
     var resultType: ResultType.Type { get }
 }
@@ -61,36 +62,32 @@ public protocol WebServiceProvider {
     init(webService: WebService)
 }
 
-/// Get request helper
 public extension WebService {
+    /// Create provider with this WebService
     func getProvider<T: WebServiceProvider>() -> T {
-        return T.init(webService: self)
-    }
-    
-    func getProvider<T: WebServiceProvider>() -> T? {
         return T.init(webService: self)
     }
 }
 
 
-
-//MARK: Internal - engines and storages
+//MARK: Public Internal - engines and storages
 
 /// Protocol for engines in WebService.
 public protocol WebServiceEngining: class {
     
     /// Thread Dispatch Queue for `request()` and `cancelRequest()` methods.
-    var queueForRequest:DispatchQueue? { get }
+    var queueForRequest: DispatchQueue? { get }
     
     /// Thread Dispatch Queue for `dataHandler()` method with data from `request()` method.
-    var queueForDataHandler:DispatchQueue? { get }
+    var queueForDataHandler: DispatchQueue? { get }
     
     /// Thread Dispatch Queue for `dataHandler()` method with data from store.
-    var queueForDataHandlerFromStorage:DispatchQueue? { get }
+    var queueForDataHandlerFromStorage: DispatchQueue? { get }
     
+    #if os(iOS)
     /// When `true`, showed networkActivityIndicator in statusBar when requests in process.
-    var useNetworkActivityIndicator:Bool { get }
-    
+    var useNetworkActivityIndicator: Bool { get }
+    #endif
     
     
     /**
@@ -103,7 +100,7 @@ public protocol WebServiceEngining: class {
         - rawDataTypeForRestoreFromStorage: If no nil - request restore raw data from storage with data.
      - Returns: If request support this engine - return true.
      */
-    func isSupportedRequest(_ request:WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage:Any.Type?) -> Bool
+    func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool
     
     
     /**
@@ -120,10 +117,10 @@ public protocol WebServiceEngining: class {
         - error: Response as error.
         - canceled: Call after called method `cancelRequest()` if support this operation.
      */
-    func performRequest(requestId:UInt64, request:WebServiceBaseRequesting,
-                        completionWithData:@escaping (_ data:Any) -> Void,
-                        completionWithError:@escaping (_ error:Error) -> Void,
-                        canceled:@escaping () -> Void)
+    func performRequest(requestId: UInt64, request: WebServiceBaseRequesting,
+                        completionWithData: @escaping (_ data:Any) -> Void,
+                        completionWithError: @escaping (_ error:Error) -> Void,
+                        canceled: @escaping () -> Void)
     
     
     
@@ -134,7 +131,7 @@ public protocol WebServiceEngining: class {
  
      - Parameter requestId: Id for canceled.
     */
-    func cancelRequest(requestId:UInt64)
+    func cancelRequest(requestId: UInt64)
     
     
     /**
@@ -152,7 +149,7 @@ public protocol WebServiceEngining: class {
      - Throws: Error proccess data from server to end data. Data from server (rawData) don't save to storage.
      - Returns: Result data for response. If == nil, data from server (rawData) don't save to storage.
      */
-    func dataHandler(request:WebServiceBaseRequesting, data:Any, isRawFromStorage:Bool) throws -> Any?
+    func dataHandler(request: WebServiceBaseRequesting, data: Any, isRawFromStorage: Bool) throws -> Any?
 }
 
 
@@ -168,7 +165,7 @@ public protocol WebServiceStoraging: class {
      - request: Request for test.
      - Returns: If request support this storage - return true.
      */
-    func isSupportedRequestForStorage(_ request:WebServiceBaseRequesting) -> Bool
+    func isSupportedRequestForStorage(_ request: WebServiceBaseRequesting) -> Bool
     
     
     /**
@@ -182,7 +179,7 @@ public protocol WebServiceStoraging: class {
      
      - Throws: Error request equivalent call `completionResponse(.error())` and not need call `completionResponse()`. The performance is higher with this error call.
      */
-    func readData(request:WebServiceBaseRequesting, completionHandler:@escaping (_ isRawData:Bool, _ response:WebServiceAnyResponse) -> Void) throws
+    func readData(request: WebServiceBaseRequesting, completionHandler: @escaping (_ isRawData: Bool, _ response: WebServiceAnyResponse) -> Void) throws
     
     
     /**
@@ -195,7 +192,7 @@ public protocol WebServiceStoraging: class {
         - data: Data for save. Type may be raw or after processed.
         - isRaw: Type data for save.
     */
-    func writeData(request:WebServiceBaseRequesting, data:Any, isRaw:Bool)
+    func writeData(request: WebServiceBaseRequesting, data: Any, isRaw: Bool)
 }
 
 

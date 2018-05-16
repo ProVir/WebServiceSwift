@@ -16,12 +16,12 @@ extension WebService {
     convenience init() {
         let engine = WebServiceHtmlEngine()
         
-        var storages:[WebServiceStoraging] = []
+        var storages: [WebServiceStoraging] = []
         if let storage = WebServiceSimpleFileStorage() {
             storages.append(storage)
         }
         
-        self.init(engines: [engine], storages:storages)
+        self.init(engines: [engine], storages: storages)
     }
     
     static var `default`: WebService {

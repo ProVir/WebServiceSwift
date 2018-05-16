@@ -3,18 +3,15 @@
 //  WebServiceSwift 2.2.0
 //
 //  Created by ViR (Короткий Виталий) on 14.06.2017.
-//  Updated to 2.2.0 by ViR (Короткий Виталий) on 18.04.2018.
+//  Updated to 2.2.0 by ViR (Короткий Виталий) on 16.05.2018.
 //  Copyright © 2017 ProVir. All rights reserved.
 //
-
-
 
 import Foundation
 
 #if os(iOS)
 import UIKit
 #endif
-
 
 /// WebService Delegate for responses
 public protocol WebServiceDelegate: class {
@@ -27,7 +24,7 @@ public protocol WebServiceDelegate: class {
         - isStorageRequest: Bool flag - response from storage or server
         - response: Response enum with results
      */
-    func webServiceResponse(request:WebServiceBaseRequesting, isStorageRequest:Bool, response:WebServiceAnyResponse)
+    func webServiceResponse(request: WebServiceBaseRequesting, isStorageRequest: Bool, response: WebServiceAnyResponse)
 }
 
 
@@ -42,9 +39,9 @@ public class WebService {
         - storages: All sorted storages that support all requests.
         - queueForResponse: Dispatch Queue for results response. Thread for public method call and queueForResponse recommended be equal. Default: main thread.
     */
-    public init(engines:[WebServiceEngining],
-                storages:[WebServiceStoraging],
-                queueForResponse:DispatchQueue = DispatchQueue.main) {
+    public init(engines: [WebServiceEngining],
+                storages: [WebServiceStoraging],
+                queueForResponse: DispatchQueue = DispatchQueue.main) {
         
         self.engines = engines
         self.storages = storages
@@ -62,15 +59,12 @@ public class WebService {
             }
         }
         
-        
         //Cancel all requests for engine
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             for (requestId, engine) in requestUseEngines {
                 //Cancel in queue
                 if let queue = engine.queueForRequest {
-                    queue.async {
-                        engine.cancelRequest(requestId: requestId)
-                    }
+                    queue.async { engine.cancelRequest(requestId: requestId) }
                 } else {
                     //Or in main thread
                     engine.cancelRequest(requestId: requestId)
@@ -78,7 +72,6 @@ public class WebService {
             }
         }
     }
-    
     
     //MARK: Private data
     private static var staticMutex = PThreadMutexLock()
@@ -93,13 +86,11 @@ public class WebService {
         }
     }
     
-    private let engines:[WebServiceEngining]
-    private let storages:[WebServiceStoraging]
+    private let engines: [WebServiceEngining]
+    private let storages: [WebServiceStoraging]
     
     private var requestList: [AnyHashable: Set<UInt64>] = [:]
     private var requestUseEngines: [UInt64: WebServiceEngining] = [:]
-    
-    
     
     
     // MARK: Settings
@@ -111,10 +102,9 @@ public class WebService {
     public var excludeDuplicateRequestsDefault = false
     
     /// Call response closures and delegates in dispath queue. Default: main thread.
-    public let queueForResponse:DispatchQueue
+    public let queueForResponse: DispatchQueue
     
-    
-    
+
     
     // MARK: Control requests
     
@@ -124,7 +114,7 @@ public class WebService {
      - Parameter request: The request to find in the current queue.
      - Returns: `true` if the request was found in the current queue; otherwise, `false`.
      */
-    public func containsRequest(request:WebServiceBaseRequesting) -> Bool {
+    public func containsRequest(request: WebServiceBaseRequesting) -> Bool {
         return containsRequest(requestKey: request.requestKey)
     }
     
@@ -134,8 +124,8 @@ public class WebService {
      - Parameter requestKey: The requestKey to find in the current queue.
      - Returns: `true` if the request with requestKey was found in the current queue; otherwise, `false`.
      */
-    public func containsRequest(requestKey:AnyHashable?) -> Bool {
-        return (internalListRequest(requestKey:requestKey)?.count ?? 0) > 0
+    public func containsRequest(requestKey: AnyHashable?) -> Bool {
+        return (internalListRequest(requestKey: requestKey)?.count ?? 0) > 0
     }
     
     /**
@@ -156,7 +146,7 @@ public class WebService {
      
      - Parameter request: The request to find in the current queue.
      */
-    public func cancelRequest(request:WebServiceBaseRequesting) {
+    public func cancelRequest(request: WebServiceBaseRequesting) {
         cancelRequest(requestKey: request.requestKey)
     }
     
@@ -167,12 +157,11 @@ public class WebService {
      
      - Parameter requestKey: The requestKey to find in the current queue.
      */
-    public func cancelRequest(requestKey:AnyHashable?) {
+    public func cancelRequest(requestKey: AnyHashable?) {
         if let list = internalListRequest(requestKey: requestKey) {
             internalCancelRequests(ids: list)
         }
     }
-    
     
     /**
      Cancel all requests with requestKey.Type.
@@ -186,8 +175,7 @@ public class WebService {
             internalCancelRequests(ids: list)
         }
     }
-    
-    
+
     /**
      Cancel all requests in current queue.
  
@@ -237,16 +225,14 @@ public class WebService {
         - dataFromStorage: Optional. Closure for read data from storage. if read data after data from server - cloure not call. If `closure == nil`, data not read from storage.
         - completionResponse: Optional. Closure for response result from server.
      */
-    public func performRequest(_ request:WebServiceBaseRequesting, dataFromStorage:((_ data:Any) -> Void)? = nil, completionResponse:@escaping (_ response:WebServiceAnyResponse) -> Void) {
+    public func performRequest(_ request: WebServiceBaseRequesting, dataFromStorage: ((_ data:Any) -> Void)? = nil, completionResponse: @escaping (_ response: WebServiceAnyResponse) -> Void) {
         let requestKey = request.requestKey
-        
         
         //Duplicate requests
         if requestKey != nil && (request.excludeDuplicate ?? excludeDuplicateRequestsDefault) && containsRequest(requestKey: requestKey) {
             completionResponse(.duplicateRequest)
             return
         }
-        
         
         //Engine and Storage
         guard let engine = internalFindEngine(request: request) else {
@@ -259,19 +245,14 @@ public class WebService {
         let requestId = internalNewRequestId()
         internalAddRequest(requestId: requestId, requestKey: requestKey, engine: engine)
         
-        
         //Request in work
         var requestStatus = RequestStatus.inWork
         
-        
         //Step #3: Call this closure with result response
-        let completeHandlerResponse:(WebServiceAnyResponse) -> Void = { [weak self, queueForResponse = self.queueForResponse] response in
-            
+        let completeHandlerResponse: (WebServiceAnyResponse) -> Void = { [weak self, queueForResponse = self.queueForResponse] response in
             //Usually main thread
             queueForResponse.async {
-                guard requestStatus == .inWork else {
-                    return
-                }
+                guard requestStatus == .inWork else { return }
                 
                 self?.internalRemoveRequest(requestId: requestId, requestKey: requestKey)
                 
@@ -288,12 +269,11 @@ public class WebService {
                     requestStatus = .canceled
                     completionResponse(.canceledRequest)
                 }
-                
             }
         }
         
         //Step #2: Data handler closure for raw data from server
-        let dataHandler:(Any) -> Void = { (data) in
+        let dataHandler: (Any) -> Void = { (data) in
             do {
                 let resultData = try engine.dataHandler(request: request,
                                                         data: data,
@@ -305,30 +285,24 @@ public class WebService {
                 }
                 
                 completeHandlerResponse(.data(resultData))
-            }
-            catch {
+                
+            } catch {
                 completeHandlerResponse(.error(error))
             }
         }
         
-        
         //Step #1: Beginer request closure
         let requestHandler = {
             engine.performRequest(requestId: requestId,
-                           request: request,
-                           completionWithData: { data in
+                                  request: request,
+                                  completionWithData: { data in
                             
                             //Raw data from server
-                            guard requestStatus == .inWork else {
-                                return
-                            }
+                            guard requestStatus == .inWork else { return }
                             
                             if let queue = engine.queueForDataHandler {
-                                queue.async {
-                                    dataHandler(data)
-                                }
-                            }
-                            else {
+                                queue.async { dataHandler(data) }
+                            } else {
                                 dataHandler(data)
                             }
                             
@@ -343,22 +317,15 @@ public class WebService {
             })
         }
         
-        
         //Step #0: Call request in queue
         if let queue = engine.queueForRequest {
-            queue.async {
-                requestHandler()
-            }
-        }
-        else {
+            queue.async { requestHandler() }
+        } else {
             requestHandler()
         }
         
-        
-        
         //Read from storage
-        if let dataFromStorage = dataFromStorage,
-            let storage = storage,
+        if let dataFromStorage = dataFromStorage, let storage = storage,
             (requestStatus == .inWork || requestStatus == .error) {
             
             self.internalReadStorage(storage: storage, request: request) { response in
@@ -371,9 +338,7 @@ public class WebService {
                 }
             }
         }
-        
     }
-    
     
     /**
      Request for server (and to storage, if need). Response result in closure.
@@ -383,21 +348,19 @@ public class WebService {
      - dataFromStorage: Optional. Closure for read data from storage. if read data after data from server - cloure not call. If `closure == nil`, data not read from storage.
      - completionResponse: Optional. Closure for response result from server.
      */
-    public func performRequest<RequestType: WebServiceRequesting>(_ request:RequestType, dataFromStorage:((_ data:RequestType.ResultType) -> Void)? = nil, completionResponse:@escaping (_ response:WebServiceResponse<RequestType.ResultType>) -> Void) {
+    public func performRequest<RequestType: WebServiceRequesting>(_ request: RequestType, dataFromStorage: ((_ data: RequestType.ResultType) -> Void)? = nil, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
         
         //DataFromStorage
-        let dataFromStorageInternal:((_ data:Any) -> Void)?
+        let dataFromStorageInternal: ((_ data: Any) -> Void)?
         if let dataFromStorage = dataFromStorage {
             dataFromStorageInternal = { if let data = $0 as? RequestType.ResultType { dataFromStorage(data) } }
         } else {
             dataFromStorageInternal = nil
         }
-        
 
         //Real request
         performRequest(request as WebServiceBaseRequesting, dataFromStorage: dataFromStorageInternal, completionResponse: { completionResponse( $0.convert() ) })
     }
-    
     
     /**
      Request for only storage. Response result in closure.
@@ -407,15 +370,13 @@ public class WebService {
         - completionResponse: Closure for read data from storage.
         - response: result read from storage.
      */
-    public func readStorage(_ request:WebServiceBaseRequesting, completionResponse:@escaping (_ response:WebServiceAnyResponse) -> Void) {
+    public func readStorage(_ request: WebServiceBaseRequesting, completionResponse: @escaping (_ response: WebServiceAnyResponse) -> Void) {
         if let storage = internalFindStorage(request: request) {
             internalReadStorage(storage: storage, request: request, completionResponse: completionResponse)
-        }
-        else {
+        } else {
             completionResponse(.error(WebServiceRequestError.noFoundStorage))
         }
     }
-    
     
     /**
      Request for only storage. Response result in closure.
@@ -425,19 +386,18 @@ public class WebService {
      - completionResponse: Closure for read data from storage.
      - response: result read from storage.
      */
-    public func readStorage<RequestType: WebServiceRequesting>(_ request:RequestType, completionResponse:@escaping (_ response:WebServiceResponse<RequestType.ResultType>) -> Void) {
+    public func readStorage<RequestType: WebServiceRequesting>(_ request: RequestType, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
         if let storage = internalFindStorage(request: request) {
             //CompletionResponse
-            let completionResponseInternal:(_ response:WebServiceAnyResponse) -> Void = { completionResponse($0.convert()) }
+            let completionResponseInternal:(_ response: WebServiceAnyResponse) -> Void = { completionResponse($0.convert()) }
             
             //Request
             internalReadStorage(storage: storage, request: request, completionResponse: completionResponseInternal)
-        }
-        else {
+            
+        } else {
             completionResponse(.error(WebServiceRequestError.noFoundStorage))
         }
     }
-    
     
     
     // MARK: Requests with delegates
@@ -450,18 +410,17 @@ public class WebService {
         - includeResponseStorage: `true` if need read data from storage. if read data after data from server - delegate not call. Default: false.
         - customDelegate: Optional. Unique delegate for current request.
      */
-    public func performRequest(_ request:WebServiceBaseRequesting, includeResponseStorage:Bool = false, customDelegate:WebServiceDelegate? = nil) {
+    public func performRequest(_ request: WebServiceBaseRequesting, includeResponseStorage: Bool = false, customDelegate: WebServiceDelegate? = nil) {
         if let delegate = customDelegate ?? self.delegate {
             performRequest(request,
-                     dataFromStorage: includeResponseStorage
-                        ? { [weak delegate] data in
-                            if let delegate = delegate {
-                                delegate.webServiceResponse(request:request, isStorageRequest:true, response:.data(data))
-                            }
+                           dataFromStorage: includeResponseStorage ? { [weak delegate] data in
+                                if let delegate = delegate {
+                                    delegate.webServiceResponse(request: request, isStorageRequest: true, response: .data(data))
+                                }
                             } : nil,
                      completionResponse: { [weak delegate] response in
                         if let delegate = delegate {
-                            delegate.webServiceResponse(request:request, isStorageRequest:false, response:response)
+                            delegate.webServiceResponse(request: request, isStorageRequest: false, response: response)
                         }
             })
         }
@@ -470,7 +429,6 @@ public class WebService {
         }
     }
     
-    
     /**
      Request for only storage. Response result in default or custom delegate.
      
@@ -478,26 +436,23 @@ public class WebService {
         - request: The request data.
         - customDelegate: Optional. Unique delegate for current request.
      */
-    public func readStorage(_ request:WebServiceBaseRequesting, customDelegate:WebServiceDelegate? = nil) {
+    public func readStorage(_ request: WebServiceBaseRequesting, customDelegate: WebServiceDelegate? = nil) {
         if let delegate = customDelegate ?? self.delegate {
-            readStorage(request,
-                                    completionResponse: { [weak delegate] response in
-                                        if let delegate = delegate {
-                                            delegate.webServiceResponse(request:request, isStorageRequest:true, response:response)
-                                        }
+            readStorage(request, completionResponse: { [weak delegate] response in
+                if let delegate = delegate {
+                    delegate.webServiceResponse(request: request, isStorageRequest: true, response: response)
+                }
             })
         }
     }
     
-    
-    
     // MARK: - Private functions
-    private func internalReadStorage(storage:WebServiceStoraging, request:WebServiceBaseRequesting, completionResponse:@escaping (_ response:WebServiceAnyResponse) -> Void) {
+    private func internalReadStorage(storage: WebServiceStoraging, request: WebServiceBaseRequesting, completionResponse: @escaping (_ response: WebServiceAnyResponse) -> Void) {
         do {
             try storage.readData(request: request) { [weak self, queueForResponse = self.queueForResponse] isRawData, response in
                 if isRawData, let rawData = response.dataResponse() {
                     if let engine = self?.internalFindEngine(request: request, rawDataTypeForRestoreFromStorage: type(of: rawData)) {
-                        
+                        //Handler closure with fined engine for use next
                         let handler = {
                             do {
                                 let data = try engine.dataHandler(request: request, data: rawData, isRawFromStorage: true)
@@ -514,21 +469,20 @@ public class WebService {
                         
                         //Call handler
                         if let queue = engine.queueForDataHandlerFromStorage {
-                            queue.async {
-                                handler()
-                            }
-                        }
-                        else {
+                            queue.async { handler() }
+                        } else {
                             handler()
                         }
-                    }
-                    else {
+                        
+                    } else {
+                        //Not found engine
                         queueForResponse.async {
                             completionResponse(.error(WebServiceRequestError.noFoundEngine))
                         }
                     }
-                }
-                else {
+                    
+                } else {
+                    //No RAW data
                     self?.queueForResponse.async {
                         completionResponse(response)
                     }
@@ -538,7 +492,6 @@ public class WebService {
             completionResponse(.error(error))
         }
     }
-    
     
     // MARK: Find engines and storages
     private func internalFindEngine(request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type? = nil) -> WebServiceEngining? {
@@ -563,7 +516,7 @@ public class WebService {
     
     
     // MARK: Request Ids
-    private static var lastRequestId:UInt64 = 0
+    private static var lastRequestId: UInt64 = 0
     private func internalNewRequestId() -> UInt64 {
         WebService.staticMutex.lock()
         defer { WebService.staticMutex.unlock() }
@@ -572,12 +525,15 @@ public class WebService {
         return WebService.lastRequestId
     }
     
-    private func internalAddRequest(requestId:UInt64, requestKey:AnyHashable?, engine:WebServiceEngining) {
+    private func internalAddRequest(requestId: UInt64, requestKey: AnyHashable?, engine: WebServiceEngining) {
+        //Increment counts for visible NetworkActivityIndicator in StatusBar if need only for iOS
+        #if os(iOS)
         if engine.useNetworkActivityIndicator {
             WebService.staticMutex.lock()
             WebService.networkActivityIndicatorRequestIds.insert(requestId)
             WebService.staticMutex.unlock()
         }
+        #endif
         
         //Thread safe
         mutex.lock()
@@ -592,11 +548,10 @@ public class WebService {
         requestUseEngines[requestId] = engine
     }
     
-    private func internalRemoveRequest(requestId:UInt64, requestKey:AnyHashable?) {
+    private func internalRemoveRequest(requestId: UInt64, requestKey: AnyHashable?) {
         WebService.staticMutex.lock()
         WebService.networkActivityIndicatorRequestIds.remove(requestId)
         WebService.staticMutex.unlock()
-        
         
         //Thread safe
         mutex.lock()
@@ -615,7 +570,7 @@ public class WebService {
         requestUseEngines.removeValue(forKey: requestId)
     }
     
-    private func internalListRequest(requestKey:AnyHashable?) -> Set<UInt64>? {
+    private func internalListRequest(requestKey: AnyHashable?) -> Set<UInt64>? {
         mutex.lock()
         defer { mutex.unlock() }
         
@@ -623,7 +578,7 @@ public class WebService {
         return requestList[key]
     }
     
-    private func internalListRequest<T: Hashable>(requestKeyType:T.Type, onlyFirst: Bool) -> Set<UInt64>? {
+    private func internalListRequest<T: Hashable>(requestKeyType: T.Type, onlyFirst: Bool) -> Set<UInt64>? {
         mutex.lock()
         defer { mutex.unlock() }
         
@@ -645,12 +600,9 @@ public class WebService {
     private func internalCancelRequests(ids: Set<UInt64>) {
         for requestId in ids {
             if let engine = mutex.synchronized({ self.requestUseEngines[requestId] }) {
-                
                 //Cancel in queue
                 if let queue = engine.queueForRequest {
-                    queue.async {
-                        engine.cancelRequest(requestId: requestId)
-                    }
+                    queue.async { engine.cancelRequest(requestId: requestId) }
                 } else {
                     //Or in current thread
                     engine.cancelRequest(requestId: requestId)
@@ -661,9 +613,7 @@ public class WebService {
     
     private struct EmptyKey: Hashable {
         var hashValue: Int { return 0 }
-        static func ==(lhs: EmptyKey, rhs: EmptyKey) -> Bool {
-            return true
-        }
+        static func ==(lhs: EmptyKey, rhs: EmptyKey) -> Bool { return true }
     }
     
     private enum RequestStatus {
@@ -672,10 +622,9 @@ public class WebService {
         case error
         case canceled
     }
-    
 }
 
-
+//MARK: Helpers
 private class PThreadMutexLock: NSObject, NSLocking {
     private var mutex = pthread_mutex_t()
     

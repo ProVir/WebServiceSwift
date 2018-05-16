@@ -12,7 +12,7 @@ import WebServiceSwift
 
 //MARK: Request
 enum SiteWebServiceRequest: WebServiceRequesting, Equatable {
-    case siteSearch(SiteSearchType, domain:String)
+    case siteSearch(SiteSearchType, domain: String)
     case siteMail(SiteMailType)
     case siteYouTube
     
@@ -31,18 +31,16 @@ enum SiteMailType: String {
 }
 
 
-
-
 //MARK: Provider
 protocol SiteWebProviderDelegate: class {
-    func webServiceResponse(request:SiteWebServiceRequest, isStorageRequest:Bool, html:String)
-    func webServiceResponse(request:SiteWebServiceRequest, isStorageRequest:Bool, error:Error)
+    func webServiceResponse(request: SiteWebServiceRequest, isStorageRequest: Bool, html: String)
+    func webServiceResponse(request: SiteWebServiceRequest, isStorageRequest: Bool, error: Error)
 }
 
-class SiteWebProvider: WebServiceDelegate {
+class SiteWebProvider: WebServiceProvider, WebServiceDelegate {
     let requestProvider: WebServiceRequestProvider<SiteWebServiceRequest>
     
-    init(webService: WebService) {
+    required init(webService: WebService) {
         requestProvider = webService.getProvider()
         requestProvider.delegate = self
     }
@@ -50,12 +48,12 @@ class SiteWebProvider: WebServiceDelegate {
     weak var delegate: SiteWebProviderDelegate?
     
     ///Request use SiteWebServiceProviderDelegate
-    func requestHtmlData(_ request:SiteWebServiceRequest, includeResponseStorage: Bool) {
+    func requestHtmlData(_ request: SiteWebServiceRequest, includeResponseStorage: Bool) {
         requestProvider.performRequest(request, includeResponseStorage: includeResponseStorage)
     }
     
     ///Request use closures
-    func requestHtmlData(_ request:SiteWebServiceRequest, dataFromStorage:((_ data:String) -> Void)? = nil, completionHandler:@escaping (_ response:WebServiceResponse<String>) -> Void) {
+    func requestHtmlData(_ request: SiteWebServiceRequest, dataFromStorage: ((_ data:String) -> Void)? = nil, completionHandler: @escaping (_ response:WebServiceResponse<String>) -> Void) {
         requestProvider.performRequest(request, dataFromStorage: dataFromStorage, completionResponse: completionHandler)
     }
     
@@ -76,7 +74,6 @@ class SiteWebProvider: WebServiceDelegate {
         }
     }
 }
-
 
 
 //MARK: BaseURL information

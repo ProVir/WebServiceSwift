@@ -13,7 +13,6 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var rawTextView: UITextView!
     @IBOutlet weak var webView: UIWebView!
-    
     @IBOutlet weak var rawSwitch: UISwitch!
     
     let siteWebProvider = SiteWebProvider(webService: WebService())
@@ -22,17 +21,14 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-
         siteWebProvider.delegate = self
     }
 
-    
     @IBAction func actionChangeRaw() {
         if rawSwitch.isOn {
             rawTextView.isHidden = false
             webView.isHidden = true
-        }
-        else {
+        } else {
             rawTextView.isHidden = true
             webView.isHidden = false
         }
@@ -82,8 +78,7 @@ class ViewController: UIViewController {
         present(alert, animated: true, completion: nil)
     }
     
-    
-    func requestMethod(_ site:SiteWebServiceRequest) {
+    func requestMethod(_ site: SiteWebServiceRequest) {
         /*
             1. Use closure recommendation variant
         */
@@ -112,7 +107,7 @@ class ViewController: UIViewController {
                 break
             }
         }
- */
+         */
         
         
         /*
@@ -120,9 +115,6 @@ class ViewController: UIViewController {
         */
         siteWebProvider.requestHtmlData(site, includeResponseStorage: true)
     }
-    
-
-    
 }
 
 extension ViewController: SiteWebProviderDelegate {

@@ -27,8 +27,6 @@ extension SiteWebServiceRequest: WebServiceHtmlRequesting {
 }
 
 
-
-
 //MARK: Store support
 extension SiteWebServiceRequest: WebServiceRequestRawStorage {
     var identificatorForRawStorage: String? {
