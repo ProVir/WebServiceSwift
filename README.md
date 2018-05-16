@@ -27,9 +27,9 @@ Network layer as Service. Support Swift 3.0 - 4.1
 - [x] Simple storage on disk in package. Easy - add only engine and work!
 - [x] Support NetworkActivityIndicator on iOS (from 2.2).
 - [x] Thread safe (from 2.2).
-- [x] Responses with concrete type in completion handler closures. 
-- [x] Providers for requests (have RequestProvider) for work with only concrete request. Used to indicate more explicit dependencies (DIP). 
-- [x] MockEngine for temporary or test  response data without use real api engine. 
+- [x] Responses with concrete type in completion handler closures (from 2.2). 
+- [x] Providers for requests (have RequestProvider) for work with only concrete request (from 2.2). Used to indicate more explicit dependencies (DIP). 
+- [x] MockEngine for temporary or test  response data without use real api engine (from 2.2). 
 - [ ] Simple HTTP Engine.  
 
 
@@ -268,7 +268,7 @@ We pass the data in request, on the output we get the ready object for display.
 #### An example using a delegate and reading a hash from disk:
 
 ```swift
-let webService = WebService(delegate:self)
+let webService = WebService(delegate: self)
 
 webService.performRequest(ExampleRequest(param1: val1, param2: val2), includeResponseStorage: true)
 
