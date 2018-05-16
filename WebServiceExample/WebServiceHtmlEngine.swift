@@ -18,19 +18,19 @@ protocol WebServiceHtmlRequesting: WebServiceBaseRequesting {
 
 ///Engine for get html data for URL.
 class WebServiceHtmlEngine: WebServiceEngining {
-    let queueForRequest:DispatchQueue? = DispatchQueue.global(qos: .background)
-    let queueForDataHandler:DispatchQueue? = nil
-    let queueForDataHandlerFromStorage:DispatchQueue? = DispatchQueue.global(qos: .default)
+    let queueForRequest: DispatchQueue? = DispatchQueue.global(qos: .background)
+    let queueForDataHandler: DispatchQueue? = nil
+    let queueForDataHandlerFromStorage: DispatchQueue? = DispatchQueue.global(qos: .default)
     let useNetworkActivityIndicator = true
     
     func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
         return request is WebServiceHtmlRequesting
     }
     
-    func performRequest(requestId:UInt64, request:WebServiceBaseRequesting,
-                        completionWithData:@escaping (_ data:Any) -> Void,
-                        completionWithError:@escaping (_ error:Error) -> Void,
-                        canceled:@escaping () -> Void) {
+    func performRequest(requestId: UInt64, request: WebServiceBaseRequesting,
+                        completionWithData: @escaping (_ data: Any) -> Void,
+                        completionWithError: @escaping (_ error: Error) -> Void,
+                        canceled: @escaping () -> Void) {
         
         guard let url = (request as? WebServiceHtmlRequesting)?.url else {
             completionWithError(WebServiceRequestError.notSupportRequest)
@@ -50,7 +50,7 @@ class WebServiceHtmlEngine: WebServiceEngining {
     
     func cancelRequest(requestId: UInt64) { /* Don't support */ }
     
-    func dataHandler(request:WebServiceBaseRequesting, data:Any, isRawFromStorage:Bool) throws -> Any? {
+    func dataHandler(request: WebServiceBaseRequesting, data: Any, isRawFromStorage: Bool) throws -> Any? {
         guard request is WebServiceHtmlRequesting, let data = data as? Data else {
             throw WebServiceRequestError.notSupportDataHandler
         }

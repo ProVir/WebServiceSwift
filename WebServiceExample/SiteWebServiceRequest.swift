@@ -12,7 +12,7 @@ import WebServiceSwift
 
 /// As HTML Request - Support WebServiceHTMLEngine with concrete URL query.
 extension SiteWebServiceRequest: WebServiceHtmlRequesting {
-    var url:URL {
+    var url: URL {
         switch self {
         case .siteSearch(let type, domain: let domain):
             return type.baseUrl(domain: domain)

@@ -80,7 +80,7 @@ class SiteWebProvider: WebServiceProvider, WebServiceDelegate {
 
 ///Presentation layer and other don't need dependency from network layer implementation: `baseUrl` don't use `url`, because `url` use only implementation for Engine (protocol `WebServiceHtmlRequesting`). But `url` can use `baseUrl` as part original request.'
 extension SiteWebServiceRequest {
-    var baseUrl:URL {
+    var baseUrl: URL {
         switch self {
         case .siteSearch(let type, domain: let domain):
             return type.baseUrl(domain: domain)
@@ -95,7 +95,7 @@ extension SiteWebServiceRequest {
 }
 
 extension SiteSearchType {
-    func baseUrl(domain:String) -> URL {
+    func baseUrl(domain: String) -> URL {
         switch self {
         case .google: return URL(string: "https://google.\(domain)")!
         case .yandex: return URL(string: "https://yandex.\(domain)")!

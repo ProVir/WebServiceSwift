@@ -168,9 +168,9 @@ Such types of requests can be as many as you like and for each one you can use y
 
 ```swift
 class WebServiceHtmlEngine: WebServiceEngining {
-    let queueForRequest:DispatchQueue? = DispatchQueue.global(qos: .background)
-    let queueForDataHandler:DispatchQueue? = nil
-    let queueForDataHandlerFromStorage:DispatchQueue? = DispatchQueue.global(qos: .default)
+    let queueForRequest: DispatchQueue? = DispatchQueue.global(qos: .background)
+    let queueForDataHandler: DispatchQueue? = nil
+    let queueForDataHandlerFromStorage: DispatchQueue? = DispatchQueue.global(qos: .default)
     let useNetworkActivityIndicator = true
 
     func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
@@ -178,9 +178,9 @@ class WebServiceHtmlEngine: WebServiceEngining {
     }
 
     func performRequest(requestId:UInt64, request:WebServiceBaseRequesting,
-                        completionWithData:@escaping (_ data:Any) -> Void,
-                        completionWithError:@escaping (_ error:Error) -> Void,
-                        canceled:@escaping () -> Void) {
+                        completionWithData: @escaping (_ data:Any) -> Void,
+                        completionWithError: @escaping (_ error:Error) -> Void,
+                        canceled: @escaping () -> Void) {
 
         guard let url = (request as? WebServiceHtmlRequesting)?.url else {
             completionWithError(WebServiceRequestError.notSupportRequest)
@@ -200,7 +200,7 @@ class WebServiceHtmlEngine: WebServiceEngining {
 
     func cancelRequest(requestId: UInt64) { /* Don't support */ }
 
-    func dataHandler(request:WebServiceBaseRequesting, data:Any, isRawFromStorage:Bool) throws -> Any? {
+    func dataHandler(request: WebServiceBaseRequesting, data: Any, isRawFromStorage: Bool) throws -> Any? {
         guard request is WebServiceHtmlRequesting, let data = data as? Data else {
             throw WebServiceRequestError.notSupportDataHandler
         }
@@ -276,7 +276,7 @@ func webServiceResponse(request: WebServiceRequesting, isStorageRequest: Bool, r
     if let request = request as? ExampleRequest {
         let response = response.convert(request: request)
 
-	    switch response {
+        switch response {
         case .canceledRequest, .duplicateRequest: 
             break
 
