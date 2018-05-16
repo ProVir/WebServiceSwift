@@ -5,7 +5,7 @@
 [![Platform](https://cocoapod-badges.herokuapp.com/p/WebServiceSwift/badge.png)](http://cocoapods.org/pods/WebServiceSwift)
 [![License](https://cocoapod-badges.herokuapp.com/l/WebServiceSwift/badge.png)](https://github.com/ProVir/WebServiceSwift/blob/master/LICENSE)
 
-Wrapper for working with network. Support Swift 3.0 - 4.0
+Network layer as Service. Support Swift 3.0 - 4.1
 
 - [Features](#features)
 - [Requirements](#requirements)
@@ -19,21 +19,25 @@ Wrapper for working with network. Support Swift 3.0 - 4.0
 
 ## Features
 
-- [x] Easy interface for work
+- [x] Easy interface for use
 - [x] All work with network in inner engine and storage, hided from interface. 
 - [x] Support Dispatch Queue.
-- [x] One class work with many types requests. 
-- [x] One class work with many engines and storages.
+- [x] One class for work with many types requests. 
+- [x] One class for work with many engines and storages.
 - [x] Simple storage on disk in package. Easy - add only engine and work!
-- [ ] Support work with NetworkActivityIndicator on iOS.
+- [x] Support NetworkActivityIndicator on iOS (from 2.2).
+- [x] Thread safe (from 2.2).
+- [x] Responses with concrete type in completion handler closures. 
+- [x] Providers for requests (have RequestProvider) for work with only concrete request. Used to indicate more explicit dependencies (DIP). 
+- [x] MockEngine for temporary or test  response data without use real api engine. 
 - [ ] Simple HTTP Engine.  
 
 
 ## Requirements
 
 - iOS 8.0+ / macOS 10.10+ / tvOS 9.0+ / watchOS 2.0+
-- Xcode 8.1, 8.2, 8.3, and 9.0
-- Swift 3.0, 3.1, 3.2, and 4.0
+- Xcode 8.0 and above
+- Swift 3.0 - 3.2 or 4.0 and above
 
 
 ## Communication
@@ -65,7 +69,7 @@ platform :ios, '8.0'
 use_frameworks!
 
 target '<Your Target Name>' do
-    pod 'WebServiceSwift', '~> 2.1'
+    pod 'WebServiceSwift', '~> 2.2'
 end
 ```
 
@@ -89,7 +93,7 @@ $ brew install carthage
 To integrate WebServiceSwift into your Xcode project using Carthage, specify it in your `Cartfile`:
 
 ```ogdl
-github "ProVir/WebServiceSwift" ~> 2.1
+github "ProVir/WebServiceSwift" ~> 2.2
 ```
 
 Run `carthage update` to build the framework and drag the built `WebServiceSwift.framework` into your Xcode project.
@@ -121,7 +125,8 @@ To use the library, you need:
 1. Create at least one type of request that implements the `WebServiceRequesting` protocol.
 2. Create at least one class for work with the network (engine), implementing the protocol `WebServiceEngining`.
 3. If desired, you can create a class for storing hashes or use the existing one - `WebServiceSimpleStore`.
-4. Write a factory to generate a WebService object or write an extension for it with a convenience constructor. 
+4. If desired, you can create a class for mocks requests when part API don't completed - `WebServiceMockEngine`.  It is recommended to use it first in the array of `engines`.
+5. Write method to generate a `WebService` object. For example can be used factory to generate a WebService object or write an extension for it with a convenience constructor. 
 
 **Note:** To use the library, remember to include it in each file: `import WebServiceSwift`.
 
@@ -133,7 +138,8 @@ The project has a less abstract example of using the library, which can be downl
 1. Создать как минимум один тип запроса, реализующий протокол `WebServiceRequesting`. 
 2. Создать как минимум один класс для работ с сетью, реализующий протокол `WebServiceEngining`. 
 3. По желанию можно создать класс для хранения хешей или использовать существующий - `WebServiceSimpleStore`.
-4. Написать метод - фабрику для генерации объекта `WebService` или написать для него расширение с конструктором, вызывающий базовый конструктор с параметрами.
+4. По желанию можно создать класс для обработки mock запросов в случаях, когда часть АПИ не реализована - `WebServiceMockEngine`. Рекомендуется использовать его первым в списке `engines`. 
+5. Написать метод получение готового объекта сервиса `WebService` . К примеру, можно использовать фабрику или написать для сервиса расширение с конструктором, вызывающий базовый конструктор с параметрами.
 
 **Замечание:** для использования библиотеки не забудьте ее подключить в каждом файле: `import WebServiceSwift`.
 
@@ -144,22 +150,12 @@ The project has a less abstract example of using the library, which can be downl
 #### An example request structure:
 
 ```swift
-struct RequestMethod: WebServiceRequesting {
-    let method:WebServiceMethod    
-    let requestKey:AnyHashable?
+struct ExampleRequest: WebServiceRequesting {
+    let param1: String  
+    let param2: Int 
     
-    init(requestKey:AnyHashable? = nil, method:WebServiceMethod) {
-	self.requestKey = requestKey
-        self.method = method
-    }
+    typealias ResultType = String
 }
-
-enum WebServiceMethod {
-    case method1(ParamType1, param2:ParamType2)
-    case method2(ParamType1)
-    case method3
-}
-
 ```
 
 Such types of requests can be as many as you like and for each one you can use your own class - the engine. There can also be several versions of the storage.
@@ -171,79 +167,68 @@ Such types of requests can be as many as you like and for each one you can use y
 #### Example of a class for working with a network using a library [Alamofire](https://github.com/Alamofire/Alamofire):
 
 ```swift
-class WebServiceEngine: WebServiceEngining {
-    
-    let queueForRequest:DispatchQueue? = nil
+class WebServiceHtmlEngine: WebServiceEngining {
+    let queueForRequest:DispatchQueue? = DispatchQueue.global(qos: .background)
     let queueForDataHandler:DispatchQueue? = nil
     let queueForDataHandlerFromStorage:DispatchQueue? = DispatchQueue.global(qos: .default)
-    
-    
-    func isSupportedRequest(_ request: WebServiceRequesting, rawDataForRestoreFromStorage: Any?) -> Bool {
-        return request is RequestMethod
+    let useNetworkActivityIndicator = true
+
+    func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
+        return request is WebServiceHtmlRequesting
     }
 
-    
-    func request(requestId:UInt64, request:WebServiceRequesting,
-                 completionWithData:@escaping (_ data:Any) -> Void,
-                 completionWithError:@escaping (_ error:Error) -> Void,
-                 canceled:@escaping () -> Void) {
-        
-        guard let method = (request as? RequestMethod)?.method else {
+    func performRequest(requestId:UInt64, request:WebServiceBaseRequesting,
+                        completionWithData:@escaping (_ data:Any) -> Void,
+                        completionWithError:@escaping (_ error:Error) -> Void,
+                        canceled:@escaping () -> Void) {
+
+        guard let url = (request as? WebServiceHtmlRequesting)?.url else {
             completionWithError(WebServiceRequestError.notSupportRequest)
             return
         }
 
-	//Custom method without example
-	var url = urlFromMethod(method) 
-
-        Alamofire.request(method.url).responseData { response in
+        Alamofire.request(url).responseData { response in
             switch response.result {
             case .success(let data):
                 completionWithData(data)
-                
+
             case .failure(let error):
                 completionWithError(error)
             }
         }
     }
 
-    
-    func cancelRequest(requestId: UInt64) {
-        
-    }
-    
-    
-    func dataHandler(request:WebServiceRequesting, data:Any, isRawFromStorage:Bool) throws -> Any? {
-        guard request is RequestMethod, let data = data as? Data else {
+    func cancelRequest(requestId: UInt64) { /* Don't support */ }
+
+    func dataHandler(request:WebServiceBaseRequesting, data:Any, isRawFromStorage:Bool) throws -> Any? {
+        guard request is WebServiceHtmlRequesting, let data = data as? Data else {
             throw WebServiceRequestError.notSupportDataHandler
         }
 
         return String(data: data, encoding: .utf8) ?? String(data: data, encoding: .windowsCP1251)
     }
-    
 }
 ```
 
-Working with the network is not a prerequisite for the engine. Behind this layer, you can hide the work with the database or at least temporarily put a stub. On the interface side, this is not important and during the development of the engine can be unnoticeably replaced, without changing the code of the requests themselves (provided that the type of data returned does not change).
+Working with the network is not a prerequisite for the engine. Behind this layer, you can hide the work with the database or at least temporarily put a stub. On the interface service side, this is not important and during the development of the engine can be unnoticeably replaced, without changing the code of the requests themselves.
 
 
-Вовсе не обязательно движок (engine) должен работать с сетью. За этим слоем вы можете скрыть работу с БД или вовсе временно выставить заглушку. Со стороны интерфейса это не важно и в процессе разработки движки можно незаметно подменять, не меняя код самих запросов (при условии что тип возвращаемых данных не меняется). 
+Вовсе не обязательно движок (engine) должен работать с сетью. За этим слоем вы можете скрыть работу с БД или вовсе временно выставить заглушку. Со стороны интерфейса сервиса это не важно и в процессе разработки движки можно незаметно подменять, не меняя код самих запросов. 
 
 
-#### WebService Factory example:
+#### WebService create service - used factory example:
 
 ```swift
 extension WebService {
-    
-    convenience init(delegate:WebServiceDelegate? = nil) {
+    convenience init(delegate: WebServiceDelegate? = nil) {
         let engine = WebServiceEngine()
         
-        var storages:[WebServiceStoraging] = []
+        var storages: [WebServiceStoraging] = []
         if let storage = WebServiceSimpleStore() {
             storages.append(storage)
         }
         
-        self.init(engines: [engine], storages:storages)
+        self.init(engines: [WebServiceMockEngine(), engine], storages: storages)
         
         self.delegate = delegate
     }
@@ -260,19 +245,18 @@ You can also make support for a singleton - an example of this approach is in th
 ```swift
 let webService = WebService()
 
-webService.request(RequestMethod(method: .method1(val1, param2: val2))) { response in
-            switch response {
-            case .canceledRequest, .duplicateRequest: 
-		break
+webService.performRequest(ExampleRequest(param1: val1, param2: val2)) { [weak self] response in
+    switch response {
+    case .canceledRequest, .duplicateRequest: 
+        break
 
-            case .data(let dataCustomType):
-                dataFromServer = dataCustomType
-                
-            case .error(let error):
-                showError(error)
-
-            }
-        }
+    case .data(let dataCustomType):
+        self?.dataFromServer = dataCustomType
+        
+    case .error(let error):
+        self?.showError(error)
+    }
+}
 ```
 
 We pass the data in request, on the output we get the ready object for display.
@@ -286,24 +270,27 @@ We pass the data in request, on the output we get the ready object for display.
 ```swift
 let webService = WebService(delegate:self)
 
-webService.request(RequestMethod(method: .method2(val1)), includeResponseStorage: true)
+webService.performRequest(ExampleRequest(param1: val1, param2: val2), includeResponseStorage: true)
 
-func webServiceResponse(request: WebServiceRequesting, isStorageRequest: Bool, response: WebServiceResponse) {
+func webServiceResponse(request: WebServiceRequesting, isStorageRequest: Bool, response: WebServiceAnyResponse) {
+    if let request = request as? ExampleRequest {
+        let response = response.convert(request: request)
+
 	    switch response {
-            case .canceledRequest, .duplicateRequest: 
-		break
+        case .canceledRequest, .duplicateRequest: 
+            break
 
-            case .data(let dataCustomType):
-		if isStorageRequest {
-		    dataFromStorage = dataCustomType
-		} else {
-                    dataFromServer = dataCustomType
-		}
-                
-            case .error(let error):
-                showError(error)
-
+        case .data(let dataCustomType):
+            if isStorageRequest {
+                dataFromStorage = dataCustomType
+            } else {
+                dataFromServer = dataCustomType
             }
+                
+        case .error(let error):
+            showError(error)
+        }
+    }
 }
 ```
 
@@ -317,19 +304,18 @@ If data from the disk is received earlier than from the network, or there will b
 ```swift
 let webService = WebService()
 
-webService.requestReadStorage(RequestMethod(.method3)) { response in
-          switch response {
-            case .canceledRequest, .duplicateRequest: 
-		break
+webService.requestReadStorage(ExampleRequest(param1: val1, param2: val2)) { [weka self] response in
+    switch response {
+    case .canceledRequest, .duplicateRequest: 
+        break
 
-            case .data(let dataCustomType):
-		dataFromStorage = dataCustomType
-                
-            case .error(let error):
-                showError(error)
-
-            }  
-        }
+    case .data(let dataCustomType):
+        self?.dataFromStorage = dataCustomType
+    
+    case .error(let error):
+        self?.showError(error)
+    }  
+}
 ```
 
 You can also request data from the storage. In case of a reading error, you will be able to find out the reason. Enums `.canceledRequest` and `.duplicateRequest` will never be returned.

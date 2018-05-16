@@ -21,7 +21,7 @@ class WebServiceHtmlEngine: WebServiceEngining {
     let queueForRequest:DispatchQueue? = DispatchQueue.global(qos: .background)
     let queueForDataHandler:DispatchQueue? = nil
     let queueForDataHandlerFromStorage:DispatchQueue? = DispatchQueue.global(qos: .default)
-    let useNetworkActivityIndicator = false
+    let useNetworkActivityIndicator = true
     
     func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
         return request is WebServiceHtmlRequesting
