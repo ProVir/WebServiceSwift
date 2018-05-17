@@ -6,7 +6,7 @@
 [![Platform](https://cocoapod-badges.herokuapp.com/p/WebServiceSwift/badge.png)](http://cocoapods.org/pods/WebServiceSwift)
 [![License](https://cocoapod-badges.herokuapp.com/l/WebServiceSwift/badge.png)](https://github.com/ProVir/WebServiceSwift/blob/master/LICENSE)
 
-Network layer as Service. Service as an interface for interacting with your web server. Support Swift 3.0 - 4.1
+Network layer as Service. Service as an interface for interacting with your web server. Support Swift 4. 
 
 - [Features](#features)
 - [Requirements](#requirements)
@@ -16,6 +16,8 @@ Network layer as Service. Service as an interface for interacting with your web 
 - [Author](#author)
 - [License](#license)
 
+
+ ![Scheme](https://raw.githubusercontent.com/ProVir/WebServiceSwift/dev/WebServiceScheme.png) 
 
 
 ## Features
@@ -37,8 +39,8 @@ Network layer as Service. Service as an interface for interacting with your web 
 ## Requirements
 
 - iOS 8.0+ / macOS 10.10+ / tvOS 9.0+ / watchOS 2.0+
-- Xcode 8.0 and above
-- Swift 3.0 - 3.2 or 4.0 and above
+- Xcode 9.0 and above
+- Swift 4.0 and above
 
 
 ## Communication
