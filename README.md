@@ -1,12 +1,12 @@
- ![logo](https://raw.githubusercontent.com/ProVir/WebServiceSwift/dev/WebServiceSwiftLogo.png) 
- # WebServiceSwift
+ ![WebServiceSwift](https://raw.githubusercontent.com/ProVir/WebServiceSwift/dev/WebServiceSwiftLogo.png) 
+
 
 [![CocoaPods Compatible](https://cocoapod-badges.herokuapp.com/v/WebServiceSwift/badge.png)](http://cocoapods.org/pods/WebServiceSwift)
 [![Carthage Compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/ProVir/WebServiceSwift)
 [![Platform](https://cocoapod-badges.herokuapp.com/p/WebServiceSwift/badge.png)](http://cocoapods.org/pods/WebServiceSwift)
 [![License](https://cocoapod-badges.herokuapp.com/l/WebServiceSwift/badge.png)](https://github.com/ProVir/WebServiceSwift/blob/master/LICENSE)
 
-Network layer as Service. Support Swift 3.0 - 4.1
+Network layer as Service. Service as an interface for interacting with your web server. Support Swift 3.0 - 4.1
 
 - [Features](#features)
 - [Requirements](#requirements)
