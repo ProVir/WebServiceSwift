@@ -13,6 +13,9 @@ Network layer as Service. Service as an interface for interacting with your web 
 - [Communication](#communication)
 - [Installation](#installation)
 - [Usage (English / Русский)](#usage-english--%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9)
+- > [Base usage](#base-usage)
+- > [Simple File Storage](#simple-file-storage)
+- > [Mock Engine](#mock-engine)
 - [Author](#author)
 - [License](#license)
 
