@@ -17,6 +17,8 @@ Network layer as Service. Service as an interface for interacting with your web 
 - [License](#license)
 
 
+## General scheme use WebServiceSwift in project (SOA).
+
  ![Scheme](https://raw.githubusercontent.com/ProVir/WebServiceSwift/dev/WebServiceScheme.png) 
 
 
@@ -126,7 +128,7 @@ Copy files from directory `Source` in your project.
 
 To use the library, you need:
 1. Create at least one type of request that implements the `WebServiceRequesting` protocol.
-2. Create at least one class for work with the network (engine), implementing the protocol `WebServiceEngining`.
+2. Create at least one class for work with the network (engine), implementing the protocol `WebServiceEngining`. It should provide its own protocol, the implementation of which with queries using the extensions will allow this engine to process the request.
 3. If desired, you can create a class for storing hashes or use the existing one - `WebServiceSimpleStore`.
 4. If desired, you can create a class for mocks requests when part API don't completed - `WebServiceMockEngine`.  It is recommended to use it first in the array of `engines`.
 5. Write method to generate a `WebService` object. For example can be used factory to generate a WebService object or write an extension for it with a convenience constructor. 
@@ -139,8 +141,8 @@ The project has a less abstract example of using the library, which can be downl
 
 Для использования библиотеки вам нужно:
 1. Создать как минимум один тип запроса, реализующий протокол `WebServiceRequesting`. 
-2. Создать как минимум один класс для работ с сетью, реализующий протокол `WebServiceEngining`. 
-3. По желанию можно создать класс для хранения хешей или использовать существующий - `WebServiceSimpleStore`.
+2. Создать как минимум один класс для работ с сетью, реализующий протокол `WebServiceEngining`.  Он должен предоставлять собственный протокол, реализация которого у запросов с помощью расширения позволит этому движку обрабатывать запрос.
+3. По желанию можно создать класс для хранения хешей или использовать существующий - `WebServiceSimpleStore`.  
 4. По желанию можно создать класс для обработки mock запросов в случаях, когда часть АПИ не реализована - `WebServiceMockEngine`. Рекомендуется использовать его первым в списке `engines`. 
 5. Написать метод получение готового объекта сервиса `WebService` . К примеру, можно использовать фабрику или написать для сервиса расширение с конструктором, вызывающий базовый конструктор с параметрами.
 
@@ -149,11 +151,12 @@ The project has a less abstract example of using the library, which can be downl
 В проекте есть менее абстрактный пример использования библиотеки, который можно скачать отдельно. 
 
 
+### Base usage
 
 #### An example request structure:
 
 ```swift
-struct ExampleRequest: WebServiceRequesting {
+struct ExampleRequest: WebServiceRequesting, Hashable {
     let param1: String  
     let param2: Int 
     
@@ -161,15 +164,19 @@ struct ExampleRequest: WebServiceRequesting {
 }
 ```
 
-Such types of requests can be as many as you like and for each one you can use your own class - the engine. There can also be several versions of the storage.
+Such types of requests can be as many as you like and for their processing you can use different engines. There can also be several versions of the storage.
 
-Таких типов запросов может быть сколько угодно и для каждого можно использовать свой класс - движок (engine). Разновидностей хранилища тоже может быть несколько.
+Таких типов запросов может быть сколько угодно и для их обработки можно использовать разные движки (engines). Разновидностей хранилища тоже может быть несколько.
 
 
 
 #### Example of a class for working with a network using a library [Alamofire](https://github.com/Alamofire/Alamofire):
 
 ```swift
+protocol WebServiceHtmlRequesting: WebServiceBaseRequesting {
+    var url: URL { get }
+}
+
 class WebServiceHtmlEngine: WebServiceEngining {
     let queueForRequest: DispatchQueue? = DispatchQueue.global(qos: .background)
     let queueForDataHandler: DispatchQueue? = nil
@@ -215,11 +222,29 @@ class WebServiceHtmlEngine: WebServiceEngining {
 
 Working with the network is not a prerequisite for the engine. Behind this layer, you can hide the work with the database or at least temporarily put a stub. On the interface service side, this is not important and during the development of the engine can be unnoticeably replaced, without changing the code of the requests themselves.
 
-
 Вовсе не обязательно движок (engine) должен работать с сетью. За этим слоем вы можете скрыть работу с БД или вовсе временно выставить заглушку. Со стороны интерфейса сервиса это не важно и в процессе разработки движки можно незаметно подменять, не меняя код самих запросов. 
 
 
-#### WebService create service - used factory example:
+#### Simple request support concrete engine example:
+
+```swift
+extension ExampleRequest: WebServiceHtmlRequesting {
+    var url: URL {
+        /* .... Logic create URL from param1 and param2 ... */
+    }
+    
+    var responseDecoder: WebServiceHtmlResponseDecoder {
+        /* ... Create concrete decoder for data from server ... */
+    }
+}
+```
+
+Each request must implement the support protocols for each engine that can handle it. If multiple engines are supported by a single query, then the first engine, supported from the list `engines`, is selected for processing.
+
+Каждый запрос должен реализовать протоколы поддержки каждого движка, который может его обрабатывать. Если поддерживается несколько движков одним запросом, то выбирается первый поддерживаемый из списка `engines` для обработки. 
+
+
+#### WebService create service - used factory constructor example:
 
 ```swift
 extension WebService {
@@ -265,7 +290,6 @@ webService.performRequest(ExampleRequest(param1: val1, param2: val2)) { [weak se
 We pass the data in request, on the output we get the ready object for display.
 
 Передаем данные в запросе, на выходе получаем готовый объект для отображения. 
-
 
 
 #### An example using a delegate and reading a hash from disk:
@@ -324,6 +348,75 @@ webService.requestReadStorage(ExampleRequest(param1: val1, param2: val2)) { [wek
 You can also request data from the storage. In case of a reading error, you will be able to find out the reason. Enums `.canceledRequest` and `.duplicateRequest` will never be returned.
 
 Также можно отдельно запросить данные с хеша. В случае ошибки чтения можно будет узнать причину. Значения `.canceledRequest` и `.duplicateRequest` никогда не будут возвращены. 
+
+
+
+### Simple File Storage
+
+For support response data store in `WebServiceSimpleFileStorage` you need conform to `WebServiceRequestRawStorage` (save raw binary data from server and decode in engine when read) or `WebServiceRequestValueStorage` (save any decoded types from server).
+
+
+#### Example of request support storage as raw data:
+
+```swift
+extension ExampleRequest: WebServiceRequestRawStorage {
+    var identificatorForRawStorage: String? {
+        return "example_data.bin"
+    }
+}
+```
+
+#### Example of request support storage as value data:
+
+```swift
+extension ExampleRequest: WebServiceRequestValueStorage {
+    var identificatorForValueStorage: String? {
+        return "example_data.txt"
+    }
+
+    func writeDataToStorage(value: Any) -> Data? {
+        if let value = value as? String {
+            return value.data(using: String.Encoding.utf8)
+        } else {
+            return nil
+        }
+    }
+
+    func readDataFromStorage(data: Data) throws -> Any? {
+        return String(data: data, encoding: String.Encoding.utf8)
+    }
+}
+```
+
+### Mock Engine
+
+If part of the API is not available or you just need to generate temporary test data, you can use the `WebServiceMockEngine`. The mock engine emulates receiving and processing data from a real server and returns exactly the data that you specify.
+
+Если часть API недоступна или вам просто нужно предоставить временные тестовые данные, вы можете использовать `WebServiceMockEngine`. Mock engine эмулирует получение и обработку данных с реального сервера и возвращает те данные, которые вы указали.
+
+
+#### Example of request support mock engine:
+
+```swift
+extension ExampleRequest: WebServiceMockRequesting {
+    var isSupportedRequest: Bool { return true }
+
+    var timeWait: TimeInterval? { return 3 }
+
+    var helperIdentifier: String? { return "template_html" }
+    func createHelper(forIdentifier identifier: String) -> Any? {
+        return "<html><body>%[BODY]%</body></html>"
+    }
+
+    func responseHandler(helper: Any?) throws -> Any? {
+        if let template = helper as? String {
+            return template.replacingOccurrences(of: "%[BODY]%", with: "<b>Hello world!</b>")
+        } else {
+            throw WebServiceResponseError.invalidData
+        }
+    }
+}
+```
 
 
 

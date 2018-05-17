@@ -15,13 +15,14 @@ extension WebService {
     
     convenience init() {
         let engine = WebServiceHtmlEngine()
+        let mock = WebServiceMockEngine(rawDataFromStoreAlwaysNil: true)
         
         var storages: [WebServiceStoraging] = []
         if let storage = WebServiceSimpleFileStorage() {
             storages.append(storage)
         }
         
-        self.init(engines: [engine], storages: storages)
+        self.init(engines: [mock, engine], storages: storages)
     }
     
     static var `default`: WebService {

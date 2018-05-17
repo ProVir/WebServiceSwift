@@ -43,4 +43,51 @@ extension SiteWebServiceRequest: WebServiceRequestRawStorage {
     }
 }
 
+/*
+extension SiteWebServiceRequest: WebServiceRequestValueStorage {
+    var identificatorForValueStorage: String? {
+        switch self {
+        case .siteSearch(let type, domain: let domain):
+            return type.rawValue + ".\(domain)"
+            
+        case .siteMail(let type):
+            return type.rawValue
+            
+        case .siteYouTube:
+            return "siteYouTube"
+        }
+    }
+    
+    func writeDataToStorage(value: Any) -> Data? {
+        if let value = value as? String {
+            return value.data(using: String.Encoding.utf8)
+        } else {
+            return nil
+        }
+    }
+    
+    func readDataFromStorage(data: Data) throws -> Any? {
+        return String(data: data, encoding: String.Encoding.utf8)
+    }
+}
+ */
+
+extension SiteWebServiceRequest: WebServiceMockRequesting {
+    var isSupportedRequest: Bool { return false }
+    
+    var timeWait: TimeInterval? { return 3 }
+    
+    var helperIdentifier: String? { return "template_html" }
+    func createHelper(forIdentifier identifier: String) -> Any? {
+        return "<html><body>%[BODY]%</body></html>"
+    }
+    
+    func responseHandler(helper: Any?) throws -> Any? {
+        if let template = helper as? String {
+            return template.replacingOccurrences(of: "%[BODY]%", with: "<b>Hello world!</b>")
+        } else {
+            throw WebServiceResponseError.invalidData
+        }
+    }
+}
 

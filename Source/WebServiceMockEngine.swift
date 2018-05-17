@@ -59,7 +59,7 @@ public class WebServiceMockEngine: WebServiceEngining {
     
     var rawDataFromStoreAlwaysNil: Bool
     
-    public init(rawDataFromStoreAlwaysNil: Bool = false) {
+    public init(rawDataFromStoreAlwaysNil: Bool = true) {
         self.rawDataFromStoreAlwaysNil = rawDataFromStoreAlwaysNil
     }
     
