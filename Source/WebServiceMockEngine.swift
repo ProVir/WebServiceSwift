@@ -1,9 +1,9 @@
 //
 //  WebServiceMockEngine.swift
-//  WebServiceSwift 2.2.0
+//  WebServiceSwift 2.2.1
 //
 //  Created by ViR (Короткий Виталий) on 12.03.2018.
-//  Updated to 2.2.0 by ViR (Короткий Виталий) on 16.05.2018.
+//  Updated to 2.2.1 by ViR (Короткий Виталий) on 19.05.2018.
 //  Copyright © 2018 ProVir. All rights reserved.
 //
 
@@ -12,8 +12,8 @@ import Foundation
 
 //MARK: Mock Request
 
-/// Protocol for request with support mock data
-public protocol WebServiceMockRequesting: WebServiceBaseRequesting {
+/// Base protocol for request with support mock data
+public protocol WebServiceMockBaseRequesting: WebServiceBaseRequesting {
     /// Fast switch enable/disable mock data (if `WebServiceMockEngine` as first in array `WebService.engines`). Default: true.
     var isSupportedRequest: Bool { get }
     
@@ -24,10 +24,16 @@ public protocol WebServiceMockRequesting: WebServiceBaseRequesting {
     var helperIdentifier: String? { get }
     
     /// Create a helper if it was not created earlier. Default: nil - don't use helper
-    func createHelper(forIdentifier identifier: String) -> Any?
+    func createHelper() -> Any?
     
+    /// Mock data without generic information as response.
+    func responseBaseHandler(helper: Any?) throws -> Any?
+}
+
+/// Protocol for request with support mock data
+public protocol WebServiceMockRequesting: WebServiceRequesting, WebServiceMockBaseRequesting {
     /// Mock data as response. Require implementation.
-    func responseHandler(helper: Any?) throws -> Any?
+    func responseHandler(helper: Any?) throws -> ResultType
 }
 
 public extension WebServiceMockRequesting {
@@ -35,8 +41,13 @@ public extension WebServiceMockRequesting {
     var timeWait: TimeInterval? { return nil }
     
     var helperIdentifier: String? { return nil }
-    func createHelper(forIdentifier identifier: String) -> Any? { return nil }
+    public func createHelper() -> Any? { return nil }
+    
+    public func responseBaseHandler(helper: Any?) throws -> Any? {
+        return try responseHandler(helper: helper)
+    }
 }
+
 
 
 //MARK: Mock Engine
@@ -68,11 +79,11 @@ public class WebServiceMockEngine: WebServiceEngining {
         if rawDataTypeForRestoreFromStorage != nil && !rawDataFromStoreAlwaysNil { return false }
         
         // Support only WebServiceMockRequesting with enable support.
-        return ((request as? WebServiceMockRequesting)?.isSupportedRequest ?? false)
+        return ((request as? WebServiceMockBaseRequesting)?.isSupportedRequest ?? false)
     }
     
     public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completionWithData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void, canceled: @escaping () -> Void) {
-        guard let request = request as? WebServiceMockRequesting else {
+        guard let request = request as? WebServiceMockBaseRequesting else {
             completionWithError(WebServiceRequestError.notSupportRequest)
             return
         }
@@ -82,7 +93,7 @@ public class WebServiceMockEngine: WebServiceEngining {
         if let identifier = request.helperIdentifier {
             if let obj = helpersArray[identifier] {
                 helper = obj
-            } else if let obj = request.createHelper(forIdentifier: identifier) {
+            } else if let obj = request.createHelper() {
                 helpersArray[identifier] = obj
                 helper = obj
             } else {
@@ -97,7 +108,7 @@ public class WebServiceMockEngine: WebServiceEngining {
             self?.requests.removeValue(forKey: requestId)
             
             do {
-                let data = try request.responseHandler(helper: helper) ?? Void()
+                let data = try request.responseBaseHandler(helper: helper) ?? Void()
                 completionWithData(data)
             } catch {
                 completionWithError(error)
@@ -121,5 +132,3 @@ public class WebServiceMockEngine: WebServiceEngining {
         else { return data }
     }
 }
-
-

@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "WebServiceSwift"
-  s.version      = "2.2.0"
+  s.version      = "2.2.1"
   s.summary      = "Network layer as Service."
   s.description  = <<-DESC
 			Written in Swift.
@@ -21,8 +21,6 @@ Pod::Spec.new do |s|
 
   s.source       = { :git => "https://github.com/ProVir/WebServiceSwift.git", :tag => "#{s.version}" }
 
-
   s.source_files = 'Source/*.{h,swift}'
   s.public_header_files = 'Source/*.h'
-
 end

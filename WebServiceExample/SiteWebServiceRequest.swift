@@ -74,15 +74,14 @@ extension SiteWebServiceRequest: WebServiceRequestValueStorage {
 
 extension SiteWebServiceRequest: WebServiceMockRequesting {
     var isSupportedRequest: Bool { return false }
-    
     var timeWait: TimeInterval? { return 3 }
     
     var helperIdentifier: String? { return "template_html" }
-    func createHelper(forIdentifier identifier: String) -> Any? {
+    func createHelper() -> Any? {
         return "<html><body>%[BODY]%</body></html>"
     }
     
-    func responseHandler(helper: Any?) throws -> Any? {
+    func responseHandler(helper: Any?) throws -> String {
         if let template = helper as? String {
             return template.replacingOccurrences(of: "%[BODY]%", with: "<b>Hello world!</b>")
         } else {
