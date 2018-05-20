@@ -3,7 +3,7 @@
 //  WebServiceSwift 2.2.1
 //
 //  Created by ViR (Короткий Виталий) on 14.06.2017.
-//  Updated to 2.2.1 by ViR (Короткий Виталий) on 19.05.2018.
+//  Updated to 2.2.1 by ViR (Короткий Виталий) on 20.05.2018.
 //  Copyright © 2017 ProVir. All rights reserved.
 //
 
@@ -90,6 +90,7 @@ public class WebService {
     private let storages: [WebServiceStoraging]
     
     private var requestList: [AnyHashable: Set<UInt64>] = [:]
+    private var requestTypes: [String: Set<UInt64>] = [:]   //[Request.Type: [Id]]
     private var requestUseEngines: [UInt64: WebServiceEngining] = [:]
     
     
@@ -138,6 +139,16 @@ public class WebService {
         return (internalListRequest(requestKeyType: requestKeyType, onlyFirst: true)?.count ?? 0) > 0
     }
     
+    /**
+     Returns a Boolean value indicating whether the current queue contains the given requests.
+     
+     - Parameter requestType: The type request to find in the all current queue.
+     - Returns: `true` if one request with WebServiceBaseRequesting.Type was found in the current queue; otherwise, `false`.
+     */
+    public func containsRequest(requestType: WebServiceBaseRequesting.Type) -> Bool {
+        return (internalListRequest(requestType: requestType)?.count ?? 0) > 0
+    }
+    
     
     /**
      Cancel all requests with equal this request.
@@ -146,8 +157,8 @@ public class WebService {
      
      - Parameter request: The request to find in the current queue.
      */
-    public func cancelRequest(request: WebServiceBaseRequesting) {
-        cancelRequest(requestKey: request.requestKey)
+    public func cancelRequests(request: WebServiceBaseRequesting) {
+        cancelRequests(requestKey: request.requestKey)
     }
     
     /**
@@ -157,7 +168,7 @@ public class WebService {
      
      - Parameter requestKey: The requestKey to find in the current queue.
      */
-    public func cancelRequest(requestKey: AnyHashable?) {
+    public func cancelRequests(requestKey: AnyHashable?) {
         if let list = internalListRequest(requestKey: requestKey) {
             internalCancelRequests(ids: list)
         }
@@ -170,8 +181,21 @@ public class WebService {
      
      - Parameter requestKeyType: The requestKey.Type to find in the current queue.
      */
-    public func cancelRequest<T: Hashable>(requestKeyType: T.Type) {
+    public func cancelRequests<T: Hashable>(requestKeyType: T.Type) {
         if let list = internalListRequest(requestKeyType: requestKeyType, onlyFirst: false) {
+            internalCancelRequests(ids: list)
+        }
+    }
+    
+    /**
+     Cancel all requests for request type.
+     
+     Signal cancel send to engine, but real canceled implementation in engine.
+     
+     - Parameter requestType: The WebServiceBaseRequesting.Type to find in the current queue.
+     */
+    public func cancelRequests(requestType: WebServiceBaseRequesting.Type) {
+        if let list = internalListRequest(requestType: requestType) {
             internalCancelRequests(ids: list)
         }
     }
@@ -242,8 +266,9 @@ public class WebService {
         
         let storage = internalFindStorage(request: request)
         
+        let requestType = type(of: request)
         let requestId = internalNewRequestId()
-        internalAddRequest(requestId: requestId, requestKey: requestKey, engine: engine)
+        internalAddRequest(requestId: requestId, requestKey: requestKey, requestType: requestType, engine: engine)
         
         //Request in work
         var requestStatus = RequestStatus.inWork
@@ -254,7 +279,7 @@ public class WebService {
             queueForResponse.async {
                 guard requestStatus == .inWork else { return }
                 
-                self?.internalRemoveRequest(requestId: requestId, requestKey: requestKey)
+                self?.internalRemoveRequest(requestId: requestId, requestKey: requestKey, requestType: requestType)
                 
                 switch response {
                 case .data(let data):
@@ -525,7 +550,7 @@ public class WebService {
         return WebService.lastRequestId
     }
     
-    private func internalAddRequest(requestId: UInt64, requestKey: AnyHashable?, engine: WebServiceEngining) {
+    private func internalAddRequest(requestId: UInt64, requestKey: AnyHashable?, requestType: WebServiceBaseRequesting.Type, engine: WebServiceEngining) {
         //Increment counts for visible NetworkActivityIndicator in StatusBar if need only for iOS
         #if os(iOS)
         if engine.useNetworkActivityIndicator {
@@ -539,16 +564,18 @@ public class WebService {
         mutex.lock()
         defer { mutex.unlock() }
         
+        //1. request list
         let key = requestKey ?? AnyHashable(EmptyKey())
+        requestList[key, default: Set<UInt64>()].insert(requestId)
         
-        var list = requestList[key] ?? Set<UInt64>()
-        list.insert(requestId)
-        requestList[key] = list
-        
+        //2. use engines
         requestUseEngines[requestId] = engine
+        
+        //3. types requests
+        requestTypes["\(requestType)", default: Set<UInt64>()].insert(requestId)
     }
     
-    private func internalRemoveRequest(requestId: UInt64, requestKey: AnyHashable?) {
+    private func internalRemoveRequest(requestId: UInt64, requestKey: AnyHashable?, requestType: WebServiceBaseRequesting.Type) {
         WebService.staticMutex.lock()
         WebService.networkActivityIndicatorRequestIds.remove(requestId)
         WebService.staticMutex.unlock()
@@ -557,17 +584,18 @@ public class WebService {
         mutex.lock()
         defer { mutex.unlock() }
         
+        //1. request list
         let key = requestKey ?? AnyHashable(EmptyKey())
+        requestList[key]?.remove(requestId)
+        if requestList[key]?.isEmpty ?? false { requestList.removeValue(forKey: key) }
         
-        if var list = requestList[key] {
-            list.remove(requestId)
-            
-            if list.isEmpty {
-                requestList.removeValue(forKey: key)
-            }
-        }
-        
+        //2. use engines
         requestUseEngines.removeValue(forKey: requestId)
+        
+        //3. types requests
+        let typeKey = "\(requestType)"
+        requestTypes[typeKey]?.remove(requestId)
+        if requestTypes[typeKey]?.isEmpty ?? false { requestTypes.removeValue(forKey: typeKey) }
     }
     
     private func internalListRequest(requestKey: AnyHashable?) -> Set<UInt64>? {
@@ -595,6 +623,14 @@ public class WebService {
         }
         
         return ids.isEmpty ? nil : ids
+    }
+    
+    private func internalListRequest(requestType: WebServiceBaseRequesting.Type) -> Set<UInt64>? {
+        mutex.lock()
+        defer { mutex.unlock() }
+        
+        let key = "\(requestType)"
+        return requestTypes[key]
     }
     
     private func internalCancelRequests(ids: Set<UInt64>) {
