@@ -69,9 +69,19 @@ public class WebServiceMockEngine: WebServiceEngining {
     var requests: [UInt64: RequestItem] = [:]
     
     var rawDataFromStoreAlwaysNil: Bool
+    var alwaysSupported: Bool
     
-    public init(rawDataFromStoreAlwaysNil: Bool = true) {
+    
+    /**
+     Mock engine constructor.
+ 
+     - Parameters:
+        - rawDataFromStoreAlwaysNil: If `true` - all read raw data from storage return as nil for supporteds requests. Default: true.
+        - alwaysSupported: if `true` - support all mock request and ignore `isSupportedRequest` parameter (always true). Usually use for unit tests. Default: false. 
+     */
+    public init(rawDataFromStoreAlwaysNil: Bool = true, alwaysSupported: Bool = false) {
         self.rawDataFromStoreAlwaysNil = rawDataFromStoreAlwaysNil
+        self.alwaysSupported = alwaysSupported
     }
     
     public func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
@@ -79,7 +89,11 @@ public class WebServiceMockEngine: WebServiceEngining {
         if rawDataTypeForRestoreFromStorage != nil && !rawDataFromStoreAlwaysNil { return false }
         
         // Support only WebServiceMockRequesting with enable support.
-        return ((request as? WebServiceMockBaseRequesting)?.isSupportedRequest ?? false)
+        if let request = request as? WebServiceMockBaseRequesting {
+            return alwaysSupported || request.isSupportedRequest
+        } else {
+            return false
+        }
     }
     
     public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completionWithData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void, canceled: @escaping () -> Void) {
