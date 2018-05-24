@@ -58,7 +58,7 @@ class SiteWebProvider: WebServiceProvider, WebServiceDelegate {
     }
     
     ///Override needed
-    func webServiceResponse(request: WebServiceBaseRequesting, isStorageRequest: Bool, response: WebServiceAnyResponse) {
+    func webServiceResponse(request: WebServiceBaseRequesting, key: AnyHashable?, isStorageRequest: Bool, response: WebServiceAnyResponse) {
         guard let request = request as? SiteWebServiceRequest else { return }
         
         let response = response.convert(request: request)

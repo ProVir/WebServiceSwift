@@ -1,9 +1,9 @@
 //
 //  WebServiceTypes.swift
-//  WebServiceSwift 2.2.0
+//  WebServiceSwift 2.3.0
 //
 //  Created by ViR (Короткий Виталий) on 16.04.2018.
-//  Updated to 2.2.0 by ViR (Короткий Виталий) on 16.05.2018.
+//  Updated to 2.3.0 by ViR (Короткий Виталий) on 24.05.2018.
 //  Copyright © 2018 ProVir. All rights reserved.
 //
 
@@ -100,17 +100,6 @@ extension WebServiceResponse where T == Any? {
         case .data(let d): return d
         default: return nil
         }
-    }
-}
-
-///Wrapper for WebServiceBaseRequesting for use requestKey if WebServiceBaseRequesting conform to Equatable, but don't conform Hashable.
-public struct WebServiceRequestKeyWrapper<T: Equatable>: Hashable {
-    public let request: T
-    public let hashValue: Int
-    
-    public init(request: T, hashValue: Int = 0) {
-        self.request = request
-        self.hashValue = hashValue
     }
 }
 

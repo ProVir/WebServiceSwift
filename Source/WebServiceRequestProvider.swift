@@ -1,9 +1,9 @@
 //
 //  WebServiceRequestProvider.swift
-//  WebServiceSwift 2.2.1
+//  WebServiceSwift 2.3.0
 //
 //  Created by ViR (Короткий Виталий) on 24.04.2018.
-//  Updated to 2.2.1 by ViR (Короткий Виталий) on 20.05.2018.
+//  Updated to 2.3.0 by ViR (Короткий Виталий) on 24.05.2018.
 //  Copyright © 2018 ProVir. All rights reserved.
 //
 
@@ -24,26 +24,6 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
     // MARK: General control requests
     
     /**
-     Returns a Boolean value indicating whether the current queue contains the given request.
-     
-     - Parameter request: The request to find in the current queue.
-     - Returns: `true` if the request was found in the current queue; otherwise, `false`.
-     */
-    public func containsRequest(request: RequestType) -> Bool {
-        return service.containsRequest(request: request)
-    }
-    
-    /**
-     Returns a Boolean value indicating whether the current queue contains the given request.
-     
-     - Parameter requestKey: The requestKey to find in the current queue.
-     - Returns: `true` if the request with requestKey was found in the current queue; otherwise, `false`.
-     */
-    public func containsRequest(requestKey: AnyHashable?) -> Bool {
-        return service.containsRequest(requestKey: requestKey)
-    }
-    
-    /**
      Returns a Boolean value indicating whether the current queue contains the given requests.
      
      - Returns: `true` if one request with current type was found in the current queue; otherwise, `false`.
@@ -53,25 +33,23 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
     }
     
     /**
-     Cancel all requests with equal this request.
+     Returns a Boolean value indicating whether the current queue contains the given request.
      
-     Signal cancel send to engine, but real canceled implementation in engine.
-     
-     - Parameter request: The request to find in the current queue.
+     - Parameter requestKey: The requestKey to find in the current queue.
+     - Returns: `true` if the request with requestKey was found in the current queue; otherwise, `false`.
      */
-    public func cancelRequests(request: RequestType) {
-        service.cancelRequests(request: request)
+    public func containsRequest(key: AnyHashable) -> Bool {
+        return service.containsRequest(key: key)
     }
     
     /**
-     Cancel all requests with requestKey.
+     Returns a Boolean value indicating whether the current queue contains the given requests.
      
-     Signal cancel send to engine, but real canceled implementation in engine.
-     
-     - Parameter requestKey: The requestKey to find in the current queue.
+     - Parameter requestKeyType: The type requestKey to find in the all current queue.
+     - Returns: `true` if one request with requestKey.Type was found in the current queue; otherwise, `false`.
      */
-    public func cancelRequests(requestKey: AnyHashable?) {
-        service.cancelRequests(requestKey: requestKey)
+    public func containsRequest<T: Hashable>(keyType: T.Type) -> Bool {
+        return service.containsRequest(keyType: keyType)
     }
     
     /**
@@ -81,6 +59,28 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
      */
     public func cancelAllRequests() {
         service.cancelRequests(requestType: RequestType.self)
+    }
+    
+    /**
+     Cancel all requests with requestKey.
+     
+     Signal cancel send to engine, but real canceled implementation in engine.
+     
+     - Parameter requestKey: The requestKey to find in the current queue.
+     */
+    public func cancelRequests(key: AnyHashable) {
+        service.cancelRequests(key: key)
+    }
+    
+    /**
+     Cancel all requests with requestKey.Type.
+     
+     Signal cancel send to engine, but real canceled implementation in engine.
+     
+     - Parameter requestKeyType: The requestKey.Type to find in the current queue.
+     */
+    public func cancelRequests<T: Hashable>(keyType: T.Type) {
+        service.cancelRequests(keyType: keyType)
     }
     
     
@@ -96,6 +96,18 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
      */
     public func performRequest(_ request: RequestType, dataFromStorage: ((_ data: RequestType.ResultType) -> Void)? = nil, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
         service.performRequest(request, dataFromStorage: dataFromStorage, completionResponse: completionResponse)
+    }
+    
+    /**
+     Request for server (and to storage, if need). Response result in closure.
+     
+     - Parameters:
+     - request: The request data.
+     - dataFromStorage: Optional. Closure for read data from storage. if read data after data from server - cloure not call. If `closure == nil`, data not read from storage.
+     - completionResponse: Optional. Closure for response result from server.
+     */
+    public func performRequest(_ request: RequestType, key: AnyHashable, excludeDuplicate: Bool = false, dataFromStorage: ((_ data: RequestType.ResultType) -> Void)? = nil, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
+        service.performRequest(request, key: key, excludeDuplicate: excludeDuplicate, dataFromStorage: dataFromStorage, completionResponse: completionResponse)
     }
     
     /**
@@ -125,11 +137,70 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
     }
     
     /**
+     Request for server (and to storage, if need). Response result for delegate in helper or `WebService.delegate`.
+     
+     - Parameters:
+     - request: The request data.
+     - includeResponseStorage: `true` if need read data from storage. if read data after data from server - delegate not call. Default: false.
+     */
+    public func performRequest(_ request: RequestType, key: AnyHashable, excludeDuplicate: Bool = false, includeResponseStorage: Bool = false) {
+        service.performRequest(request, key: key, excludeDuplicate: excludeDuplicate, includeResponseStorage: includeResponseStorage, customDelegate: delegate)
+    }
+    
+    /**
      Request for only storage. Response result for delegate in helper or `WebService.delegate`.
      
      - Parameter request: The request data.
      */
-    public func readStorage(_ request: RequestType) {
-        service.readStorage(request, customDelegate: delegate)
+    public func readStorage(_ request: RequestType, key: AnyHashable?) {
+        service.readStorage(request, key: key, customDelegate: delegate)
     }
 }
+
+extension WebServiceRequestProvider where RequestType: Hashable {
+    
+    /**
+     Returns a Boolean value indicating whether the current queue contains the given request.
+     
+     - Parameter request: The request to find in the current queue.
+     - Returns: `true` if the request was found in the current queue; otherwise, `false`.
+     */
+    public func containsRequest(request: RequestType) -> Bool {
+        return service.containsRequest(request: request)
+    }
+    
+    /**
+     Cancel all requests with equal this request.
+     
+     Signal cancel send to engine, but real canceled implementation in engine.
+     
+     - Parameter request: The request to find in the current queue.
+     */
+    public func cancelRequests(request: RequestType) {
+        service.cancelRequests(request: request)
+    }
+    
+    /**
+     Request for server (and to storage, if need). Response result in closure.
+     
+     - Parameters:
+     - request: The request data.
+     - dataFromStorage: Optional. Closure for read data from storage. if read data after data from server - cloure not call. If `closure == nil`, data not read from storage.
+     - completionResponse: Optional. Closure for response result from server.
+     */
+    public func performRequest(_ request: RequestType, excludeDuplicate: Bool, dataFromStorage: ((_ data: RequestType.ResultType) -> Void)? = nil, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
+                service.performRequest(request, excludeDuplicate: excludeDuplicate, dataFromStorage: dataFromStorage, completionResponse: completionResponse)
+    }
+    
+    /**
+     Request for server (and to storage, if need). Response result for delegate in helper or `WebService.delegate`.
+     
+     - Parameters:
+     - request: The request data.
+     - includeResponseStorage: `true` if need read data from storage. if read data after data from server - delegate not call. Default: false.
+     */
+    public func performRequest(_ request: RequestType, excludeDuplicate: Bool, includeResponseStorage: Bool = false) {
+        service.performRequest(request, excludeDuplicate: excludeDuplicate, includeResponseStorage: includeResponseStorage, customDelegate: delegate)
+    }
+}
+

@@ -1,9 +1,9 @@
 //
 //  WebServiceProtocols.swift
-//  WebServiceSwift 2.2.0
+//  WebServiceSwift 2.3.0
 //
 //  Created by ViR (Короткий Виталий) on 14.06.2017.
-//  Updated to 2.2.0 by ViR (Короткий Виталий) on 16.05.2018.
+//  Updated to 2.3.0 by ViR (Короткий Виталий) on 24.05.2018.
 //  Copyright © 2017 ProVir. All rights reserved.
 //
 
@@ -12,46 +12,12 @@ import Foundation
 //MARK: Requests
 
 /// Base protocol for all types request.
-public protocol WebServiceBaseRequesting {
-    /**
-     Unique key for request or groups requests (Optional). Default: for Hashable Requests equal self Request, else without key (= nil).
-     
-     Use in `WebService.containsRequest()` and `WebService.cancelRequest()` methods.
-     
-     Requests with equal `requestKey` are a group and controls by together in the methods of `containsRequest()` and `cancelRequest()`.
-    */
-    var requestKey: AnyHashable? { get }
-    
-    /// Test to equal request and send error if this request in process and wait data from server. Default = `nil` - use `WebService.excludeDuplicateRequests`.
-    var excludeDuplicate: Bool? { get }
-}
+public protocol WebServiceBaseRequesting { }
 
 /// Generic protocol for all types request.
 public protocol WebServiceRequesting: WebServiceBaseRequesting {
+    /// Type for response data when success. For data always nil (without data). use Any?
     associatedtype ResultType
-
-    /**
-     Result type. Usually as constant. If use `enums` with different result types, you can `ResultType = Any` and return many `resultType`.
-     Default don't need implementation (only use `typealias ResultType = *SomeType*`)
-     */
-    var resultType: ResultType.Type { get }
-}
-
-public extension WebServiceBaseRequesting {
-    var requestKey: AnyHashable? { return nil }
-    var excludeDuplicate: Bool? { return nil }
-}
-
-public extension WebServiceBaseRequesting where Self: Equatable {
-    var requestKey: AnyHashable? { return WebServiceRequestKeyWrapper(request: self) }
-}
-
-public extension WebServiceBaseRequesting where Self: Hashable {
-    var requestKey: AnyHashable? { return self }
-}
-
-public extension WebServiceRequesting {
-    var resultType: ResultType.Type { return ResultType.self }
 }
 
 
