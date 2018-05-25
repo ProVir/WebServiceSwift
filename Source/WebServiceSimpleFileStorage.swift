@@ -1,9 +1,9 @@
 //
 //  WebServiceSimpleFileStorage.swift
-//  WebServiceSwift 2.2.0
+//  WebServiceSwift 2.3.0
 //
 //  Created by ViR (Короткий Виталий) on 29.07.17.
-//  Updated to 2.2.0 by ViR (Короткий Виталий) on 16.05.2018.
+//  Updated to 2.3.0 by ViR (Короткий Виталий) on 25.05.2018.
 //  Copyright © 2017 ProVir. All rights reserved.
 //
 
@@ -11,14 +11,14 @@ import Foundation
 
 
 /// Conform to protocol if requests support store raw data.
-public protocol WebServiceRequestRawStorage: WebServiceBaseRequesting {
+public protocol WebServiceRequestRawStoring: WebServiceBaseRequesting {
     
     ///Unique identificator for read and write data if current request support storage as raw data. May contain file type at the end.
     var identificatorForRawStorage: String? { get }
 }
 
 /// Conform to protocol if requests support store data.
-public protocol WebServiceRequestValueStorage: WebServiceBaseRequesting {
+public protocol WebServiceRequestValueStoring: WebServiceBaseRequesting {
     
     ///Unique identificator for read and write data if current request support storage as custom data. May contain file type at the end.
     var identificatorForValueStorage: String? { get }
@@ -95,11 +95,11 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
     
     // MARK: WebServiceStoraging
     public func isSupportedRequestForStorage(_ request: WebServiceBaseRequesting) -> Bool {
-        if let request = request as? WebServiceRequestRawStorage,
+        if let request = request as? WebServiceRequestRawStoring,
             request.identificatorForRawStorage != nil {
             return true
             
-        } else if let request = request as? WebServiceRequestValueStorage,
+        } else if let request = request as? WebServiceRequestValueStoring,
             request.identificatorForValueStorage != nil {
             return true
             
@@ -110,7 +110,7 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
     
     public func readData(request: WebServiceBaseRequesting, completionHandler: @escaping (Bool, WebServiceAnyResponse) -> Void) throws {
         //Raw
-        if let request = request as? WebServiceRequestRawStorage,
+        if let request = request as? WebServiceRequestRawStoring,
             let identificator = request.identificatorForRawStorage {
             
             privateReadData(identificator: identificator, type: .raw, completionHandler: { (data, error) in
@@ -123,7 +123,7 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
         }
         
         //Custom
-        else if let request = request as? WebServiceRequestValueStorage,
+        else if let request = request as? WebServiceRequestValueStoring,
             let identificator = request.identificatorForValueStorage {
             
             privateReadData(identificator: identificator, type: .value, completionHandler: { binaryData, error in
@@ -147,7 +147,7 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
     
     public func writeData(request: WebServiceBaseRequesting, data: Any, isRaw: Bool) {
         //Raw
-        if isRaw, let request = request as? WebServiceRequestRawStorage,
+        if isRaw, let request = request as? WebServiceRequestRawStoring,
             let identificator = request.identificatorForRawStorage,
             let binaryData = data as? Data {
             
@@ -155,7 +155,7 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
         }
         
         //Custom
-        else if !isRaw, let request = request as? WebServiceRequestValueStorage,
+        else if !isRaw, let request = request as? WebServiceRequestValueStoring,
             let identificator = request.identificatorForValueStorage,
             let binaryData = request.writeDataToStorage(value: data) {
             

@@ -3,7 +3,7 @@
 //  WebServiceSwift 2.3.0
 //
 //  Created by ViR (Короткий Виталий) on 14.06.2017.
-//  Updated to 2.3.0 by ViR (Короткий Виталий) on 24.05.2018.
+//  Updated to 2.3.0 by ViR (Короткий Виталий) on 25.05.2018.
 //  Copyright © 2017 ProVir. All rights reserved.
 //
 
@@ -362,7 +362,7 @@ public class WebService {
     }
     
     
-    public func performRequest<RequestType: WebServiceRequesting>(_ request: RequestType, key: AnyHashable, excludeDuplicate: Bool = false, dataFromStorage: ((_ data: RequestType.ResultType) -> Void)? = nil, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
+    public func performRequest<RequestType: WebServiceRequesting>(_ request: RequestType, key: AnyHashable, excludeDuplicate: Bool, dataFromStorage: ((_ data: RequestType.ResultType) -> Void)? = nil, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
         internalPerformRequest(request, key: key, excludeDuplicate: excludeDuplicate, dataFromStorage: dataFromStorage, completionResponse: completionResponse)
     }
     
@@ -424,7 +424,7 @@ public class WebService {
         internalPerformRequest(request, key: nil, excludeDuplicate: false, includeResponseStorage: includeResponseStorage, customDelegate: customDelegate)
     }
     
-    public func performRequest(_ request: WebServiceBaseRequesting, key: AnyHashable, excludeDuplicate: Bool = false, includeResponseStorage: Bool = false, customDelegate: WebServiceDelegate? = nil) {
+    public func performRequest(_ request: WebServiceBaseRequesting, key: AnyHashable, excludeDuplicate: Bool, includeResponseStorage: Bool = false, customDelegate: WebServiceDelegate? = nil) {
         internalPerformRequest(request, key: key, excludeDuplicate: excludeDuplicate, includeResponseStorage: includeResponseStorage, customDelegate: customDelegate)
     }
     

@@ -3,7 +3,7 @@
 //  WebServiceSwift 2.3.0
 //
 //  Created by ViR (Короткий Виталий) on 24.04.2018.
-//  Updated to 2.3.0 by ViR (Короткий Виталий) on 24.05.2018.
+//  Updated to 2.3.0 by ViR (Короткий Виталий) on 25.05.2018.
 //  Copyright © 2018 ProVir. All rights reserved.
 //
 
@@ -106,7 +106,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
      - dataFromStorage: Optional. Closure for read data from storage. if read data after data from server - cloure not call. If `closure == nil`, data not read from storage.
      - completionResponse: Optional. Closure for response result from server.
      */
-    public func performRequest(_ request: RequestType, key: AnyHashable, excludeDuplicate: Bool = false, dataFromStorage: ((_ data: RequestType.ResultType) -> Void)? = nil, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
+    public func performRequest(_ request: RequestType, key: AnyHashable, excludeDuplicate: Bool, dataFromStorage: ((_ data: RequestType.ResultType) -> Void)? = nil, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
         service.performRequest(request, key: key, excludeDuplicate: excludeDuplicate, dataFromStorage: dataFromStorage, completionResponse: completionResponse)
     }
     
@@ -143,7 +143,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
      - request: The request data.
      - includeResponseStorage: `true` if need read data from storage. if read data after data from server - delegate not call. Default: false.
      */
-    public func performRequest(_ request: RequestType, key: AnyHashable, excludeDuplicate: Bool = false, includeResponseStorage: Bool = false) {
+    public func performRequest(_ request: RequestType, key: AnyHashable, excludeDuplicate: Bool, includeResponseStorage: Bool = false) {
         service.performRequest(request, key: key, excludeDuplicate: excludeDuplicate, includeResponseStorage: includeResponseStorage, customDelegate: delegate)
     }
     
