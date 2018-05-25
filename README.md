@@ -39,6 +39,20 @@ Network layer as Service. Service as an interface for interacting with your web 
 - [x] MockEngine for temporary or test  response data without use real api engine (from 2.2). 
 - [ ] Simple HTTP Engine.  
 
+## Warnings - in version 2.3 there will be changes
+
+#### Removed `WebServiceBaseRequesting.requestKey` parameter
+The parameter is no longer responsible for the uniqueness and management of running requests. Instead of this parameter, the following features will be added:
+1. Only requests with the implementation of a `Hashable` protocol are unique. `Equatable`, but not `Hashable` requests ignoring. 
+2. Added parameter `key: AnyHashable` for `performRequests()` methods. It changes the algorithm for determining the uniqueness of the request, the uniqueness of the request is determined by it.  
+
+#### Removed `WebService.excludeDuplicateRequestsDefault` and `WebServiceBaseRequesting.excludeDuplicate` parameters. Added parameter `excludeDuplicate: Bool` for `performRequests()` methods. 
+Now the condition of the absence of duplicate requests is set only at the moment of execution of the request itself.  It is recommended not to use the parameter `WebService.excludeDuplicateRequestsDefault`. 
+
+#### From `WebServiceMockRequesting` removed default implementation parameters and functions. 
+Always use all the parameters in your implementation. 
+
+
 
 ## Requirements
 
