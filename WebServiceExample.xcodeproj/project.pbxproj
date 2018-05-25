@@ -72,7 +72,7 @@
 		501D2AED1F4E9BE5000E3FA3 /* SiteWebServiceRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SiteWebServiceRequest.swift; sourceTree = "<group>"; };
 		501D2AEF1F4EA1EC000E3FA3 /* WebServiceHtmlEngine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceHtmlEngine.swift; sourceTree = "<group>"; };
 		506CAFCD2084D707008AB016 /* WebServiceTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceTypes.swift; sourceTree = "<group>"; };
-		50A9162420B09C4C00EA2E9D /* WebServiceSwift.podspec */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = WebServiceSwift.podspec; sourceTree = "<group>"; };
+		50A9162420B09C4C00EA2E9D /* WebServiceSwift.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; fileEncoding = 4; path = WebServiceSwift.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		50AB6AAF20883C2F00C1E093 /* SiteWebProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteWebProvider.swift; sourceTree = "<group>"; };
 		50AB6AB120883F3100C1E093 /* WebService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebService.swift; sourceTree = "<group>"; };
 		50BFAFF7208F4C8A007E8FBD /* WebServiceRequestProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceRequestProvider.swift; sourceTree = "<group>"; };
