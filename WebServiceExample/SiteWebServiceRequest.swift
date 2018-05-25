@@ -28,7 +28,7 @@ extension SiteWebServiceRequest: WebServiceHtmlRequesting {
 
 
 //MARK: Store support
-extension SiteWebServiceRequest: WebServiceRequestRawStorage {
+extension SiteWebServiceRequest: WebServiceRequestRawStoring {
     var identificatorForRawStorage: String? {
         switch self {
         case .siteSearch(let type, domain: let domain):
@@ -44,7 +44,7 @@ extension SiteWebServiceRequest: WebServiceRequestRawStorage {
 }
 
 /*
-extension SiteWebServiceRequest: WebServiceRequestValueStorage {
+extension SiteWebServiceRequest: WebServiceRequestValueStoring {
     var identificatorForValueStorage: String? {
         switch self {
         case .siteSearch(let type, domain: let domain):
