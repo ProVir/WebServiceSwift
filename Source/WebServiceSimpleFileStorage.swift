@@ -227,7 +227,11 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
         fileWorkDispatchQueue.async {
             do {
                 let binData = try Data(contentsOf: url)
-                let data = try PropertyListDecoder().decode(StoreData.self, from: binData)
+                var data = try PropertyListDecoder().decode(StoreData.self, from: binData)
+                
+                if data.timeStamp?.timeIntervalSinceNow ?? -0.1 > 0 {
+                    data.timeStamp = nil
+                }
                 
                 DispatchQueue.main.async {
                     completionHandler(data, nil)
