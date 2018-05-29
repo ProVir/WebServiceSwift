@@ -32,6 +32,18 @@ public protocol WebServiceDelegate: class {
 /// Controller for work. All requests are performed through it.
 public class WebService {
     
+    /// Dependency type to next request (`performRequest()`). Use only to read from storage.
+    public enum ReadStorageDependencyType {
+        /// Not depend for next request
+        case notDepend
+        
+        /// Ignore result from storage only after success response
+        case dependSuccessResult
+        
+        /// As dependSuccessResult, but canceled read from storage after duplicated or canceled next request.
+        case dependFull
+    }
+    
     /**
      Constructor for WebService.
      
@@ -94,6 +106,8 @@ public class WebService {
     private var requestsForTypes: [String: Set<UInt64>] = [:]        //[Request.Type: [Id]]
     private var requestsForHashs: [AnyHashable: Set<UInt64>] = [:]   //[Request<Hashable>: [Id]]
     private var requestsForKeys:  [AnyHashable: Set<UInt64>] = [:]   //[Key: [Id]]
+    
+    private var readStorageDependNextRequestWait: ReadStorageDependRequestInfo?
     
     
     // MARK: Settings
@@ -223,17 +237,22 @@ public class WebService {
         - dataFromStorage: Optional. Closure for read data from storage. if read data after data from server - cloure not call. If `closure == nil`, data not read from storage.
         - completionResponse: Optional. Closure for response result from server.
      */
-    public func performBaseRequest(_ request: WebServiceBaseRequesting, key: AnyHashable? = nil, excludeDuplicate: Bool = false, dataFromStorage: ((_ data:Any) -> Void)? = nil, completionResponse: @escaping (_ response: WebServiceAnyResponse) -> Void) {
+    public func performBaseRequest(_ request: WebServiceBaseRequesting, key: AnyHashable? = nil, excludeDuplicate: Bool = false, completionResponse: @escaping (_ response: WebServiceAnyResponse) -> Void) {
+        weak var readStorageRequestInfo: ReadStorageDependRequestInfo? = readStorageDependNextRequestWait
+        readStorageDependNextRequestWait = nil
+        
         let requestHashable = request as? AnyHashable
         
         //Duplicate requests
         if excludeDuplicate, let key = key {
             if containsRequest(key: key) {
+                readStorageRequestInfo?.setDuplicate()
                 completionResponse(.duplicateRequest)
                 return
             }
         } else if excludeDuplicate, let requestHashable = requestHashable {
             if mutex.synchronized({ !(requestsForHashs[requestHashable]?.isEmpty ?? true) }) {
+                readStorageRequestInfo?.setDuplicate()
                 completionResponse(.duplicateRequest)
                 return
             }
@@ -241,6 +260,7 @@ public class WebService {
         
         //Engine and Storage
         guard let engine = internalFindEngine(request: request) else {
+            readStorageRequestInfo?.setState(.error)
             completionResponse(.error(WebServiceRequestError.noFoundEngine))
             return
         }
@@ -253,27 +273,30 @@ public class WebService {
         
  
         //Request in work
-        var requestStatus = RequestStatus.inWork
+        var requestState = RequestState.inWork
         
         //Step #3: Call this closure with result response
         let completeHandlerResponse: (WebServiceAnyResponse) -> Void = { [weak self, queueForResponse = self.queueForResponse] response in
             //Usually main thread
             queueForResponse.async {
-                guard requestStatus == .inWork else { return }
+                guard requestState == .inWork else { return }
                 
                 self?.internalRemoveRequest(requestId: requestId, key: key, requestHashable: requestHashable, requestType: requestType)
                 
                 switch response {
                 case .data(let data):
-                    requestStatus = .completed
+                    requestState = .completed
+                    readStorageRequestInfo?.setState(requestState)
                     completionResponse(.data(data))
                     
                 case .error(let error):
-                    requestStatus = .error
+                    requestState = .error
+                    readStorageRequestInfo?.setState(requestState)
                     completionResponse(.error(error))
                     
                 case .canceledRequest, .duplicateRequest:
-                    requestStatus = .canceled
+                    requestState = .canceled
+                    readStorageRequestInfo?.setState(requestState)
                     completionResponse(.canceledRequest)
                 }
             }
@@ -305,7 +328,7 @@ public class WebService {
                                   completionWithData: { data in
                                     
                                     //Raw data from server
-                                    guard requestStatus == .inWork else { return }
+                                    guard requestState == .inWork else { return }
                                     
                                     if let queue = engine.queueForDataHandler {
                                         queue.async { dataHandler(data) }
@@ -330,21 +353,6 @@ public class WebService {
         } else {
             requestHandler()
         }
-        
-        //Read from storage
-        if let dataFromStorage = dataFromStorage, let storage = storage,
-            (requestStatus == .inWork || requestStatus == .error) {
-            
-            self.internalReadStorage(storage: storage, request: request) { response in
-                switch response {
-                case .data(let data):
-                    if let data = data, (requestStatus == .inWork || requestStatus == .error) {
-                        dataFromStorage(data)
-                    }
-                default: break
-                }
-            }
-        }
     }
     
     /**
@@ -357,17 +365,17 @@ public class WebService {
         - dataFromStorage: Optional. Closure for read data from storage. if read data after data from server - cloure not call. If `closure == nil`, data not read from storage.
         - completionResponse: Optional. Closure for response result from server.
      */
-    public func performRequest<RequestType: WebServiceRequesting>(_ request: RequestType, dataFromStorage: ((_ data: RequestType.ResultType) -> Void)? = nil, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
-        internalPerformRequest(request, key: nil, excludeDuplicate: false, dataFromStorage: dataFromStorage, completionResponse: completionResponse)
+    public func performRequest<RequestType: WebServiceRequesting>(_ request: RequestType, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
+        performBaseRequest(request, key: nil, excludeDuplicate: false, completionResponse: { completionResponse( $0.convert() ) })
     }
     
     
-    public func performRequest<RequestType: WebServiceRequesting>(_ request: RequestType, key: AnyHashable, excludeDuplicate: Bool, dataFromStorage: ((_ data: RequestType.ResultType) -> Void)? = nil, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
-        internalPerformRequest(request, key: key, excludeDuplicate: excludeDuplicate, dataFromStorage: dataFromStorage, completionResponse: completionResponse)
+    public func performRequest<RequestType: WebServiceRequesting>(_ request: RequestType, key: AnyHashable, excludeDuplicate: Bool, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
+        performBaseRequest(request, key: key, excludeDuplicate: excludeDuplicate, completionResponse: { completionResponse( $0.convert() ) })
     }
     
-    public func performRequest<RequestType: WebServiceRequesting & Hashable>(_ request: RequestType, excludeDuplicate: Bool, dataFromStorage: ((_ data: RequestType.ResultType) -> Void)? = nil, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
-        internalPerformRequest(request, key: nil, excludeDuplicate: excludeDuplicate, dataFromStorage: dataFromStorage, completionResponse: completionResponse)
+    public func performRequest<RequestType: WebServiceRequesting & Hashable>(_ request: RequestType, excludeDuplicate: Bool, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
+        performBaseRequest(request, key: nil, excludeDuplicate: excludeDuplicate, completionResponse: { completionResponse( $0.convert() ) })
     }
     
     
@@ -380,9 +388,9 @@ public class WebService {
      - completionResponse: Closure for read data from storage.
      - response: result read from storage.
      */
-    public func readStorageAnyData(_ request: WebServiceBaseRequesting, completionResponse: @escaping (_ response: WebServiceAnyResponse) -> Void) {
+    public func readStorageAnyData(_ request: WebServiceBaseRequesting, dependencyNextRequest: ReadStorageDependencyType = .notDepend, completionResponse: @escaping (_ response: WebServiceAnyResponse) -> Void) {
         if let storage = internalFindStorage(request: request) {
-            internalReadStorage(storage: storage, request: request, completionResponse: completionResponse)
+            internalReadStorage(storage: storage, request: request, dependencyNextRequest: dependencyNextRequest, completionResponse: completionResponse)
         } else {
             completionResponse(.error(WebServiceRequestError.noFoundStorage))
         }
@@ -396,13 +404,13 @@ public class WebService {
      - completionResponse: Closure for read data from storage.
      - response: result read from storage.
      */
-    public func readStorage<RequestType: WebServiceRequesting>(_ request: RequestType, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
+    public func readStorage<RequestType: WebServiceRequesting>(_ request: RequestType, dependencyNextRequest: ReadStorageDependencyType = .notDepend, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
         if let storage = internalFindStorage(request: request) {
             //CompletionResponse
             let completionResponseInternal:(_ response: WebServiceAnyResponse) -> Void = { completionResponse($0.convert()) }
             
             //Request
-            internalReadStorage(storage: storage, request: request, completionResponse: completionResponseInternal)
+            internalReadStorage(storage: storage, request: request, dependencyNextRequest: dependencyNextRequest, completionResponse: completionResponseInternal)
             
         } else {
             completionResponse(.error(WebServiceRequestError.noFoundStorage))
@@ -420,16 +428,16 @@ public class WebService {
      - includeResponseStorage: `true` if need read data from storage. if read data after data from server - delegate not call. Default: false.
      - customDelegate: Optional. Unique delegate for current request.
      */
-    public func performRequest(_ request: WebServiceBaseRequesting, includeResponseStorage: Bool = false, customDelegate: WebServiceDelegate? = nil) {
-        internalPerformRequest(request, key: nil, excludeDuplicate: false, includeResponseStorage: includeResponseStorage, customDelegate: customDelegate)
+    public func performRequest(_ request: WebServiceBaseRequesting, customDelegate: WebServiceDelegate? = nil) {
+        internalPerformRequest(request, key: nil, excludeDuplicate: false, customDelegate: customDelegate)
     }
     
-    public func performRequest(_ request: WebServiceBaseRequesting, key: AnyHashable, excludeDuplicate: Bool, includeResponseStorage: Bool = false, customDelegate: WebServiceDelegate? = nil) {
-        internalPerformRequest(request, key: key, excludeDuplicate: excludeDuplicate, includeResponseStorage: includeResponseStorage, customDelegate: customDelegate)
+    public func performRequest(_ request: WebServiceBaseRequesting, key: AnyHashable, excludeDuplicate: Bool, customDelegate: WebServiceDelegate? = nil) {
+        internalPerformRequest(request, key: key, excludeDuplicate: excludeDuplicate, customDelegate: customDelegate)
     }
     
-    public func performRequest<RequestType: WebServiceBaseRequesting & Hashable>(_ request: RequestType, excludeDuplicate: Bool, includeResponseStorage: Bool = false, customDelegate: WebServiceDelegate? = nil) {
-        internalPerformRequest(request, key: nil, excludeDuplicate: excludeDuplicate, includeResponseStorage: includeResponseStorage, customDelegate: customDelegate)
+    public func performRequest<RequestType: WebServiceBaseRequesting & Hashable>(_ request: RequestType, excludeDuplicate: Bool, customDelegate: WebServiceDelegate? = nil) {
+        internalPerformRequest(request, key: nil, excludeDuplicate: excludeDuplicate, customDelegate: customDelegate)
     }
     
     
@@ -440,9 +448,9 @@ public class WebService {
      - request: The request data.
      - customDelegate: Optional. Unique delegate for current request.
      */
-    public func readStorage(_ request: WebServiceBaseRequesting, key: AnyHashable? = nil, customDelegate: WebServiceDelegate? = nil) {
+    public func readStorage(_ request: WebServiceBaseRequesting, key: AnyHashable? = nil, dependencyNextRequest: ReadStorageDependencyType = .notDepend, customDelegate: WebServiceDelegate? = nil) {
         if let delegate = customDelegate ?? self.delegate {
-            readStorageAnyData(request, completionResponse: { [weak delegate] response in
+            readStorageAnyData(request, dependencyNextRequest: dependencyNextRequest, completionResponse: { [weak delegate] response in
                 if let delegate = delegate {
                     delegate.webServiceResponse(request: request, key: key, isStorageRequest: true, response: response)
                 }
@@ -451,30 +459,11 @@ public class WebService {
     }
     
     // MARK: - Private functions
-    private func internalPerformRequest<RequestType: WebServiceRequesting>(_ request: RequestType, key: AnyHashable?, excludeDuplicate: Bool, dataFromStorage: ((_ data: RequestType.ResultType) -> Void)?, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
-        
-        //DataFromStorage
-        let dataFromStorageInternal: ((_ data: Any) -> Void)?
-        if let dataFromStorage = dataFromStorage {
-            dataFromStorageInternal = { if let data = $0 as? RequestType.ResultType { dataFromStorage(data) } }
-        } else {
-            dataFromStorageInternal = nil
-        }
-        
-        //Real request
-        performBaseRequest(request, key: key, excludeDuplicate: excludeDuplicate, dataFromStorage: dataFromStorageInternal, completionResponse: { completionResponse( $0.convert() ) })
-    }
-    
-    private func internalPerformRequest(_ request: WebServiceBaseRequesting, key: AnyHashable?, excludeDuplicate: Bool, includeResponseStorage: Bool = false, customDelegate: WebServiceDelegate? = nil) {
+    private func internalPerformRequest(_ request: WebServiceBaseRequesting, key: AnyHashable?, excludeDuplicate: Bool, customDelegate: WebServiceDelegate? = nil) {
         if let delegate = customDelegate ?? self.delegate {
             performBaseRequest(request,
                                key: key,
                                excludeDuplicate: excludeDuplicate,
-                               dataFromStorage: includeResponseStorage ? { [weak delegate] data in
-                                if let delegate = delegate {
-                                    delegate.webServiceResponse(request: request, key: key, isStorageRequest: true, response: .data(data))
-                                }
-                                } : nil,
                                completionResponse: { [weak delegate] response in
                                 if let delegate = delegate {
                                     delegate.webServiceResponse(request: request, key: key, isStorageRequest: false, response: response)
@@ -482,14 +471,47 @@ public class WebService {
             })
         }
         else {
-            performBaseRequest(request, key: key, excludeDuplicate: excludeDuplicate, dataFromStorage: nil, completionResponse: { _ in })
+            performBaseRequest(request, key: key, excludeDuplicate: excludeDuplicate, completionResponse: { _ in })
         }
     }
     
-    private func internalReadStorage(storage: WebServiceStoraging, request: WebServiceBaseRequesting, completionResponse: @escaping (_ response: WebServiceAnyResponse) -> Void) {
+    private func internalReadStorage(storage: WebServiceStoraging, request: WebServiceBaseRequesting, dependencyNextRequest: ReadStorageDependencyType, completionResponse: @escaping (_ response: WebServiceAnyResponse) -> Void) {
+        let nextRequestInfo: ReadStorageDependRequestInfo?
+        let completionHandler: (_ response: WebServiceAnyResponse) -> Void
+        
+        //Dependency setup
+        if dependencyNextRequest == .notDepend {
+            nextRequestInfo = nil
+            completionHandler = completionResponse
+            
+        } else {
+            nextRequestInfo = ReadStorageDependRequestInfo(dependencyType: dependencyNextRequest)
+            readStorageDependNextRequestWait = nextRequestInfo
+            
+            completionHandler = { [weak self] response in
+                if self?.readStorageDependNextRequestWait === nextRequestInfo {
+                    self?.readStorageDependNextRequestWait = nil
+                }
+                
+                if nextRequestInfo?.canRead() ?? true {
+                    completionResponse(response)
+                } else if nextRequestInfo?.isDuplicate ?? false {
+                    completionResponse(.duplicateRequest)
+                } else {
+                    completionResponse(.canceledRequest)
+                }
+            }
+        }
+        
+        //Perform read
         do {
             try storage.readData(request: request) { [weak self, queueForResponse = self.queueForResponse] isRawData, response in
-                if isRawData, let rawData = response.dataResponse() {
+                if (nextRequestInfo?.canRead() ?? true) == false {
+                    self?.queueForResponse.async {
+                        completionHandler(.canceledRequest)
+                    }
+                    
+                } else if isRawData, let rawData = response.dataResponse() {
                     if let engine = self?.internalFindEngine(request: request, rawDataTypeForRestoreFromStorage: type(of: rawData)) {
                         //Handler closure with fined engine for use next
                         let handler = {
@@ -497,11 +519,11 @@ public class WebService {
                                 let data = try engine.dataHandler(request: request, data: rawData, isRawFromStorage: true)
                                 
                                 queueForResponse.async {
-                                    completionResponse(.data(data))
+                                    completionHandler(.data(data))
                                 }
                             } catch {
                                 queueForResponse.async {
-                                    completionResponse(.error(error))
+                                    completionHandler(.error(error))
                                 }
                             }
                         }
@@ -516,19 +538,21 @@ public class WebService {
                     } else {
                         //Not found engine
                         queueForResponse.async {
-                            completionResponse(.error(WebServiceRequestError.noFoundEngine))
+                            completionHandler(.error(WebServiceRequestError.noFoundEngine))
                         }
                     }
                     
                 } else {
                     //No RAW data
                     self?.queueForResponse.async {
-                        completionResponse(response)
+                        completionHandler(response)
                     }
                 }
             }
         } catch {
-            completionResponse(.error(error))
+            self.queueForResponse.async {
+                completionHandler(.error(error))
+            }
         }
     }
     
@@ -662,11 +686,56 @@ public class WebService {
         }
     }
     
-    private enum RequestStatus {
+    
+    //MARK: Private types
+    private enum RequestState {
         case inWork
         case completed
         case error
         case canceled
+    }
+    
+    private class ReadStorageDependRequestInfo {
+        private let mutex = PThreadMutexLock()
+        let dependencyType: ReadStorageDependencyType
+        
+        private var _state: RequestState = .inWork
+        private var _isDuplicate: Bool = false
+        
+        var state: RequestState { return mutex.synchronized { self._state } }
+        var isDuplicate: Bool { return mutex.synchronized { self._isDuplicate } }
+        
+        init(dependencyType: ReadStorageDependencyType) {
+            self.dependencyType = dependencyType
+            
+            print("Create ReadStorageDependRequestInfo")
+        }
+        
+        deinit {
+            print("Remove ReadStorageDependRequestInfo")
+        }
+        
+        func setDuplicate() {
+            mutex.synchronized {
+                self._isDuplicate = true
+                self._state = .canceled
+            }
+        }
+        
+        func setState(_ state: RequestState) {
+            mutex.synchronized {
+                self._isDuplicate = false
+                self._state = state
+            }
+        }
+        
+        func canRead() -> Bool {
+            switch dependencyType {
+            case .notDepend: return true
+            case .dependSuccessResult: return state != .completed
+            case .dependFull: return state != .completed && state != .canceled && !isDuplicate
+            }
+        }
     }
 }
 

@@ -22,8 +22,6 @@
 		501D2AFB1F527D05000E3FA3 /* WebService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AE41F4E8FA2000E3FA3 /* WebService.swift */; };
 		506CAFCF2084D729008AB016 /* WebServiceTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 506CAFCD2084D707008AB016 /* WebServiceTypes.swift */; };
 		50844338207D244900C757C7 /* WebServiceMockEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50F4943120565FD1004F1E08 /* WebServiceMockEngine.swift */; };
-		508496A120B86F7900660A86 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 50F0804F20AC843B00994710 /* README.md */; };
-		50A9162520B09C4C00EA2E9D /* WebServiceSwift.podspec in Resources */ = {isa = PBXBuildFile; fileRef = 50A9162420B09C4C00EA2E9D /* WebServiceSwift.podspec */; };
 		50AB6AB020883C2F00C1E093 /* SiteWebProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50AB6AAF20883C2F00C1E093 /* SiteWebProvider.swift */; };
 		50AB6AB220883F3100C1E093 /* WebService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50AB6AB120883F3100C1E093 /* WebService.swift */; };
 		50BFAFF9208F4C8E007E8FBD /* WebServiceRequestProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50BFAFF7208F4C8A007E8FBD /* WebServiceRequestProvider.swift */; };
@@ -300,9 +298,7 @@
 			files = (
 				501D2ACB1F4E8DD0000E3FA3 /* LaunchScreen.storyboard in Resources */,
 				501D2AC81F4E8DD0000E3FA3 /* Assets.xcassets in Resources */,
-				508496A120B86F7900660A86 /* README.md in Resources */,
 				501D2AC61F4E8DD0000E3FA3 /* Main.storyboard in Resources */,
-				50A9162520B09C4C00EA2E9D /* WebServiceSwift.podspec in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

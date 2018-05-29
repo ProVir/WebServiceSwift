@@ -49,12 +49,24 @@ class SiteWebProvider: WebServiceProvider, WebServiceDelegate {
     
     ///Request use SiteWebServiceProviderDelegate
     func requestHtmlData(_ request: SiteWebServiceRequest, includeResponseStorage: Bool) {
-        requestProvider.performRequest(request, includeResponseStorage: includeResponseStorage)
+        if includeResponseStorage {
+            requestProvider.readStorage(request, dependencyNextRequest: .dependFull)
+        }
+        
+        requestProvider.performRequest(request)
     }
     
     ///Request use closures
     func requestHtmlData(_ request: SiteWebServiceRequest, dataFromStorage: ((_ data:String) -> Void)? = nil, completionHandler: @escaping (_ response:WebServiceResponse<String>) -> Void) {
-        requestProvider.performRequest(request, dataFromStorage: dataFromStorage, completionResponse: completionHandler)
+        if let dataFromStorage = dataFromStorage {
+            requestProvider.readStorage(request, dependencyNextRequest: .dependFull) { response in
+                if case .data(let data) = response {
+                    dataFromStorage(data)
+                }
+            }
+        }
+        
+        requestProvider.performRequest(request, completionResponse: completionHandler)
     }
     
     ///Override needed
