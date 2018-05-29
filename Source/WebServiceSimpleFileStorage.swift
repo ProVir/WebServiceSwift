@@ -10,18 +10,18 @@
 import Foundation
 
 
-/// Conform to protocol if requests support store raw data.
-public protocol WebServiceRequestRawStoring: WebServiceBaseRequesting {
+/// Base protocol for requests support store data.
+public protocol WebServiceRequestBaseStoring: WebServiceBaseRequesting {
     
-    ///Unique identificator for read and write data if current request support storage as raw data. May contain file type at the end.
-    var identificatorForRawStorage: String? { get }
+    ///Unique identificator for read and write data if current request support storage. Default use for raw data.
+    var identificatorForStorage: String? { get }
 }
 
+/// Conform to protocol if requests support store raw data.
+public protocol WebServiceRequestRawStoring: WebServiceRequestBaseStoring { }
+
 /// Conform to protocol if requests support store data.
-public protocol WebServiceRequestValueStoring: WebServiceBaseRequesting {
-    
-    ///Unique identificator for read and write data if current request support storage as custom data. May contain file type at the end.
-    var identificatorForValueStorage: String? { get }
+public protocol WebServiceRequestAnyValueStoring: WebServiceRequestBaseStoring {
     
     /**
      Coding data from custom type to binary data.
@@ -29,7 +29,7 @@ public protocol WebServiceRequestValueStoring: WebServiceBaseRequesting {
      - Parameter value: Data with type from response.
      - Results: Binary data after coding if supported.
      */
-    func writeDataToStorage(value: Any) -> Data?
+    func writeAnyDataToStorage(value: Any) -> Data?
     
     /**
      Decoding data from binary data to custom type.
@@ -37,12 +37,57 @@ public protocol WebServiceRequestValueStoring: WebServiceBaseRequesting {
      - Parameter data: Binary data from disk.
      - Results: Custom type after decoding if supported.
      */
-    func readDataFromStorage(data: Data) throws -> Any?
+    func readAnyDataFromStorage(data: Data) throws -> Any?
+}
+
+/// Conform to protocol if requests support store data.
+public protocol WebServiceRequestValueStoring: WebServiceRequestAnyValueStoring, WebServiceRequesting {
+    /**
+     Coding data from custom type to binary data.
+     
+     - Parameter value: Data with type from response.
+     - Results: Binary data after coding if supported.
+     */
+    func writeDataToStorage(value: ResultType) -> Data?
+    
+    /**
+     Decoding data from binary data to custom type.
+     
+     - Parameter data: Binary data from disk.
+     - Results: Custom type after decoding if supported.
+     */
+    func readDataFromStorage(data: Data) throws -> ResultType?
+}
+
+public extension WebServiceRequestValueStoring {
+    func writeAnyDataToStorage(value: Any) -> Data? {
+        if let value = value as? ResultType {
+            return writeDataToStorage(value: value)
+        } else {
+            return nil
+        }
+    }
+    
+    func readAnyDataFromStorage(data: Data) throws -> Any? {
+        return try readDataFromStorage(data: data)
+    }
+}
+
+
+/// Data Source from custom types response with raw data from server
+public protocol WebServiceRawDataSource {
+    var binaryRawData: Data { get }
 }
 
 
 /// Simple store on disk for WebService.
 public class WebServiceSimpleFileStorage: WebServiceStoraging {
+    
+    public struct StoreData: Codable {
+        var binary: Data
+        var isRaw: Bool
+        var timeStamp: Date?
+    }
     
     private enum FormatType: String {
         case raw
@@ -89,87 +134,100 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
      Prefix name for all files: *webServiceSimpleStore*
      */
     public convenience init?() {
-        self.init(prefixNameFiles: "webServiceSimpleFileStorage")
+        self.init(prefixNameFiles: "webServiceSimpleFileStorage_")
     }
     
     
     // MARK: WebServiceStoraging
     public func isSupportedRequestForStorage(_ request: WebServiceBaseRequesting) -> Bool {
-        if let request = request as? WebServiceRequestRawStoring,
-            request.identificatorForRawStorage != nil {
+        if (request as? WebServiceRequestBaseStoring)?.identificatorForStorage != nil &&
+            (request is WebServiceRequestRawStoring || request is WebServiceRequestAnyValueStoring) {
             return true
-            
-        } else if let request = request as? WebServiceRequestValueStoring,
-            request.identificatorForValueStorage != nil {
-            return true
-            
         } else {
             return false
         }
     }
     
     public func readData(request: WebServiceBaseRequesting, completionHandler: @escaping (Bool, Date?, WebServiceAnyResponse) -> Void) throws {
-        //Raw
-        if let request = request as? WebServiceRequestRawStoring,
-            let identificator = request.identificatorForRawStorage {
-            
-            privateReadData(identificator: identificator, type: .raw, completionHandler: { (data, error) in
-                if let error = error {
-                    completionHandler(true, nil, .error(error))
-                } else {
-                    completionHandler(true, nil, .data(data))
-                }
-            })
+        guard let identificator = (request as? WebServiceRequestBaseStoring)?.identificatorForStorage else {
+            return
         }
-        
-        //Custom
-        else if let request = request as? WebServiceRequestValueStoring,
-            let identificator = request.identificatorForValueStorage {
-            
-            privateReadData(identificator: identificator, type: .value, completionHandler: { binaryData, error in
-                if let error = error {
-                    completionHandler(false, nil, .error(error))
+
+        privateReadData(identificator: identificator, completionHandler: { (storeData, error) in
+            if let error = error {
+                //Read error
+                completionHandler(false, nil, .error(error))
+    
+            } else if let storeData = storeData {
+                if storeData.isRaw {
+                    //Readed RAW data - use if supported request
+                    if request is WebServiceRequestRawStoring {
+                        completionHandler(true, storeData.timeStamp, .data(storeData.binary))
+                    } else {
+                        completionHandler(true, nil, .error(WebServiceResponseError.notFoundData))
+                    }
                     
-                } else if let binaryData = binaryData {
+                } else if let request = request as? WebServiceRequestAnyValueStoring {
+                    //Readed value and can encode
                     do {
-                        let data = try request.readDataFromStorage(data: binaryData)
-                        completionHandler(false, nil, .data(data))
+                        if let data = try request.readAnyDataFromStorage(data: storeData.binary) {
+                            completionHandler(false, storeData.timeStamp, .data(data))
+                        } else {
+                            completionHandler(false, nil, .error(WebServiceResponseError.notFoundData))
+                        }
                     } catch {
                         completionHandler(false, nil, .error(error))
                     }
                     
                 } else {
-                    completionHandler(false, nil, .data(nil))
+                    //Value don't supported request
+                    completionHandler(false, nil, .error(WebServiceResponseError.notFoundData))
                 }
-            })
-        }
+                
+            } else {
+                //Unknow error
+                completionHandler(false, nil, .error(WebServiceResponseError.notFoundData))
+            }
+        })
     }
     
     public func writeData(request: WebServiceBaseRequesting, data: Any, isRaw: Bool) {
-        //Raw
-        if isRaw, let request = request as? WebServiceRequestRawStoring,
-            let identificator = request.identificatorForRawStorage,
-            let binaryData = data as? Data {
-            
-            privateWriteData(identificator: identificator, type: .raw, data: binaryData)
+        guard let identificator = (request as? WebServiceRequestBaseStoring)?.identificatorForStorage else {
+            return
         }
         
         //Custom
-        else if !isRaw, let request = request as? WebServiceRequestValueStoring,
-            let identificator = request.identificatorForValueStorage,
-            let binaryData = request.writeDataToStorage(value: data) {
+        if !isRaw, let request = request as? WebServiceRequestAnyValueStoring,
+            let binaryData = request.writeAnyDataToStorage(value: data) {
+            let storeData = StoreData(binary: binaryData, isRaw: false, timeStamp: Date())
             
-            privateWriteData(identificator: identificator, type: .value, data: binaryData)
+            privateWriteData(identificator: identificator, data: storeData)
+        }
+        
+        //Raw
+        if isRaw && request is WebServiceRequestRawStoring {
+            let binaryData: Data
+            if let data = data as? Data {
+                binaryData = data
+            } else if let binary = (data as? WebServiceRawDataSource)?.binaryRawData {
+                binaryData = binary
+            } else {
+                return
+            }
+            
+            let storeData = StoreData(binary: binaryData, isRaw: true, timeStamp: Date())
+            privateWriteData(identificator: identificator, data: storeData)
         }
     }
 
-    //MARK: Storage private
-    private func privateReadData(identificator: String, type: FormatType, completionHandler: @escaping (Data?, Error?) -> Void) {
-        let url = filesDir.appendingPathComponent("\(prefixNameFiles)_\(type.rawValue)_\(identificator)")
+    //MARK: - Storage private
+    private func privateReadData(identificator: String, completionHandler: @escaping (StoreData?, Error?) -> Void) {
+        let url = filesDir.appendingPathComponent("\(prefixNameFiles)\(identificator)")
         
         fileWorkDispatchQueue.async {
             do {
-                let data = try Data(contentsOf: url)
+                let binData = try Data(contentsOf: url)
+                let data = try PropertyListDecoder().decode(StoreData.self, from: binData)
                 
                 DispatchQueue.main.async {
                     completionHandler(data, nil)
@@ -182,11 +240,16 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
         }
     }
     
-    private func privateWriteData(identificator: String, type: FormatType, data: Data) {
-        let url = filesDir.appendingPathComponent("\(prefixNameFiles)_\(type.rawValue)_\(identificator)")
+    private func privateWriteData(identificator: String, data: StoreData) {
+        let url = filesDir.appendingPathComponent("\(prefixNameFiles)\(identificator)")
         
         fileWorkDispatchQueue.async {
-            try? data.write(to: url, options: .atomicWrite)
+            let encoder = PropertyListEncoder()
+            encoder.outputFormat = .binary
+            
+            if let binData = try? encoder.encode(data) {
+                try? binData.write(to: url, options: .atomicWrite)
+            }
         }
     }
 }

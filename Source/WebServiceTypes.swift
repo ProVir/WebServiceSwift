@@ -18,8 +18,8 @@ import Foundation
  - `notSupportDataHandler`: If request don't support data handler
  */
 public enum WebServiceRequestError: Error {
-    case noFoundEngine
-    case noFoundStorage
+    case notFoundEngine
+    case notFoundStorage
     
     case notSupportRequest
     case notSupportDataHandler
@@ -35,6 +35,9 @@ public enum WebServiceRequestError: Error {
 public enum WebServiceResponseError: Error {
     ///Data from server invalid
     case invalidData
+    
+    /// Data not found in storage
+    case notFoundData
     
     ///General error http status code
     case httpStatusCode(Int)

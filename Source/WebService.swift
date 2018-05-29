@@ -261,7 +261,7 @@ public class WebService {
         //Engine and Storage
         guard let engine = internalFindEngine(request: request) else {
             readStorageRequestInfo?.setState(.error)
-            completionResponse(.error(WebServiceRequestError.noFoundEngine))
+            completionResponse(.error(WebServiceRequestError.notFoundEngine))
             return
         }
         
@@ -392,7 +392,7 @@ public class WebService {
         if let storage = internalFindStorage(request: request) {
             internalReadStorage(storage: storage, request: request, dependencyNextRequest: dependencyNextRequest, completionResponse: completionResponse)
         } else {
-            completionResponse(nil, .error(WebServiceRequestError.noFoundStorage))
+            completionResponse(nil, .error(WebServiceRequestError.notFoundStorage))
         }
     }
     
@@ -413,7 +413,7 @@ public class WebService {
             internalReadStorage(storage: storage, request: request, dependencyNextRequest: dependencyNextRequest, completionResponse: completionResponseInternal)
             
         } else {
-            completionResponse(nil, .error(WebServiceRequestError.noFoundStorage))
+            completionResponse(nil, .error(WebServiceRequestError.notFoundStorage))
         }
     }
     
@@ -538,7 +538,7 @@ public class WebService {
                     } else {
                         //Not found engine
                         queueForResponse.async {
-                            completionHandler(nil, .error(WebServiceRequestError.noFoundEngine))
+                            completionHandler(nil, .error(WebServiceRequestError.notFoundEngine))
                         }
                     }
                     
@@ -707,12 +707,6 @@ public class WebService {
         
         init(dependencyType: ReadStorageDependencyType) {
             self.dependencyType = dependencyType
-            
-            print("Create ReadStorageDependRequestInfo")
-        }
-        
-        deinit {
-            print("Remove ReadStorageDependRequestInfo")
         }
         
         func setDuplicate() {

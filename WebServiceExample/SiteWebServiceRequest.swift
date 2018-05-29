@@ -29,14 +29,14 @@ extension SiteWebServiceRequest: WebServiceHtmlRequesting {
 
 //MARK: Store support
 extension SiteWebServiceRequest: WebServiceRequestRawStoring {
-    var identificatorForRawStorage: String? {
+    var identificatorForStorage: String? {
         switch self {
         case .siteSearch(let type, domain: let domain):
             return type.rawValue + ".\(domain)"
-            
+
         case .siteMail(let type):
             return type.rawValue
-            
+
         case .siteYouTube:
             return "siteYouTube"
         }
@@ -45,7 +45,7 @@ extension SiteWebServiceRequest: WebServiceRequestRawStoring {
 
 /*
 extension SiteWebServiceRequest: WebServiceRequestValueStoring {
-    var identificatorForValueStorage: String? {
+    var identificatorForStorage: String? {
         switch self {
         case .siteSearch(let type, domain: let domain):
             return type.rawValue + ".\(domain)"
@@ -58,15 +58,11 @@ extension SiteWebServiceRequest: WebServiceRequestValueStoring {
         }
     }
     
-    func writeDataToStorage(value: Any) -> Data? {
-        if let value = value as? String {
-            return value.data(using: String.Encoding.utf8)
-        } else {
-            return nil
-        }
+    func writeDataToStorage(value: String) -> Data? {
+        return value.data(using: String.Encoding.utf8)
     }
     
-    func readDataFromStorage(data: Data) throws -> Any? {
+    func readDataFromStorage(data: Data) throws -> String? {
         return String(data: data, encoding: String.Encoding.utf8)
     }
 }
