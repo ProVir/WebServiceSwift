@@ -76,7 +76,7 @@ public extension WebServiceRequestValueStoring {
 
 /// Data Source from custom types response with raw data from server
 public protocol WebServiceRawDataSource {
-    var binaryRawData: Data { get }
+    var binaryRawData: Data? { get }
 }
 
 
