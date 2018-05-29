@@ -145,7 +145,7 @@ public protocol WebServiceStoraging: class {
      
      - Throws: Error request equivalent call `completionResponse(.error())` and not need call `completionResponse()`. The performance is higher with this error call.
      */
-    func readData(request: WebServiceBaseRequesting, completionHandler: @escaping (_ isRawData: Bool, _ response: WebServiceAnyResponse) -> Void) throws
+    func readData(request: WebServiceBaseRequesting, completionHandler: @escaping (_ isRawData: Bool, _ timeStamp: Date?, _ response: WebServiceAnyResponse) -> Void) throws
     
     
     /**

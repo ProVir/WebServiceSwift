@@ -108,16 +108,16 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
         }
     }
     
-    public func readData(request: WebServiceBaseRequesting, completionHandler: @escaping (Bool, WebServiceAnyResponse) -> Void) throws {
+    public func readData(request: WebServiceBaseRequesting, completionHandler: @escaping (Bool, Date?, WebServiceAnyResponse) -> Void) throws {
         //Raw
         if let request = request as? WebServiceRequestRawStoring,
             let identificator = request.identificatorForRawStorage {
             
             privateReadData(identificator: identificator, type: .raw, completionHandler: { (data, error) in
                 if let error = error {
-                    completionHandler(true, .error(error))
+                    completionHandler(true, nil, .error(error))
                 } else {
-                    completionHandler(true, .data(data))
+                    completionHandler(true, nil, .data(data))
                 }
             })
         }
@@ -128,18 +128,18 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
             
             privateReadData(identificator: identificator, type: .value, completionHandler: { binaryData, error in
                 if let error = error {
-                    completionHandler(false, .error(error))
+                    completionHandler(false, nil, .error(error))
                     
                 } else if let binaryData = binaryData {
                     do {
                         let data = try request.readDataFromStorage(data: binaryData)
-                        completionHandler(false, .data(data))
+                        completionHandler(false, nil, .data(data))
                     } catch {
-                        completionHandler(false, .error(error))
+                        completionHandler(false, nil, .error(error))
                     }
                     
                 } else {
-                    completionHandler(false, .data(nil))
+                    completionHandler(false, nil, .data(nil))
                 }
             })
         }

@@ -59,7 +59,7 @@ class SiteWebProvider: WebServiceProvider, WebServiceDelegate {
     ///Request use closures
     func requestHtmlData(_ request: SiteWebServiceRequest, dataFromStorage: ((_ data:String) -> Void)? = nil, completionHandler: @escaping (_ response:WebServiceResponse<String>) -> Void) {
         if let dataFromStorage = dataFromStorage {
-            requestProvider.readStorage(request, dependencyNextRequest: .dependFull) { response in
+            requestProvider.readStorage(request, dependencyNextRequest: .dependFull) { _, response in
                 if case .data(let data) = response {
                     dataFromStorage(data)
                 }

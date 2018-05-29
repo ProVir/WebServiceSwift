@@ -118,7 +118,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
      - completionResponse: Closure for read data from storage.
      - response: result read from storage.
      */
-    public func readStorage(_ request: RequestType, dependencyNextRequest: WebService.ReadStorageDependencyType = .notDepend, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
+    public func readStorage(_ request: RequestType, dependencyNextRequest: WebService.ReadStorageDependencyType = .notDepend, completionResponse: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
         service.readStorage(request, dependencyNextRequest: dependencyNextRequest, completionResponse: completionResponse)
     }
     
