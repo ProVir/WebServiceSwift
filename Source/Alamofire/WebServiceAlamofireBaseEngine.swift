@@ -51,10 +51,8 @@ open class WebServiceAlamofireBaseEngine: WebServiceEngining {
         }
     }
     
-    
     private let lock = PThreadMutexLock()
     private var tasks = [UInt64: TaskData]()
-    
     
     public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completionWithData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void, canceled: @escaping () -> Void) {
         do {

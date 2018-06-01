@@ -24,6 +24,7 @@
 		5054625520C0665000595948 /* WebServiceAlamofireBaseEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625320C065DE00595948 /* WebServiceAlamofireBaseEngine.swift */; };
 		5054625820C066FD00595948 /* PThreadMutexLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625620C066B500595948 /* PThreadMutexLock.swift */; };
 		5054625A20C1026800595948 /* WebServiceAlamofireSimpleEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625920C1026800595948 /* WebServiceAlamofireSimpleEngine.swift */; };
+		5054625C20C1884200595948 /* WebServiceSimpleEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625B20C1884200595948 /* WebServiceSimpleEngine.swift */; };
 		506CAFCF2084D729008AB016 /* WebServiceTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 506CAFCD2084D707008AB016 /* WebServiceTypes.swift */; };
 		50844338207D244900C757C7 /* WebServiceMockEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50F4943120565FD1004F1E08 /* WebServiceMockEngine.swift */; };
 		50AB6AB020883C2F00C1E093 /* SiteWebProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50AB6AAF20883C2F00C1E093 /* SiteWebProvider.swift */; };
@@ -76,6 +77,7 @@
 		5054625320C065DE00595948 /* WebServiceAlamofireBaseEngine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceAlamofireBaseEngine.swift; sourceTree = "<group>"; };
 		5054625620C066B500595948 /* PThreadMutexLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PThreadMutexLock.swift; sourceTree = "<group>"; };
 		5054625920C1026800595948 /* WebServiceAlamofireSimpleEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceAlamofireSimpleEngine.swift; sourceTree = "<group>"; };
+		5054625B20C1884200595948 /* WebServiceSimpleEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceSimpleEngine.swift; sourceTree = "<group>"; };
 		506CAFCD2084D707008AB016 /* WebServiceTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceTypes.swift; sourceTree = "<group>"; };
 		50A9162420B09C4C00EA2E9D /* WebServiceSwift.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; fileEncoding = 4; path = WebServiceSwift.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		50AB6AAF20883C2F00C1E093 /* SiteWebProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteWebProvider.swift; sourceTree = "<group>"; };
@@ -168,6 +170,7 @@
 				50BFAFF7208F4C8A007E8FBD /* WebServiceRequestProvider.swift */,
 				501D2AEB1F4E92A1000E3FA3 /* WebServiceSimpleFileStorage.swift */,
 				50F4943120565FD1004F1E08 /* WebServiceMockEngine.swift */,
+				5054625B20C1884200595948 /* WebServiceSimpleEngine.swift */,
 				5054625620C066B500595948 /* PThreadMutexLock.swift */,
 				5054625220C065B200595948 /* Alamofire */,
 			);
@@ -419,6 +422,7 @@
 				5054625820C066FD00595948 /* PThreadMutexLock.swift in Sources */,
 				5054625A20C1026800595948 /* WebServiceAlamofireSimpleEngine.swift in Sources */,
 				501D2AFA1F527D03000E3FA3 /* WebServiceProtocols.swift in Sources */,
+				5054625C20C1884200595948 /* WebServiceSimpleEngine.swift in Sources */,
 				501D2AEC1F4E92A1000E3FA3 /* WebServiceSimpleFileStorage.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

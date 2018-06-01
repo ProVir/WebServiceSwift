@@ -15,6 +15,9 @@ extension WebService {
     
     convenience init() {
         let engine = WebServiceHtmlEngine()
+//        let engine = WebServiceSimpleEngine()
+//        let engine = WebServiceAlamofireSimpleEngine()
+        
         let mock = WebServiceMockEngine(rawDataFromStoreAlwaysNil: true)
         
         var storages: [WebServiceStoraging] = []

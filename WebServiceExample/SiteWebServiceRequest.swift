@@ -8,11 +8,10 @@
 
 import Foundation
 import WebServiceSwift
+import Alamofire
 
-
-/// As HTML Request - Support WebServiceHTMLEngine with concrete URL query.
-extension SiteWebServiceRequest: WebServiceHtmlRequesting {
-    var url: URL {
+extension SiteWebServiceRequest {
+    var urlSite: URL {
         switch self {
         case .siteSearch(let type, domain: let domain):
             return type.baseUrl(domain: domain)
@@ -23,6 +22,42 @@ extension SiteWebServiceRequest: WebServiceHtmlRequesting {
         case .siteYouTube:
             return URL(string: "https://www.youtube.com/?gl=RU&hl=ru")!
         }
+    }
+    
+    func decodeResponse(data: Data) throws -> String {
+        if let text = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .windowsCP1251) {
+            return text
+        } else {
+            throw WebServiceResponseError.invalidData
+        }
+    }
+}
+
+
+/// As HTML Request - Support WebServiceHTMLEngine with concrete URL query.
+extension SiteWebServiceRequest: WebServiceHtmlRequesting {
+    var url: URL { return urlSite }
+}
+
+extension SiteWebServiceRequest: WebServiceSimpleRequesting {
+    func simpleRequest() throws -> URLRequest {
+        return URLRequest(url: urlSite)
+    }
+    
+    var simpleResponseType: WebServiceSimpleResponseType { return .binary }
+    func simpleDecodeResponse(_ data: WebServiceSimpleResponseData) throws -> String {
+        return try decodeResponse(data: data.binary)
+    }
+}
+
+extension SiteWebServiceRequest: WebServiceAlamofireRequesting {
+    func afRequest(sessionManager: SessionManager) throws -> DataRequest {
+        return sessionManager.request(urlSite)
+    }
+    
+    var afResponseType: WebServiceAlamofireResponseType { return .binary }
+    func afDecodeResponse(_ data: WebServiceAlamofireResponseData) throws -> String {
+        return try decodeResponse(data: data.binary)
     }
 }
 
@@ -85,4 +120,3 @@ extension SiteWebServiceRequest: WebServiceMockRequesting {
         }
     }
 }
-
