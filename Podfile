@@ -6,3 +6,7 @@ target 'WebServiceExample' do
   pod 'Alamofire'
 end
 
+target 'WebServiceSwift' do
+  pod 'Alamofire'
+end
+

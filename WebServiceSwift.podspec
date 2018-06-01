@@ -12,6 +12,7 @@ Pod::Spec.new do |s|
   s.homepage     = "https://github.com/ProVir/WebServiceSwift"
   s.license      = { :type => "MIT", :file => "LICENSE" }
   s.author       = { "ViR (Vitaliy Korotkiy)" => "admin@provir.ru" }
+  s.source       = { :git => "https://github.com/ProVir/WebServiceSwift.git", :tag => "#{s.version}" }
 
   s.swift_version = '4'
   s.ios.deployment_target = '8.0'
@@ -19,8 +20,18 @@ Pod::Spec.new do |s|
   s.tvos.deployment_target = '9.0'
   s.watchos.deployment_target = '2.0'
 
-  s.source       = { :git => "https://github.com/ProVir/WebServiceSwift.git", :tag => "#{s.version}" }
+  s.default_subspec = 'Core'
+  
+  s.subspec 'Core' do |ss|
+    ss.source_files = 'Source/*.{h,swift}'
+    ss.public_header_files = 'Source/*.h'
+  end
 
-  s.source_files = 'Source/*.{h,swift}'
-  s.public_header_files = 'Source/*.h'
+  s.subspec 'Alamofire' do |ss|
+    ss.source_files = 'Source/Alamofire/*.swift'
+    
+    ss.dependency 'WebServiceSwift/Core'
+    ss.dependency 'Alamofire'
+  end
+  
 end
