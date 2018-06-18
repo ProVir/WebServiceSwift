@@ -63,8 +63,8 @@ extension SiteWebServiceRequest: WebServiceAlamofireRequesting {
 
 
 //MARK: Store support
-extension SiteWebServiceRequest: WebServiceRequestRawStoring {
-    var identificatorForStorage: String? {
+extension SiteWebServiceRequest: WebServiceRequestRawFileStoring {
+    var identificatorForFileStorage: String? {
         switch self {
         case .siteSearch(let type, domain: let domain):
             return type.rawValue + ".\(domain)"
@@ -79,8 +79,8 @@ extension SiteWebServiceRequest: WebServiceRequestRawStoring {
 }
 
 /*
-extension SiteWebServiceRequest: WebServiceRequestValueStoring {
-    var identificatorForStorage: String? {
+extension SiteWebServiceRequest: WebServiceRequestValueFileStoring {
+    var identificatorForFileStorage: String? {
         switch self {
         case .siteSearch(let type, domain: let domain):
             return type.rawValue + ".\(domain)"
@@ -93,15 +93,15 @@ extension SiteWebServiceRequest: WebServiceRequestValueStoring {
         }
     }
     
-    func writeDataToStorage(value: String) -> Data? {
+    func writeDataToFileStorage(value: String) -> Data? {
         return value.data(using: String.Encoding.utf8)
     }
     
-    func readDataFromStorage(data: Data) throws -> String? {
+    func readDataFromFileStorage(data: Data) throws -> String? {
         return String(data: data, encoding: String.Encoding.utf8)
     }
 }
- */
+*/
 
 extension SiteWebServiceRequest: WebServiceMockRequesting {
     var isSupportedRequest: Bool { return false }

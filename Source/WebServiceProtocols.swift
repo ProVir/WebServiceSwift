@@ -21,6 +21,23 @@ public protocol WebServiceRequesting: WebServiceBaseRequesting {
 }
 
 
+//MARK: Support storages
+
+/// Base protocol for all requests with support storages
+public protocol WebServiceRequestBaseStoring: WebServiceBaseRequesting {
+    var dataClassificationForStorage: AnyHashable { get }
+}
+
+/// Default data classification for storages.
+public let WebServiceDefaultDataClassification = "default"
+
+/// Data Source from custom types response with raw data from server
+public protocol WebServiceRawDataSource {
+    var binaryRawData: Data? { get }
+}
+
+
+
 //MARK: Provider
 
 /// Base protocol for providers
