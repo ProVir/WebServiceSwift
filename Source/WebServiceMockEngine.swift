@@ -13,7 +13,7 @@ import Foundation
 //MARK: Mock Request
 
 /// Base protocol for request with support mock data
-public protocol WebServiceMockBaseRequesting: WebServiceBaseRequesting {
+public protocol WebServiceMockBaseRequesting {
     /// Fast switch enable/disable mock data (if `WebServiceMockEngine` as first in array `WebService.engines`).
     var isSupportedRequest: Bool { get }
     
@@ -46,7 +46,7 @@ public extension WebServiceMockRequesting {
 
 //MARK: Mock Engine
 /// Simple engine for temporary mock requests.
-public class WebServiceMockEngine: WebServiceEngining {
+open class WebServiceMockEngine: WebServiceEngining {
     
     /// Item for store current requests in process
     struct RequestItem {
@@ -62,9 +62,23 @@ public class WebServiceMockEngine: WebServiceEngining {
     var helpersArray: [String: Any] = [:]
     var requests: [UInt64: RequestItem] = [:]
     
-    var rawDataFromStoreAlwaysNil: Bool
-    var alwaysSupported: Bool
+    public var rawDataFromStoreAlwaysNil: Bool
+    public var alwaysSupported: Bool
     
+    
+    /// Need override to support custom requests (not WebServiceMockBaseRequesting)
+    open func isSupportedRequest(_ request: WebServiceBaseRequesting) -> Bool {
+        if let request = request as? WebServiceMockBaseRequesting {
+            return alwaysSupported || request.isSupportedRequest
+        } else {
+            return false
+        }
+    }
+    
+    /// Need override to support custom requests (not WebServiceMockBaseRequesting)
+    open func convertToMockRequest(_ request: WebServiceBaseRequesting) -> WebServiceMockBaseRequesting? {
+        return request as? WebServiceMockBaseRequesting
+    }
     
     /**
      Mock engine constructor.
@@ -83,15 +97,11 @@ public class WebServiceMockEngine: WebServiceEngining {
         if rawDataTypeForRestoreFromStorage != nil && !rawDataFromStoreAlwaysNil { return false }
         
         // Support only WebServiceMockRequesting with enable support.
-        if let request = request as? WebServiceMockBaseRequesting {
-            return alwaysSupported || request.isSupportedRequest
-        } else {
-            return false
-        }
+        return isSupportedRequest(request)
     }
     
     public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completionWithData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void, canceled: @escaping () -> Void) {
-        guard let request = request as? WebServiceMockBaseRequesting else {
+        guard let request = convertToMockRequest(request) else {
             completionWithError(WebServiceRequestError.notSupportRequest)
             return
         }
@@ -130,6 +140,7 @@ public class WebServiceMockEngine: WebServiceEngining {
     
     public func cancelRequest(requestId: UInt64) {
         if let requestItem = requests.removeValue(forKey: requestId) {
+            requestItem.workItem.cancel()
             requestItem.canceled()
         }
     }
