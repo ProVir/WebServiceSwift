@@ -1,16 +1,16 @@
 //
-//  WebServiceSimpleFileStorage.swift
+//  WebServiceFileStorage.swift
 //  WebServiceSwift 2.3.0
 //
 //  Created by ViR (Короткий Виталий) on 29.07.17.
-//  Updated to 2.3.0 by ViR (Короткий Виталий) on 25.05.2018.
+//  Updated to 2.3.0 by ViR (Короткий Виталий) on 18.06.2018.
 //  Copyright © 2017 ProVir. All rights reserved.
 //
 
 import Foundation
 
 
-/// Base protocol for requests support store data.
+/// Base protocol for requests support store data as files.
 public protocol WebServiceRequestBaseFileStoring: WebServiceRequestBaseStoring {
     
     ///Unique identificator for read and write data if current request support storage. Default use for raw data.
@@ -24,10 +24,10 @@ public extension WebServiceRequestBaseFileStoring {
     var useWrapperWithMetaDataForFileStorage: Bool { return true }
 }
 
-/// Conform to protocol if requests support store raw data.
+/// Conform to protocol if requests support store raw data as files.
 public protocol WebServiceRequestRawFileStoring: WebServiceRequestBaseFileStoring { }
 
-/// Conform to protocol if requests support store data.
+/// Conform to protocol if requests support store data as files.
 public protocol WebServiceRequestAnyValueFileStoring: WebServiceRequestBaseFileStoring {
     
     /**
@@ -47,7 +47,7 @@ public protocol WebServiceRequestAnyValueFileStoring: WebServiceRequestBaseFileS
     func readAnyDataFromFileStorage(data: Data) throws -> Any?
 }
 
-/// Conform to protocol if requests support store data.
+/// Conform to protocol if requests support store data as files.
 public protocol WebServiceRequestValueFileStoring: WebServiceRequestAnyValueFileStoring, WebServiceRequesting {
     /**
      Coding data from custom type to binary data.
@@ -90,7 +90,7 @@ public extension WebServiceRequestValueFileStoring {
 
 
 /// Simple store on disk for WebService.
-public class WebServiceSimpleFileStorage: WebServiceStoraging {
+public class WebServiceFileStorage: WebServiceStoraging {
     
     public struct StoreData: Codable {
         var binary: Data
@@ -101,9 +101,7 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
     private let fileWorkDispatchQueue: DispatchQueue
     private let filesDir: URL
     private let prefixNameFiles: String
-    
-    /// Data classification support list. Empty - support all.
-    public var supportDataClassification: Set<AnyHashable>
+    private let supportDataClassification: Set<AnyHashable>
     
     // MARK: Constructors
     
@@ -171,6 +169,7 @@ public class WebServiceSimpleFileStorage: WebServiceStoraging {
     
     public func readData(request: WebServiceBaseRequesting, completionHandler: @escaping (Bool, Date?, WebServiceAnyResponse) -> Void) throws {
         guard let request = request as? WebServiceRequestBaseFileStoring, let identificator = request.identificatorForFileStorage else {
+            completionHandler(false, nil, .error(WebServiceResponseError.notFoundData))
             return
         }
         

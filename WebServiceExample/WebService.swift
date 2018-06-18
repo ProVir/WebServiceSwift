@@ -21,7 +21,7 @@ extension WebService {
         let mock = WebServiceMockEngine(rawDataFromStoreAlwaysNil: true)
         
         var storages: [WebServiceStoraging] = []
-        if let storage = WebServiceSimpleFileStorage() {
+        if let storage = WebServiceFileStorage() {
             storages.append(storage)
         }
         
