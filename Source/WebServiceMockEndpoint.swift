@@ -15,30 +15,30 @@ import Foundation
 /// Base protocol for request with support mock data
 public protocol WebServiceMockBaseRequesting {
     /// Fast switch enable/disable mock data (if `WebServiceMockEndpoint` as first in array `WebService.endpoints`).
-    var isSupportedRequest: Bool { get }
+    var isSupportedRequestForMock: Bool { get }
     
     /// After timeout mock data send as response. `nil` - without pause.
-    var timeWait: TimeInterval? { get }
+    var mockTimeWait: TimeInterval? { get }
     
     /// Identifier for dictionary helpers, `nil` - don't use helper. Helpers are created once and when used within one instance of the endpoint.
-    var helperIdentifier: String? { get }
+    var mockHelperIdentifier: String? { get }
     
     /// Create a helper if it was not created earlier. `nil` - don't use helper
-    func createHelper() -> Any?
+    func mockCreateHelper() -> Any?
     
     /// Mock data without generic information as response.
-    func responseBaseHandler(helper: Any?) throws -> Any?
+    func mockResponseBaseHandler(helper: Any?) throws -> Any
 }
 
 /// Protocol for request with support mock data
 public protocol WebServiceMockRequesting: WebServiceRequesting, WebServiceMockBaseRequesting {
     /// Mock data as response. Require implementation.
-    func responseHandler(helper: Any?) throws -> ResultType
+    func mockResponseHandler(helper: Any?) throws -> ResultType
 }
 
 public extension WebServiceMockRequesting {
-    public func responseBaseHandler(helper: Any?) throws -> Any? {
-        return try responseHandler(helper: helper)
+    public func mockResponseBaseHandler(helper: Any?) throws -> Any {
+        return try mockResponseHandler(helper: helper)
     }
 }
 
@@ -59,8 +59,8 @@ open class WebServiceMockEndpoint: WebServiceEndpoint {
     public let queueForDataHandlerFromStorage: DispatchQueue? = nil
     public let useNetworkActivityIndicator = false
     
-    var helpersArray: [String: Any] = [:]
-    var requests: [UInt64: RequestItem] = [:]
+    private var helpersArray: [String: Any] = [:]
+    private var requests: [UInt64: RequestItem] = [:]
     
     public var rawDataFromStoreAlwaysNil: Bool
     public var alwaysSupported: Bool
@@ -69,7 +69,7 @@ open class WebServiceMockEndpoint: WebServiceEndpoint {
     /// Need override to support custom requests (not WebServiceMockBaseRequesting)
     open func isSupportedRequest(_ request: WebServiceBaseRequesting) -> Bool {
         if let request = request as? WebServiceMockBaseRequesting {
-            return alwaysSupported || request.isSupportedRequest
+            return alwaysSupported || request.isSupportedRequestForMock
         } else {
             return false
         }
@@ -108,10 +108,10 @@ open class WebServiceMockEndpoint: WebServiceEndpoint {
         
         //Helper Object
         let helper:Any?
-        if let identifier = request.helperIdentifier {
+        if let identifier = request.mockHelperIdentifier {
             if let obj = helpersArray[identifier] {
                 helper = obj
-            } else if let obj = request.createHelper() {
+            } else if let obj = request.mockCreateHelper() {
                 helpersArray[identifier] = obj
                 helper = obj
             } else {
@@ -122,11 +122,11 @@ open class WebServiceMockEndpoint: WebServiceEndpoint {
         }
         
         //Request
-        let workItem =  DispatchWorkItem { [weak self] in
+        let workItem = DispatchWorkItem { [weak self] in
             self?.requests.removeValue(forKey: requestId)
             
             do {
-                let data = try request.responseBaseHandler(helper: helper) ?? Void()
+                let data = try request.mockResponseBaseHandler(helper: helper)
                 completionWithData(data)
             } catch {
                 completionWithError(error)
@@ -135,7 +135,7 @@ open class WebServiceMockEndpoint: WebServiceEndpoint {
         
         //Run request with pause time
         requests[requestId] = RequestItem(workItem: workItem, canceled: canceled)
-        DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + (request.timeWait ?? 0), execute: workItem)
+        DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + (request.mockTimeWait ?? 0), execute: workItem)
     }
     
     public func cancelRequest(requestId: UInt64) {
@@ -147,7 +147,6 @@ open class WebServiceMockEndpoint: WebServiceEndpoint {
     
     public func dataHandler(request: WebServiceBaseRequesting, data: Any, isRawFromStorage: Bool) throws -> Any? {
         if isRawFromStorage { return nil }
-        else if data is Void { return nil }
         else { return data }
     }
 }

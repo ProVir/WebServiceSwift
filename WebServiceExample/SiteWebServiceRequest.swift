@@ -104,15 +104,15 @@ extension SiteWebServiceRequest: WebServiceRequestValueFileStoring {
 */
 
 extension SiteWebServiceRequest: WebServiceMockRequesting {
-    var isSupportedRequest: Bool { return false }
-    var timeWait: TimeInterval? { return 3 }
+    var isSupportedRequestForMock: Bool { return false }
+    var mockTimeWait: TimeInterval? { return 3 }
     
-    var helperIdentifier: String? { return "template_html" }
-    func createHelper() -> Any? {
+    var mockHelperIdentifier: String? { return "template_html" }
+    func mockCreateHelper() -> Any? {
         return "<html><body>%[BODY]%</body></html>"
     }
     
-    func responseHandler(helper: Any?) throws -> String {
+    func mockResponseHandler(helper: Any?) throws -> String {
         if let template = helper as? String {
             return template.replacingOccurrences(of: "%[BODY]%", with: "<b>Hello world!</b>")
         } else {

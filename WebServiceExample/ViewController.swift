@@ -126,6 +126,11 @@ extension ViewController: SiteWebProviderDelegate {
     }
     
     func webServiceResponse(request: SiteWebServiceRequest, isStorageRequest: Bool, error: Error) {
+        if isStorageRequest {
+            print("Error read from storage: \(error)")
+            return
+        }
+        
         let text = (error as NSError).localizedDescription
         
         let alert = UIAlertController(title: "Error", message: text, preferredStyle: .alert)

@@ -25,7 +25,14 @@ extension WebService {
             storages.append(storage)
         }
         
-        self.init(endpoints: [mock, endpoint], storages: storages)
+        /*
+        let template = "<html><body>%[BODY]%</body></html>"
+        let mockRequest = WebServiceMockRequestEndpoint.init(timeWait: 3) { (request: SiteWebServiceRequest) -> String in
+            return template.replacingOccurrences(of: "%[BODY]%", with: "<b>Hello world from MockRequestEndpoint!</b>")
+        }
+         */
+        
+        self.init(endpoints: [/*mockRequest, */mock, endpoint], storages: storages)
     }
     
     static var `default`: WebService {
