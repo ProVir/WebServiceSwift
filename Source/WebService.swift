@@ -44,6 +44,9 @@ public class WebService {
         case dependFull
     }
     
+    /// Perform response closures and delegates in dispath queue. Default: main thread.
+    public let queueForResponse: DispatchQueue
+    
     /**
      Constructor for WebService.
      
@@ -110,169 +113,95 @@ public class WebService {
     private weak var readStorageDependNextRequestWait: ReadStorageDependRequestInfo?
     
     
-    // MARK: Settings
-    
-    /// Default delegate for responses. Apply before call new request.
-    public weak var delegate: WebServiceDelegate?
-    
-    /// Perform response closures and delegates in dispath queue. Default: main thread.
-    public let queueForResponse: DispatchQueue
-    
-    
-    // MARK: Control requests
+    // MARK: Perform requests
     
     /**
-     Returns a Boolean value indicating whether the current queue contains the given request.
-     
-     - Parameter request: The request to find in the current queue.
-     - Returns: `true` if the request was found in the current queue; otherwise, `false`.
-     */
-    public func containsRequest<T: WebServiceBaseRequesting & Hashable>(request: T) -> Bool {
-        return mutex.synchronized { !(requestsForHashs[request]?.isEmpty ?? true) }
-    }
-    
-    /**
-     Returns a Boolean value indicating whether the current queue contains the given requests.
-     
-     - Parameter requestType: The type request to find in the all current queue.
-     - Returns: `true` if one request with WebServiceBaseRequesting.Type was found in the current queue; otherwise, `false`.
-     */
-    public func containsRequest(requestType: WebServiceBaseRequesting.Type) -> Bool {
-        return mutex.synchronized { !(requestsForTypes["\(requestType)"]?.isEmpty ?? true) }
-    }
-    
-    /**
-     Returns a Boolean value indicating whether the current queue contains the given request.
-     
-     - Parameter requestKey: The requestKey to find in the current queue.
-     - Returns: `true` if the request with requestKey was found in the current queue; otherwise, `false`.
-     */
-    public func containsRequest(key: AnyHashable) -> Bool {
-        return mutex.synchronized { !(requestsForKeys[key]?.isEmpty ?? true) }
-    }
-    
-    /**
-     Returns a Boolean value indicating whether the current queue contains the given requests.
-     
-     - Parameter requestKeyType: The type requestKey to find in the all current queue.
-     - Returns: `true` if one request with requestKey.Type was found in the current queue; otherwise, `false`.
-     */
-    public func containsRequest<T: Hashable>(keyType: T.Type) -> Bool {
-        return (internalListRequest(keyType: keyType, onlyFirst: true)?.count ?? 0) > 0
-    }
-    
-    
-    /**
-     Cancel all requests with equal this request.
-     
-     Signal cancel send to endpoint, but real canceled implementation in endpoint.
-     
-     - Parameter request: The request to find in the current queue.
-     */
-    public func cancelRequests<T: WebServiceBaseRequesting & Hashable>(request: T) {
-        if let list = mutex.synchronized({ requestsForHashs[request] }) {
-            internalCancelRequests(ids: list)
-        }
-    }
-    
-    /**
-     Cancel all requests for request type.
-     
-     Signal cancel send to endpoint, but real canceled implementation in endpoint.
-     
-     - Parameter requestType: The WebServiceBaseRequesting.Type to find in the current queue.
-     */
-    public func cancelRequests(requestType: WebServiceBaseRequesting.Type) {
-        if let list = mutex.synchronized({ requestsForTypes["\(requestType)"] }) {
-            internalCancelRequests(ids: list)
-        }
-    }
-    
-    /**
-     Cancel all requests with requestKey.
-     
-     Signal cancel send to endpoint, but real canceled implementation in endpoint.
-     
-     - Parameter requestKey: The requestKey to find in the current queue.
-     */
-    public func cancelRequests(key: AnyHashable) {
-        if let list = mutex.synchronized({ requestsForKeys[key] }) {
-            internalCancelRequests(ids: list)
-        }
-    }
-    
-    /**
-     Cancel all requests with requestKey.Type.
-     
-     Signal cancel send to endpoint, but real canceled implementation in endpoint.
-     
-     - Parameter requestKeyType: The requestKey.Type to find in the current queue.
-     */
-    public func cancelRequests<T: Hashable>(keyType: T.Type) {
-        if let list = internalListRequest(keyType: keyType, onlyFirst: false) {
-            internalCancelRequests(ids: list)
-        }
-    }
-    
-    /**
-     Cancel all requests in current queue.
-     
-     Signal cancel send to endpoint, but real canceled implementation in endpoint.
-     */
-    public func cancelAllRequests() {
-        let requestList = mutex.synchronized { self.requestList }
-        internalCancelRequests(ids: requestList)
-    }
-    
-    
-    // MARK: Requests with closure
-    
-    /**
-     Request for server (and to storage, if need). Response result in closure.
+     Request for server (endpoint). Response result in closure.
      
      - Parameters:
-        - request: The request data.
-        - key: unique key for controling requests: caontaint and canceled. Also use for excludeDuplicate. Default: nil.
-        - excludeDuplicate: Exclude duplicate requests. Equal requests alogorithm: test for key if not null, else test requests equal if request is hashable.
-        - dataFromStorage: Optional. Closure for read data from storage. if read data after data from server - cloure not call. If `closure == nil`, data not read from storage.
-        - completionResponse: Optional. Closure for response result from server.
+        - request: The request with data and result type.
+        - completionHandler: Closure for response result from server.
      */
-    public func performBaseRequest(_ request: WebServiceBaseRequesting, key: AnyHashable? = nil, excludeDuplicate: Bool = false, completionResponse: @escaping (_ response: WebServiceAnyResponse) -> Void) {
+    public func performRequest<RequestType: WebServiceRequesting>(_ request: RequestType, completionHandler: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
+        performBaseRequest(request, key: nil, excludeDuplicate: false, completionHandler: { completionHandler( $0.convert() ) })
+    }
+    
+    /**
+     Request for server (endpoint). Response result in closure.
+     
+     - Parameters:
+        - request: The request with data and result type.
+        - key: unique key for controling requests - contains and canceled. Also use for excludeDuplicate.
+        - excludeDuplicate: Exclude duplicate requests. Requests are equal if their keys match.
+        - completionHandler: Closure for response result from server.
+     */
+    public func performRequest<RequestType: WebServiceRequesting>(_ request: RequestType, key: AnyHashable, excludeDuplicate: Bool, completionHandler: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
+        performBaseRequest(request, key: key, excludeDuplicate: excludeDuplicate, completionHandler: { completionHandler( $0.convert() ) })
+    }
+    
+    /**
+     Request for server (endpoint). Response result in closure.
+     
+     - Parameters:
+        - request: The hashable (also equatable) request with data and result type.
+        - excludeDuplicate: Exclude duplicate equatable requests.
+        - completionHandler: Closure for response result from server.
+     */
+    public func performRequest<RequestType: WebServiceRequesting & Hashable>(_ request: RequestType, excludeDuplicate: Bool, completionHandler: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
+        performBaseRequest(request, key: nil, excludeDuplicate: excludeDuplicate, completionHandler: { completionHandler( $0.convert() ) })
+    }
+    
+    /**
+     Request without support generic for server (endpoint). Response result in closure.
+     
+     - Parameters:
+        - request: The request with data.
+        - key: unique key for controling requests - contains and canceled. Also use for excludeDuplicate. Default: nil.
+        - excludeDuplicate: Exclude duplicate requests. Equal requests alogorithm: test for key if not null, else test requests equal if request is hashable.
+        - completionHandler: Closure for response result from server.
+     */
+    public func performBaseRequest(_ request: WebServiceBaseRequesting,
+                                   key: AnyHashable? = nil,
+                                   excludeDuplicate: Bool = false,
+                                   completionHandler: @escaping (_ response: WebServiceAnyResponse) -> Void) {
+        
+        //1. Depend from previous read storage.
         weak var readStorageRequestInfo: ReadStorageDependRequestInfo? = readStorageDependNextRequestWait
         readStorageDependNextRequestWait = nil
         
+        //2. Test duplicate requests
         let requestHashable = request as? AnyHashable
         
-        //Duplicate requests
         if excludeDuplicate, let key = key {
             if containsRequest(key: key) {
                 readStorageRequestInfo?.setDuplicate()
-                completionResponse(.duplicateRequest)
+                completionHandler(.duplicateRequest)
                 return
             }
         } else if excludeDuplicate, let requestHashable = requestHashable {
             if mutex.synchronized({ !(requestsForHashs[requestHashable]?.isEmpty ?? true) }) {
                 readStorageRequestInfo?.setDuplicate()
-                completionResponse(.duplicateRequest)
+                completionHandler(.duplicateRequest)
                 return
             }
         }
         
-        //Endpoint and Storage
+        //3. Find Endpoint and Storage
         guard let endpoint = internalFindEndpoint(request: request) else {
             readStorageRequestInfo?.setState(.error)
-            completionResponse(.error(WebServiceRequestError.notFoundEndpoint))
+            completionHandler(.error(WebServiceRequestError.notFoundEndpoint))
             return
         }
         
         let storage = internalFindStorage(request: request)
         
+        //4. Add request to memory database
         let requestType = type(of: request)
         let requestId = internalNewRequestId()
         internalAddRequest(requestId: requestId, key: key, requestHashable: requestHashable, requestType: requestType, endpoint: endpoint)
         
  
-        //Request in work
+        //5. Perform request (Step #0 -> Step #3)
         var requestState = RequestState.inWork
         
         //Step #3: Call this closure with result response
@@ -287,17 +216,17 @@ public class WebService {
                 case .data(let data):
                     requestState = .completed
                     readStorageRequestInfo?.setState(requestState)
-                    completionResponse(.data(data))
+                    completionHandler(.data(data))
                     
                 case .error(let error):
                     requestState = .error
                     readStorageRequestInfo?.setState(requestState)
-                    completionResponse(.error(error))
+                    completionHandler(.error(error))
                     
                 case .canceledRequest, .duplicateRequest:
                     requestState = .canceled
                     readStorageRequestInfo?.setState(requestState)
-                    completionResponse(.canceledRequest)
+                    completionHandler(.canceledRequest)
                 }
             }
         }
@@ -355,134 +284,230 @@ public class WebService {
         }
     }
     
-    /**
-     Request for server (and to storage, if need). Response result in closure.
-     
-     - Parameters:
-        - request: The request data.
-        - key: unique key for controling requests: caontaint and canceled. Also use for excludeDuplicate. Default: nil.
-        - excludeDuplicate: Exclude duplicate requests. Equal requests alogorithm: test for key if not null, else test requests equal if request is hashable.
-        - dataFromStorage: Optional. Closure for read data from storage. if read data after data from server - cloure not call. If `closure == nil`, data not read from storage.
-        - completionResponse: Optional. Closure for response result from server.
-     */
-    public func performRequest<RequestType: WebServiceRequesting>(_ request: RequestType, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
-        performBaseRequest(request, key: nil, excludeDuplicate: false, completionResponse: { completionResponse( $0.convert() ) })
-    }
     
-    
-    public func performRequest<RequestType: WebServiceRequesting>(_ request: RequestType, key: AnyHashable, excludeDuplicate: Bool, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
-        performBaseRequest(request, key: key, excludeDuplicate: excludeDuplicate, completionResponse: { completionResponse( $0.convert() ) })
-    }
-    
-    public func performRequest<RequestType: WebServiceRequesting & Hashable>(_ request: RequestType, excludeDuplicate: Bool, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
-        performBaseRequest(request, key: nil, excludeDuplicate: excludeDuplicate, completionResponse: { completionResponse( $0.convert() ) })
-    }
-    
-    
+    //MARK: Read from storage
     
     /**
-     Request for only storage. Response result in closure.
+     Read last success data from storage. Response result in closure.
      
      - Parameters:
-     - request: The request data.
-     - completionResponse: Closure for read data from storage.
-     - response: result read from storage.
+         - request: The request with data.
+         - dependencyNextRequest: Type dependency from next performRequest.
+         - completionHandler: Closure for read data from storage.
+         - timeStamp: timeStamp when saved from server (endpoint).
+         - response: result read from storage.
      */
-    public func readStorageAnyData(_ request: WebServiceBaseRequesting, dependencyNextRequest: ReadStorageDependencyType = .notDepend, completionResponse: @escaping (_ timeStamp: Date?, _ response: WebServiceAnyResponse) -> Void) {
-        if let storage = internalFindStorage(request: request) {
-            internalReadStorage(storage: storage, request: request, dependencyNextRequest: dependencyNextRequest, completionResponse: completionResponse)
-        } else {
-            completionResponse(nil, .error(WebServiceRequestError.notFoundStorage))
-        }
-    }
-    
-    /**
-     Request for only storage. Response result in closure.
-     
-     - Parameters:
-     - request: The request data.
-     - completionResponse: Closure for read data from storage.
-     - response: result read from storage.
-     */
-    public func readStorage<RequestType: WebServiceRequesting>(_ request: RequestType, dependencyNextRequest: ReadStorageDependencyType = .notDepend, completionResponse: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
+    public func readStorage<RequestType: WebServiceRequesting>(_ request: RequestType, dependencyNextRequest: ReadStorageDependencyType = .notDepend, completionHandler: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
         if let storage = internalFindStorage(request: request) {
             //CompletionResponse
-            let completionResponseInternal:(_ timeStamp: Date?, _ response: WebServiceAnyResponse) -> Void = { completionResponse($0, $1.convert()) }
+            let completionHandlerInternal:(_ timeStamp: Date?, _ response: WebServiceAnyResponse) -> Void = { completionHandler($0, $1.convert()) }
             
             //Request
-            internalReadStorage(storage: storage, request: request, dependencyNextRequest: dependencyNextRequest, completionResponse: completionResponseInternal)
+            internalReadStorage(storage: storage, request: request, dependencyNextRequest: dependencyNextRequest, completionHandler: completionHandlerInternal)
             
         } else {
-            completionResponse(nil, .error(WebServiceRequestError.notFoundStorage))
+            completionHandler(nil, .error(WebServiceRequestError.notFoundStorage))
         }
     }
-    
-    
-    // MARK: Requests with delegates
     
     /**
-     Request for server (and to storage, if need). Response result in default or custom delegate.
+     Read last success data from storage without information result type data. Response result in closure.
      
      - Parameters:
-     - request: The request data.
-     - includeResponseStorage: `true` if need read data from storage. if read data after data from server - delegate not call. Default: false.
-     - customDelegate: Optional. Unique delegate for current request.
+        - request: The request with data.
+        - dependencyNextRequest: Type dependency from next performRequest.
+        - completionHandler: Closure for read data from storage.
+        - timeStamp: timeStamp when saved from server (endpoint).
+        - response: result read from storage.
      */
-    public func performRequest(_ request: WebServiceBaseRequesting, customDelegate: WebServiceDelegate? = nil) {
-        internalPerformRequest(request, key: nil, excludeDuplicate: false, customDelegate: customDelegate)
+    public func readStorageAnyData(_ request: WebServiceBaseRequesting,
+                                   dependencyNextRequest: ReadStorageDependencyType = .notDepend,
+                                   completionHandler: @escaping (_ timeStamp: Date?, _ response: WebServiceAnyResponse) -> Void) {
+        if let storage = internalFindStorage(request: request) {
+            internalReadStorage(storage: storage, request: request, dependencyNextRequest: dependencyNextRequest, completionHandler: completionHandler)
+        } else {
+            completionHandler(nil, .error(WebServiceRequestError.notFoundStorage))
+        }
     }
     
-    public func performRequest(_ request: WebServiceBaseRequesting, key: AnyHashable, excludeDuplicate: Bool, customDelegate: WebServiceDelegate? = nil) {
-        internalPerformRequest(request, key: key, excludeDuplicate: excludeDuplicate, customDelegate: customDelegate)
-    }
     
-    public func performRequest<RequestType: WebServiceBaseRequesting & Hashable>(_ request: RequestType, excludeDuplicate: Bool, customDelegate: WebServiceDelegate? = nil) {
-        internalPerformRequest(request, key: nil, excludeDuplicate: excludeDuplicate, customDelegate: customDelegate)
-    }
-    
+    // MARK: Perform requests use delegate for response
     
     /**
-     Request for only storage. Response result in default or custom delegate.
+     Request for server (endpoint). Response result send to delegate.
      
      - Parameters:
-     - request: The request data.
-     - customDelegate: Optional. Unique delegate for current request.
+        - request: The request with data.
+        - responseDelegate: Weak delegate for response from this request.
      */
-    public func readStorage(_ request: WebServiceBaseRequesting, key: AnyHashable? = nil, dependencyNextRequest: ReadStorageDependencyType = .notDepend, customDelegate: WebServiceDelegate? = nil) {
-        if let delegate = customDelegate ?? self.delegate {
-            readStorageAnyData(request, dependencyNextRequest: dependencyNextRequest, completionResponse: { [weak delegate] _, response in
-                if let delegate = delegate {
-                    delegate.webServiceResponse(request: request, key: key, isStorageRequest: true, response: response)
-                }
-            })
+    public func performRequest(_ request: WebServiceBaseRequesting, responseDelegate: WebServiceDelegate?) {
+        internalPerformRequest(request, key: nil, excludeDuplicate: false, responseDelegate: responseDelegate)
+    }
+    
+    /**
+     Request for server (endpoint). Response result send to delegate.
+     
+     - Parameters:
+         - request: The request with data.
+         - key: unique key for controling requests - contains and canceled. Also use for excludeDuplicate.
+         - excludeDuplicate: Exclude duplicate requests. Requests are equal if their keys match.
+         - responseDelegate: Weak delegate for response from this request.
+     */
+    public func performRequest(_ request: WebServiceBaseRequesting, key: AnyHashable, excludeDuplicate: Bool, responseDelegate: WebServiceDelegate?) {
+        internalPerformRequest(request, key: key, excludeDuplicate: excludeDuplicate, responseDelegate: responseDelegate)
+    }
+    
+    /**
+     Request for server (endpoint). Response result send to delegate.
+     
+     - Parameters:
+         - request: The hashable (also equatable) request with data.
+         - excludeDuplicate: Exclude duplicate equatable requests.
+         - responseDelegate: Weak delegate for response from this request.
+     */
+    public func performRequest<RequestType: WebServiceBaseRequesting & Hashable>(_ request: RequestType, excludeDuplicate: Bool, responseDelegate: WebServiceDelegate?) {
+        internalPerformRequest(request, key: nil, excludeDuplicate: excludeDuplicate, responseDelegate: responseDelegate)
+    }
+    
+    /**
+     Read last success data from storage. Response result in default or custom delegate.
+     
+     - Parameters:
+         - request: The request with data.
+         - key: unique key for controling requests, use only for response delegate.
+         - responseDelegate: Weak delegate for response from this request.
+     */
+    public func readStorage(_ request: WebServiceBaseRequesting, key: AnyHashable? = nil, dependencyNextRequest: ReadStorageDependencyType = .notDepend, responseDelegate delegate: WebServiceDelegate) {
+        readStorageAnyData(request, dependencyNextRequest: dependencyNextRequest) { [weak delegate] _, response in
+            if let delegate = delegate {
+                delegate.webServiceResponse(request: request, key: key, isStorageRequest: true, response: response)
+            }
         }
     }
     
-    // MARK: - Private functions
-    private func internalPerformRequest(_ request: WebServiceBaseRequesting, key: AnyHashable?, excludeDuplicate: Bool, customDelegate: WebServiceDelegate? = nil) {
-        if let delegate = customDelegate ?? self.delegate {
-            performBaseRequest(request,
-                               key: key,
-                               excludeDuplicate: excludeDuplicate,
-                               completionResponse: { [weak delegate] response in
-                                if let delegate = delegate {
-                                    delegate.webServiceResponse(request: request, key: key, isStorageRequest: false, response: response)
-                                }
-            })
-        }
-        else {
-            performBaseRequest(request, key: key, excludeDuplicate: excludeDuplicate, completionResponse: { _ in })
+    
+    // MARK: Control requests
+    
+    /**
+     Returns a Boolean value indicating whether the current queue contains the given request.
+     
+     - Parameter request: The request to find in the current queue.
+     - Returns: `true` if the request was found in the current queue; otherwise, `false`.
+     */
+    public func containsRequest<T: WebServiceBaseRequesting & Hashable>(request: T) -> Bool {
+        return mutex.synchronized { !(requestsForHashs[request]?.isEmpty ?? true) }
+    }
+    
+    /**
+     Returns a Boolean value indicating whether the current queue contains requests the given type.
+     
+     - Parameter requestType: The type request to find in the all current queue.
+     - Returns: `true` if one request with WebServiceBaseRequesting.Type was found in the current queue; otherwise, `false`.
+     */
+    public func containsRequest(requestType: WebServiceBaseRequesting.Type) -> Bool {
+        return mutex.synchronized { !(requestsForTypes["\(requestType)"]?.isEmpty ?? true) }
+    }
+    
+    /**
+     Returns a Boolean value indicating whether the current queue contains the given request with key.
+     
+     - Parameter key: The key to find requests in the current queue.
+     - Returns: `true` if the request with key was found in the current queue; otherwise, `false`.
+     */
+    public func containsRequest(key: AnyHashable) -> Bool {
+        return mutex.synchronized { !(requestsForKeys[key]?.isEmpty ?? true) }
+    }
+    
+    /**
+     Returns a Boolean value indicating whether the current queue contains requests the given type key.
+     
+     - Parameter keyType: The type requestKey to find in the all current queue.
+     - Returns: `true` if one request with key.Type was found in the current queue; otherwise, `false`.
+     */
+    public func containsRequest<T: Hashable>(keyType: T.Type) -> Bool {
+        return (internalListRequest(keyType: keyType, onlyFirst: true)?.count ?? 0) > 0
+    }
+    
+    /**
+     Cancel all requests with equal this request.
+     
+     Signal cancel send to endpoint, but real canceled implementation in endpoint.
+     
+     - Parameter request: The request to find in the current queue.
+     */
+    public func cancelRequests<T: WebServiceBaseRequesting & Hashable>(request: T) {
+        if let list = mutex.synchronized({ requestsForHashs[request] }) {
+            internalCancelRequests(ids: list)
         }
     }
     
-    private func internalReadStorage(storage: WebServiceStorage, request: WebServiceBaseRequesting, dependencyNextRequest: ReadStorageDependencyType, completionResponse: @escaping (_ timeStamp: Date?, _ response: WebServiceAnyResponse) -> Void) {
+    /**
+     Cancel all requests for request type.
+     
+     Signal cancel send to endpoint, but real canceled implementation in endpoint.
+     
+     - Parameter requestType: The WebServiceBaseRequesting.Type to find in the current queue.
+     */
+    public func cancelRequests(requestType: WebServiceBaseRequesting.Type) {
+        if let list = mutex.synchronized({ requestsForTypes["\(requestType)"] }) {
+            internalCancelRequests(ids: list)
+        }
+    }
+    
+    /**
+     Cancel all requests with key.
+     
+     Signal cancel send to endpoint, but real canceled implementation in endpoint.
+     
+     - Parameter key: The key to find in the current queue.
+     */
+    public func cancelRequests(key: AnyHashable) {
+        if let list = mutex.synchronized({ requestsForKeys[key] }) {
+            internalCancelRequests(ids: list)
+        }
+    }
+    
+    /**
+     Cancel all requests with key.Type.
+     
+     Signal cancel send to endpoint, but real canceled implementation in endpoint.
+     
+     - Parameter keyType: The key.Type to find in the current queue.
+     */
+    public func cancelRequests<T: Hashable>(keyType: T.Type) {
+        if let list = internalListRequest(keyType: keyType, onlyFirst: false) {
+            internalCancelRequests(ids: list)
+        }
+    }
+    
+    /**
+     Cancel all requests in current queue.
+     
+     Signal cancel send to endpoint, but real canceled implementation in endpoint.
+     */
+    public func cancelAllRequests() {
+        let requestList = mutex.synchronized { self.requestList }
+        internalCancelRequests(ids: requestList)
+    }
+    
+    
+    //MARK: - Private functions
+    private func internalPerformRequest(_ request: WebServiceBaseRequesting, key: AnyHashable?, excludeDuplicate: Bool, responseDelegate delegate: WebServiceDelegate?) {
+        performBaseRequest(request, key: key, excludeDuplicate: excludeDuplicate) { [weak delegate] response in
+            if let delegate = delegate {
+                delegate.webServiceResponse(request: request, key: key, isStorageRequest: false, response: response)
+            }
+        }
+    }
+    
+    private func internalReadStorage(storage: WebServiceStorage, request: WebServiceBaseRequesting, dependencyNextRequest: ReadStorageDependencyType, completionHandler handler: @escaping (_ timeStamp: Date?, _ response: WebServiceAnyResponse) -> Void) {
         let nextRequestInfo: ReadStorageDependRequestInfo?
         let completionHandler: (_ timeStamp: Date?, _ response: WebServiceAnyResponse) -> Void
         
-        //Dependency setup
+        //1. Dependency setup
         if dependencyNextRequest == .notDepend {
             nextRequestInfo = nil
-            completionHandler = completionResponse
+            completionHandler = handler
             
         } else {
             nextRequestInfo = ReadStorageDependRequestInfo(dependencyType: dependencyNextRequest)
@@ -494,16 +519,16 @@ public class WebService {
                 }
                 
                 if nextRequestInfo?.canRead() ?? true {
-                    completionResponse(timeStamp, response)
+                    handler(timeStamp, response)
                 } else if nextRequestInfo?.isDuplicate ?? false {
-                    completionResponse(timeStamp, .duplicateRequest)
+                    handler(timeStamp, .duplicateRequest)
                 } else {
-                    completionResponse(timeStamp, .canceledRequest)
+                    handler(timeStamp, .canceledRequest)
                 }
             }
         }
         
-        //Perform read
+        //2. Perform read
         do {
             try storage.readData(request: request) { [weak self, queueForResponse = self.queueForResponse] isRawData, timeStamp, response in
                 if (nextRequestInfo?.canRead() ?? true) == false {
@@ -567,7 +592,7 @@ public class WebService {
         return nil
     }
     
-    private func internalFindStorage(request:WebServiceBaseRequesting) -> WebServiceStorage? {
+    private func internalFindStorage(request: WebServiceBaseRequesting) -> WebServiceStorage? {
         for storage in self.storages {
             if storage.isSupportedRequestForStorage(request) {
                 return storage

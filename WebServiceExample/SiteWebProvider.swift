@@ -66,7 +66,7 @@ class SiteWebProvider: WebServiceProvider, WebServiceDelegate {
             }
         }
         
-        requestProvider.performRequest(request, completionResponse: completionHandler)
+        requestProvider.performRequest(request, completionHandler: completionHandler)
     }
     
     ///Override needed

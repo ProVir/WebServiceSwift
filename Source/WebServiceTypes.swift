@@ -25,34 +25,29 @@ public enum WebServiceRequestError: Error {
     case notSupportDataHandler
 }
 
-/**
- WebService general error enum for response
- 
- - `invalidData`: If data from server or decoder invalid
- - `httpStatusCode(Code)`: HTTP Status code != 200 and as error
- - `general(code, data)`: Custom error with code and data
- */
+
+/// WebService general error enum for response
 public enum WebServiceResponseError: Error {
-    ///Data from server invalid
+    ///Data from server invalid. Use also for `WebServiceResponse.convert()`
     case invalidData
     
     /// Data not found in storage
     case notFoundData
     
-    ///General error http status code
+    ///General error http status code (usually when != 200)
     case httpStatusCode(Int)
     
-    /// Code + data
+    /// Custom error with code and user data
     case general(Int, Any?)
 }
 
 /**
  WebService result response for concrete type from endpoint
  
- - `data(T)`: Success response with data with requre type
+ - `data(T)`: Success response with data with require type
  - `error(Error)`: Error response
- - `canceledRequest`: Reqest canceled (called `WebService.cancelRequest()` method for this request or group requests)
- - `duplicateRequest`: If `excludeDuplicateRequests == true` and this request contained in queue
+ - `canceledRequest`: Reqest canceled (called `WebService.cancelRequests()` method for this request)
+ - `duplicateRequest`: If `excludeDuplicate == true` and this request contained in queue
  */
 public enum WebServiceResponse<T> {
     case data(T)

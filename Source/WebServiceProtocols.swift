@@ -14,9 +14,9 @@ import Foundation
 /// Base protocol for all types request.
 public protocol WebServiceBaseRequesting { }
 
-/// Generic protocol for all types request.
+/// Generic protocol with information result type for all types request.
 public protocol WebServiceRequesting: WebServiceBaseRequesting {
-    /// Type for response data when success. For data always nil (without data). use Any?
+    /// Type for response data when success. For data without data you can use Void or Any?
     associatedtype ResultType
 }
 
@@ -31,7 +31,7 @@ public protocol WebServiceRequestBaseStoring: WebServiceBaseRequesting {
 /// Default data classification for storages.
 public let WebServiceDefaultDataClassification = "default"
 
-/// Data Source from custom types response with raw data from server
+/// Data Source from custom types response with raw data from server. Used in storages when raw data as binary.
 public protocol WebServiceRawDataSource {
     var binaryRawData: Data? { get }
 }
@@ -58,13 +58,13 @@ public extension WebService {
 /// Protocol for endpoint in WebService.
 public protocol WebServiceEndpoint: class {
     
-    /// Thread Dispatch Queue for `request()` and `cancelRequest()` methods.
+    /// Thread Dispatch Queue for `perofrmRequest()` and `cancelRequests()` methods.
     var queueForRequest: DispatchQueue? { get }
     
-    /// Thread Dispatch Queue for `dataHandler()` method with data from `request()` method.
+    /// Thread Dispatch Queue for `dataHandler()` method with data from `performRequest()` method.
     var queueForDataHandler: DispatchQueue? { get }
     
-    /// Thread Dispatch Queue for `dataHandler()` method with data from store.
+    /// Thread Dispatch Queue for `dataHandler()` method with raw data from store.
     var queueForDataHandlerFromStorage: DispatchQueue? { get }
     
     #if os(iOS)

@@ -94,8 +94,8 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
      - dataFromStorage: Optional. Closure for read data from storage. if read data after data from server - cloure not call. If `closure == nil`, data not read from storage.
      - completionResponse: Optional. Closure for response result from server.
      */
-    public func performRequest(_ request: RequestType, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
-        service.performRequest(request, completionResponse: completionResponse)
+    public func performRequest(_ request: RequestType, completionHandler: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
+        service.performRequest(request, completionHandler: completionHandler)
     }
     
     /**
@@ -106,8 +106,8 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
      - dataFromStorage: Optional. Closure for read data from storage. if read data after data from server - cloure not call. If `closure == nil`, data not read from storage.
      - completionResponse: Optional. Closure for response result from server.
      */
-    public func performRequest(_ request: RequestType, key: AnyHashable, excludeDuplicate: Bool, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
-        service.performRequest(request, key: key, excludeDuplicate: excludeDuplicate, completionResponse: completionResponse)
+    public func performRequest(_ request: RequestType, key: AnyHashable, excludeDuplicate: Bool, completionHandler: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
+        service.performRequest(request, key: key, excludeDuplicate: excludeDuplicate, completionHandler: completionHandler)
     }
     
     /**
@@ -118,8 +118,8 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
      - completionResponse: Closure for read data from storage.
      - response: result read from storage.
      */
-    public func readStorage(_ request: RequestType, dependencyNextRequest: WebService.ReadStorageDependencyType = .notDepend, completionResponse: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
-        service.readStorage(request, dependencyNextRequest: dependencyNextRequest, completionResponse: completionResponse)
+    public func readStorage(_ request: RequestType, dependencyNextRequest: WebService.ReadStorageDependencyType = .notDepend, completionHandler: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
+        service.readStorage(request, dependencyNextRequest: dependencyNextRequest, completionHandler: completionHandler)
     }
     
     
@@ -133,7 +133,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
      - includeResponseStorage: `true` if need read data from storage. if read data after data from server - delegate not call. Default: false.
      */
     public func performRequest(_ request: RequestType) {
-        service.performRequest(request, customDelegate: delegate)
+        service.performRequest(request, responseDelegate: delegate)
     }
     
     /**
@@ -144,7 +144,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
      - includeResponseStorage: `true` if need read data from storage. if read data after data from server - delegate not call. Default: false.
      */
     public func performRequest(_ request: RequestType, key: AnyHashable, excludeDuplicate: Bool) {
-        service.performRequest(request, key: key, excludeDuplicate: excludeDuplicate, customDelegate: delegate)
+        service.performRequest(request, key: key, excludeDuplicate: excludeDuplicate, responseDelegate: delegate)
     }
     
     /**
@@ -153,7 +153,9 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
      - Parameter request: The request data.
      */
     public func readStorage(_ request: RequestType, key: AnyHashable? = nil, dependencyNextRequest: WebService.ReadStorageDependencyType = .notDepend) {
-        service.readStorage(request, key: key, dependencyNextRequest: dependencyNextRequest, customDelegate: delegate)
+        if let delegate = delegate {
+            service.readStorage(request, key: key, dependencyNextRequest: dependencyNextRequest, responseDelegate: delegate)
+        }
     }
 }
 
@@ -188,8 +190,8 @@ extension WebServiceRequestProvider where RequestType: Hashable {
      - dataFromStorage: Optional. Closure for read data from storage. if read data after data from server - cloure not call. If `closure == nil`, data not read from storage.
      - completionResponse: Optional. Closure for response result from server.
      */
-    public func performRequest(_ request: RequestType, excludeDuplicate: Bool, completionResponse: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
-                service.performRequest(request, excludeDuplicate: excludeDuplicate, completionResponse: completionResponse)
+    public func performRequest(_ request: RequestType, excludeDuplicate: Bool, completionHandler: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
+                service.performRequest(request, excludeDuplicate: excludeDuplicate, completionHandler: completionHandler)
     }
     
     /**
@@ -200,7 +202,7 @@ extension WebServiceRequestProvider where RequestType: Hashable {
      - includeResponseStorage: `true` if need read data from storage. if read data after data from server - delegate not call. Default: false.
      */
     public func performRequest(_ request: RequestType, excludeDuplicate: Bool) {
-        service.performRequest(request, excludeDuplicate: excludeDuplicate, customDelegate: delegate)
+        service.performRequest(request, excludeDuplicate: excludeDuplicate, responseDelegate: delegate)
     }
 }
 
