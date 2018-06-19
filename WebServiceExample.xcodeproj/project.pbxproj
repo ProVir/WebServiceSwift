@@ -18,15 +18,15 @@
 		501D2ADF1F4E8DF5000E3FA3 /* WebServiceSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 501D2AD71F4E8DF5000E3FA3 /* WebServiceSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		501D2AEC1F4E92A1000E3FA3 /* WebServiceFileStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AEB1F4E92A1000E3FA3 /* WebServiceFileStorage.swift */; };
 		501D2AF11F518762000E3FA3 /* SiteWebServiceRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AED1F4E9BE5000E3FA3 /* SiteWebServiceRequest.swift */; };
-		501D2AF21F5188CC000E3FA3 /* WebServiceHtmlEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AEF1F4EA1EC000E3FA3 /* WebServiceHtmlEngine.swift */; };
+		501D2AF21F5188CC000E3FA3 /* WebServiceHtmlEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AEF1F4EA1EC000E3FA3 /* WebServiceHtmlEndpoint.swift */; };
 		501D2AFA1F527D03000E3FA3 /* WebServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AE91F4E917A000E3FA3 /* WebServiceProtocols.swift */; };
 		501D2AFB1F527D05000E3FA3 /* WebService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AE41F4E8FA2000E3FA3 /* WebService.swift */; };
-		5054625520C0665000595948 /* WebServiceAlamofireBaseEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625320C065DE00595948 /* WebServiceAlamofireBaseEngine.swift */; };
+		5054625520C0665000595948 /* WebServiceAlamofireBaseEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625320C065DE00595948 /* WebServiceAlamofireBaseEndpoint.swift */; };
 		5054625820C066FD00595948 /* PThreadMutexLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625620C066B500595948 /* PThreadMutexLock.swift */; };
-		5054625A20C1026800595948 /* WebServiceAlamofireSimpleEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625920C1026800595948 /* WebServiceAlamofireSimpleEngine.swift */; };
-		5054625C20C1884200595948 /* WebServiceSimpleEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625B20C1884200595948 /* WebServiceSimpleEngine.swift */; };
+		5054625A20C1026800595948 /* WebServiceAlamofireSimpleEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625920C1026800595948 /* WebServiceAlamofireSimpleEndpoint.swift */; };
+		5054625C20C1884200595948 /* WebServiceSimpleEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625B20C1884200595948 /* WebServiceSimpleEndpoint.swift */; };
 		506CAFCF2084D729008AB016 /* WebServiceTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 506CAFCD2084D707008AB016 /* WebServiceTypes.swift */; };
-		50844338207D244900C757C7 /* WebServiceMockEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50F4943120565FD1004F1E08 /* WebServiceMockEngine.swift */; };
+		50844338207D244900C757C7 /* WebServiceMockEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50F4943120565FD1004F1E08 /* WebServiceMockEndpoint.swift */; };
 		50AB6AB020883C2F00C1E093 /* SiteWebProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50AB6AAF20883C2F00C1E093 /* SiteWebProvider.swift */; };
 		50AB6AB220883F3100C1E093 /* WebService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50AB6AB120883F3100C1E093 /* WebService.swift */; };
 		50BFAFF9208F4C8E007E8FBD /* WebServiceRequestProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50BFAFF7208F4C8A007E8FBD /* WebServiceRequestProvider.swift */; };
@@ -74,11 +74,11 @@
 		501D2AE91F4E917A000E3FA3 /* WebServiceProtocols.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceProtocols.swift; sourceTree = "<group>"; };
 		501D2AEB1F4E92A1000E3FA3 /* WebServiceFileStorage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceFileStorage.swift; sourceTree = "<group>"; };
 		501D2AED1F4E9BE5000E3FA3 /* SiteWebServiceRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SiteWebServiceRequest.swift; sourceTree = "<group>"; };
-		501D2AEF1F4EA1EC000E3FA3 /* WebServiceHtmlEngine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceHtmlEngine.swift; sourceTree = "<group>"; };
-		5054625320C065DE00595948 /* WebServiceAlamofireBaseEngine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceAlamofireBaseEngine.swift; sourceTree = "<group>"; };
+		501D2AEF1F4EA1EC000E3FA3 /* WebServiceHtmlEndpoint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceHtmlEndpoint.swift; sourceTree = "<group>"; };
+		5054625320C065DE00595948 /* WebServiceAlamofireBaseEndpoint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceAlamofireBaseEndpoint.swift; sourceTree = "<group>"; };
 		5054625620C066B500595948 /* PThreadMutexLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PThreadMutexLock.swift; sourceTree = "<group>"; };
-		5054625920C1026800595948 /* WebServiceAlamofireSimpleEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceAlamofireSimpleEngine.swift; sourceTree = "<group>"; };
-		5054625B20C1884200595948 /* WebServiceSimpleEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceSimpleEngine.swift; sourceTree = "<group>"; };
+		5054625920C1026800595948 /* WebServiceAlamofireSimpleEndpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceAlamofireSimpleEndpoint.swift; sourceTree = "<group>"; };
+		5054625B20C1884200595948 /* WebServiceSimpleEndpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceSimpleEndpoint.swift; sourceTree = "<group>"; };
 		506CAFCD2084D707008AB016 /* WebServiceTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceTypes.swift; sourceTree = "<group>"; };
 		50A9162420B09C4C00EA2E9D /* WebServiceSwift.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; fileEncoding = 4; path = WebServiceSwift.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		50AB6AAF20883C2F00C1E093 /* SiteWebProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteWebProvider.swift; sourceTree = "<group>"; };
@@ -86,7 +86,7 @@
 		50BFAFF7208F4C8A007E8FBD /* WebServiceRequestProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceRequestProvider.swift; sourceTree = "<group>"; };
 		50D22B0A20D7F91800C44198 /* WebServiceMemoryStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceMemoryStorage.swift; sourceTree = "<group>"; };
 		50F0804F20AC843B00994710 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		50F4943120565FD1004F1E08 /* WebServiceMockEngine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceMockEngine.swift; sourceTree = "<group>"; };
+		50F4943120565FD1004F1E08 /* WebServiceMockEndpoint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceMockEndpoint.swift; sourceTree = "<group>"; };
 		83873141EF5334067DE0C2D6 /* Pods-WebServiceSwift.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WebServiceSwift.release.xcconfig"; path = "Pods/Target Support Files/Pods-WebServiceSwift/Pods-WebServiceSwift.release.xcconfig"; sourceTree = "<group>"; };
 		85924404FE98C539DF31A8DB /* Pods-WebServiceExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WebServiceExample.debug.xcconfig"; path = "Pods/Target Support Files/Pods-WebServiceExample/Pods-WebServiceExample.debug.xcconfig"; sourceTree = "<group>"; };
 		918173D2DBEB2D8E5D5A88E4 /* Pods-WebServiceSwift.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WebServiceSwift.debug.xcconfig"; path = "Pods/Target Support Files/Pods-WebServiceSwift/Pods-WebServiceSwift.debug.xcconfig"; sourceTree = "<group>"; };
@@ -172,8 +172,8 @@
 				50BFAFF7208F4C8A007E8FBD /* WebServiceRequestProvider.swift */,
 				501D2AEB1F4E92A1000E3FA3 /* WebServiceFileStorage.swift */,
 				50D22B0A20D7F91800C44198 /* WebServiceMemoryStorage.swift */,
-				50F4943120565FD1004F1E08 /* WebServiceMockEngine.swift */,
-				5054625B20C1884200595948 /* WebServiceSimpleEngine.swift */,
+				50F4943120565FD1004F1E08 /* WebServiceMockEndpoint.swift */,
+				5054625B20C1884200595948 /* WebServiceSimpleEndpoint.swift */,
 				5054625620C066B500595948 /* PThreadMutexLock.swift */,
 				5054625220C065B200595948 /* Alamofire */,
 			);
@@ -183,8 +183,8 @@
 		5054625220C065B200595948 /* Alamofire */ = {
 			isa = PBXGroup;
 			children = (
-				5054625320C065DE00595948 /* WebServiceAlamofireBaseEngine.swift */,
-				5054625920C1026800595948 /* WebServiceAlamofireSimpleEngine.swift */,
+				5054625320C065DE00595948 /* WebServiceAlamofireBaseEndpoint.swift */,
+				5054625920C1026800595948 /* WebServiceAlamofireSimpleEndpoint.swift */,
 			);
 			path = Alamofire;
 			sourceTree = "<group>";
@@ -203,7 +203,7 @@
 			isa = PBXGroup;
 			children = (
 				50AB6AB120883F3100C1E093 /* WebService.swift */,
-				501D2AEF1F4EA1EC000E3FA3 /* WebServiceHtmlEngine.swift */,
+				501D2AEF1F4EA1EC000E3FA3 /* WebServiceHtmlEndpoint.swift */,
 			);
 			name = WebService;
 			sourceTree = "<group>";
@@ -408,7 +408,7 @@
 				501D2AF11F518762000E3FA3 /* SiteWebServiceRequest.swift in Sources */,
 				50AB6AB020883C2F00C1E093 /* SiteWebProvider.swift in Sources */,
 				501D2AC31F4E8DD0000E3FA3 /* ViewController.swift in Sources */,
-				501D2AF21F5188CC000E3FA3 /* WebServiceHtmlEngine.swift in Sources */,
+				501D2AF21F5188CC000E3FA3 /* WebServiceHtmlEndpoint.swift in Sources */,
 				501D2AC11F4E8DD0000E3FA3 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -417,16 +417,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5054625520C0665000595948 /* WebServiceAlamofireBaseEngine.swift in Sources */,
+				5054625520C0665000595948 /* WebServiceAlamofireBaseEndpoint.swift in Sources */,
 				506CAFCF2084D729008AB016 /* WebServiceTypes.swift in Sources */,
-				50844338207D244900C757C7 /* WebServiceMockEngine.swift in Sources */,
+				50844338207D244900C757C7 /* WebServiceMockEndpoint.swift in Sources */,
 				50BFAFF9208F4C8E007E8FBD /* WebServiceRequestProvider.swift in Sources */,
 				501D2AFB1F527D05000E3FA3 /* WebService.swift in Sources */,
 				5054625820C066FD00595948 /* PThreadMutexLock.swift in Sources */,
-				5054625A20C1026800595948 /* WebServiceAlamofireSimpleEngine.swift in Sources */,
+				5054625A20C1026800595948 /* WebServiceAlamofireSimpleEndpoint.swift in Sources */,
 				50D22B0B20D7F91800C44198 /* WebServiceMemoryStorage.swift in Sources */,
 				501D2AFA1F527D03000E3FA3 /* WebServiceProtocols.swift in Sources */,
-				5054625C20C1884200595948 /* WebServiceSimpleEngine.swift in Sources */,
+				5054625C20C1884200595948 /* WebServiceSimpleEndpoint.swift in Sources */,
 				501D2AEC1F4E92A1000E3FA3 /* WebServiceFileStorage.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

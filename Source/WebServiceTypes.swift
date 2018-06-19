@@ -1,9 +1,9 @@
 //
 //  WebServiceTypes.swift
-//  WebServiceSwift 2.3.0
+//  WebServiceSwift 3.0.0
 //
-//  Created by ViR (Короткий Виталий) on 16.04.2018.
-//  Updated to 2.3.0 by ViR (Короткий Виталий) on 24.05.2018.
+//  Created by Короткий Виталий (ViR) on 16.04.2018.
+//  Updated to 3.0.0 by Короткий Виталий (ViR) on 19.06.2018.
 //  Copyright © 2018 ProVir. All rights reserved.
 //
 
@@ -12,13 +12,13 @@ import Foundation
 /**
  WebService general error enum for requests
  
- - `noFoundEngine`: If engine not found in `[engines]` for request
+ - `noFoundEndpoint`: If endpoint not found in `[endpoints]` for request
  - `noFoundStorage`: If storage not found in `[storages]` for request
- - `notSupportRequest`: If request after test fot engine contains invalid query or etc.
+ - `notSupportRequest`: If request after test fot endpoint contains invalid query or etc.
  - `notSupportDataHandler`: If request don't support data handler
  */
 public enum WebServiceRequestError: Error {
-    case notFoundEngine
+    case notFoundEndpoint
     case notFoundStorage
     
     case notSupportRequest
@@ -47,7 +47,7 @@ public enum WebServiceResponseError: Error {
 }
 
 /**
- WebService result response for concrete type from engine
+ WebService result response for concrete type from endpoint
  
  - `data(T)`: Success response with data with requre type
  - `error(Error)`: Error response
@@ -93,12 +93,12 @@ public enum WebServiceResponse<T> {
     }
 }
 
-/// WebService result response from engine without information for type
+/// WebService result response from endpoint without information for type
 public typealias WebServiceAnyResponse = WebServiceResponse<Any?>
 
 extension WebServiceResponse where T == Any? {
     /// Data if success response
-    public func dataResponse() -> Any? {
+    public func dataAnyResponse() -> Any? {
         switch self {
         case .data(let d): return d
         default: return nil

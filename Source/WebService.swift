@@ -1,9 +1,9 @@
 //
 //  WebService.swift
-//  WebServiceSwift 2.3.0
+//  WebServiceSwift 3.0.0
 //
-//  Created by ViR (Короткий Виталий) on 14.06.2017.
-//  Updated to 2.3.0 by ViR (Короткий Виталий) on 25.05.2018.
+//  Created by Короткий Виталий (ViR) on 14.06.2017.
+//  Updated to 3.0.0 by Короткий Виталий (ViR) on 19.06.2018.
 //  Copyright © 2017 ProVir. All rights reserved.
 //
 
@@ -48,37 +48,37 @@ public class WebService {
      Constructor for WebService.
      
      - Parameters:
-        - engines: All sorted engines that support all requests.
+        - endpoints: All sorted endpoints that support all requests.
         - storages: All sorted storages that support all requests.
         - queueForResponse: Dispatch Queue for results response. Thread for public method call and queueForResponse recommended be equal. Default: main thread.
      */
-    public init(engines: [WebServiceEngining],
-                storages: [WebServiceStoraging],
+    public init(endpoints: [WebServiceEndpoint],
+                storages: [WebServiceStorage],
                 queueForResponse: DispatchQueue = DispatchQueue.main) {
         
-        self.engines = engines
+        self.endpoints = endpoints
         self.storages = storages
         
         self.queueForResponse = queueForResponse
     }
     
     deinit {
-        let (requestList, requestUseEngines) = mutex.synchronized({ (self.requestList, self.requestUseEngines) })
+        let (requestList, requestUseEndpoint) = mutex.synchronized({ (self.requestList, self.requestUseEndpoint) })
         
         //End networkActivityIndicator for all requests
         WebService.staticMutex.synchronized {
             WebService.networkActivityIndicatorRequestIds.subtract(requestList)
         }
         
-        //Cancel all requests for engine
+        //Cancel all requests for endpoint
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            for (requestId, engine) in requestUseEngines {
+            for (requestId, endpoint) in requestUseEndpoint {
                 //Cancel in queue
-                if let queue = engine.queueForRequest {
-                    queue.async { engine.cancelRequest(requestId: requestId) }
+                if let queue = endpoint.queueForRequest {
+                    queue.async { endpoint.cancelRequest(requestId: requestId) }
                 } else {
                     //Or in main thread
-                    engine.cancelRequest(requestId: requestId)
+                    endpoint.cancelRequest(requestId: requestId)
                 }
             }
         }
@@ -97,11 +97,11 @@ public class WebService {
         }
     }
     
-    private let engines: [WebServiceEngining]
-    private let storages: [WebServiceStoraging]
+    private let endpoints: [WebServiceEndpoint]
+    private let storages: [WebServiceStorage]
     
     private var requestList: Set<UInt64> = []   //All requests
-    private var requestUseEngines: [UInt64: WebServiceEngining] = [:]
+    private var requestUseEndpoint: [UInt64: WebServiceEndpoint] = [:]
     
     private var requestsForTypes: [String: Set<UInt64>] = [:]        //[Request.Type: [Id]]
     private var requestsForHashs: [AnyHashable: Set<UInt64>] = [:]   //[Request<Hashable>: [Id]]
@@ -165,7 +165,7 @@ public class WebService {
     /**
      Cancel all requests with equal this request.
      
-     Signal cancel send to engine, but real canceled implementation in engine.
+     Signal cancel send to endpoint, but real canceled implementation in endpoint.
      
      - Parameter request: The request to find in the current queue.
      */
@@ -178,7 +178,7 @@ public class WebService {
     /**
      Cancel all requests for request type.
      
-     Signal cancel send to engine, but real canceled implementation in engine.
+     Signal cancel send to endpoint, but real canceled implementation in endpoint.
      
      - Parameter requestType: The WebServiceBaseRequesting.Type to find in the current queue.
      */
@@ -191,7 +191,7 @@ public class WebService {
     /**
      Cancel all requests with requestKey.
      
-     Signal cancel send to engine, but real canceled implementation in engine.
+     Signal cancel send to endpoint, but real canceled implementation in endpoint.
      
      - Parameter requestKey: The requestKey to find in the current queue.
      */
@@ -204,7 +204,7 @@ public class WebService {
     /**
      Cancel all requests with requestKey.Type.
      
-     Signal cancel send to engine, but real canceled implementation in engine.
+     Signal cancel send to endpoint, but real canceled implementation in endpoint.
      
      - Parameter requestKeyType: The requestKey.Type to find in the current queue.
      */
@@ -217,7 +217,7 @@ public class WebService {
     /**
      Cancel all requests in current queue.
      
-     Signal cancel send to engine, but real canceled implementation in engine.
+     Signal cancel send to endpoint, but real canceled implementation in endpoint.
      */
     public func cancelAllRequests() {
         let requestList = mutex.synchronized { self.requestList }
@@ -258,10 +258,10 @@ public class WebService {
             }
         }
         
-        //Engine and Storage
-        guard let engine = internalFindEngine(request: request) else {
+        //Endpoint and Storage
+        guard let endpoint = internalFindEndpoint(request: request) else {
             readStorageRequestInfo?.setState(.error)
-            completionResponse(.error(WebServiceRequestError.notFoundEngine))
+            completionResponse(.error(WebServiceRequestError.notFoundEndpoint))
             return
         }
         
@@ -269,7 +269,7 @@ public class WebService {
         
         let requestType = type(of: request)
         let requestId = internalNewRequestId()
-        internalAddRequest(requestId: requestId, key: key, requestHashable: requestHashable, requestType: requestType, engine: engine)
+        internalAddRequest(requestId: requestId, key: key, requestHashable: requestHashable, requestType: requestType, endpoint: endpoint)
         
  
         //Request in work
@@ -305,9 +305,9 @@ public class WebService {
         //Step #2: Data handler closure for raw data from server
         let dataHandler: (Any) -> Void = { (data) in
             do {
-                let resultData = try engine.dataHandler(request: request,
-                                                        data: data,
-                                                        isRawFromStorage: false)
+                let resultData = try endpoint.dataHandler(request: request,
+                                                          data: data,
+                                                          isRawFromStorage: false)
                 
                 if let resultData = resultData {
                     storage?.writeData(request: request, data: data, isRaw: true)
@@ -323,14 +323,14 @@ public class WebService {
         
         //Step #1: Beginer request closure
         let requestHandler = {
-            engine.performRequest(requestId: requestId,
-                                  request: request,
-                                  completionWithData: { data in
+            endpoint.performRequest(requestId: requestId,
+                                    request: request,
+                                    completionWithData: { data in
                                     
                                     //Raw data from server
                                     guard requestState == .inWork else { return }
                                     
-                                    if let queue = engine.queueForDataHandler {
+                                    if let queue = endpoint.queueForDataHandler {
                                         queue.async { dataHandler(data) }
                                     } else {
                                         dataHandler(data)
@@ -348,7 +348,7 @@ public class WebService {
         }
         
         //Step #0: Call request in queue
-        if let queue = engine.queueForRequest {
+        if let queue = endpoint.queueForRequest {
             queue.async { requestHandler() }
         } else {
             requestHandler()
@@ -475,7 +475,7 @@ public class WebService {
         }
     }
     
-    private func internalReadStorage(storage: WebServiceStoraging, request: WebServiceBaseRequesting, dependencyNextRequest: ReadStorageDependencyType, completionResponse: @escaping (_ timeStamp: Date?, _ response: WebServiceAnyResponse) -> Void) {
+    private func internalReadStorage(storage: WebServiceStorage, request: WebServiceBaseRequesting, dependencyNextRequest: ReadStorageDependencyType, completionResponse: @escaping (_ timeStamp: Date?, _ response: WebServiceAnyResponse) -> Void) {
         let nextRequestInfo: ReadStorageDependRequestInfo?
         let completionHandler: (_ timeStamp: Date?, _ response: WebServiceAnyResponse) -> Void
         
@@ -511,12 +511,12 @@ public class WebService {
                         completionHandler(nil, .canceledRequest)
                     }
                     
-                } else if isRawData, let rawData = response.dataResponse() {
-                    if let engine = self?.internalFindEngine(request: request, rawDataTypeForRestoreFromStorage: type(of: rawData)) {
-                        //Handler closure with fined engine for use next
+                } else if isRawData, let rawData = response.dataAnyResponse() {
+                    if let endpoint = self?.internalFindEndpoint(request: request, rawDataTypeForRestoreFromStorage: type(of: rawData)) {
+                        //Handler closure with fined endpoint for use next
                         let handler = {
                             do {
-                                let data = try engine.dataHandler(request: request, data: rawData, isRawFromStorage: true)
+                                let data = try endpoint.dataHandler(request: request, data: rawData, isRawFromStorage: true)
                                 
                                 queueForResponse.async {
                                     completionHandler(timeStamp, .data(data))
@@ -529,16 +529,16 @@ public class WebService {
                         }
                         
                         //Call handler
-                        if let queue = engine.queueForDataHandlerFromStorage {
+                        if let queue = endpoint.queueForDataHandlerFromStorage {
                             queue.async { handler() }
                         } else {
                             handler()
                         }
                         
                     } else {
-                        //Not found engine
+                        //Not found endpoint
                         queueForResponse.async {
-                            completionHandler(nil, .error(WebServiceRequestError.notFoundEngine))
+                            completionHandler(nil, .error(WebServiceRequestError.notFoundEndpoint))
                         }
                     }
                     
@@ -556,18 +556,18 @@ public class WebService {
         }
     }
     
-    // MARK: Find engines and storages
-    private func internalFindEngine(request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type? = nil) -> WebServiceEngining? {
-        for engine in self.engines {
-            if engine.isSupportedRequest(request, rawDataTypeForRestoreFromStorage: rawDataTypeForRestoreFromStorage) {
-                return engine
+    // MARK: Find endpoints and storages
+    private func internalFindEndpoint(request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type? = nil) -> WebServiceEndpoint? {
+        for endpoint in self.endpoints {
+            if endpoint.isSupportedRequest(request, rawDataTypeForRestoreFromStorage: rawDataTypeForRestoreFromStorage) {
+                return endpoint
             }
         }
         
         return nil
     }
     
-    private func internalFindStorage(request:WebServiceBaseRequesting) -> WebServiceStoraging? {
+    private func internalFindStorage(request:WebServiceBaseRequesting) -> WebServiceStorage? {
         for storage in self.storages {
             if storage.isSupportedRequestForStorage(request) {
                 return storage
@@ -588,10 +588,10 @@ public class WebService {
         return WebService.lastRequestId
     }
     
-    private func internalAddRequest(requestId: UInt64, key: AnyHashable?, requestHashable: AnyHashable?, requestType: WebServiceBaseRequesting.Type, engine: WebServiceEngining) {
+    private func internalAddRequest(requestId: UInt64, key: AnyHashable?, requestHashable: AnyHashable?, requestType: WebServiceBaseRequesting.Type, endpoint: WebServiceEndpoint) {
         //Increment counts for visible NetworkActivityIndicator in StatusBar if need only for iOS
         #if os(iOS)
-        if engine.useNetworkActivityIndicator {
+        if endpoint.useNetworkActivityIndicator {
             WebService.staticMutex.lock()
             WebService.networkActivityIndicatorRequestIds.insert(requestId)
             WebService.staticMutex.unlock()
@@ -613,7 +613,7 @@ public class WebService {
             requestsForHashs[requestHashable, default: Set<UInt64>()].insert(requestId)
         }
 
-        requestUseEngines[requestId] = engine
+        requestUseEndpoint[requestId] = endpoint
     }
     
     private func internalRemoveRequest(requestId: UInt64, key: AnyHashable?, requestHashable: AnyHashable?, requestType: WebServiceBaseRequesting.Type) {
@@ -641,7 +641,7 @@ public class WebService {
             if requestsForHashs[requestHashable]?.isEmpty ?? false { requestsForHashs.removeValue(forKey: requestHashable) }
         }
   
-        requestUseEngines.removeValue(forKey: requestId)
+        requestUseEndpoint.removeValue(forKey: requestId)
     }
     
     private func internalListRequest<T: Hashable>(keyType: T.Type, onlyFirst: Bool) -> Set<UInt64>? {
@@ -663,24 +663,15 @@ public class WebService {
         return ids.isEmpty ? nil : ids
     }
     
-    private func internalListRequest(requestType: WebServiceBaseRequesting.Type) -> Set<UInt64>? {
-        mutex.lock()
-        defer { mutex.unlock() }
-        
-//        let key = "\(requestType)"
-//        return requestTypes[key]
-        return nil
-    }
-    
     private func internalCancelRequests(ids: Set<UInt64>) {
         for requestId in ids {
-            if let engine = mutex.synchronized({ self.requestUseEngines[requestId] }) {
+            if let endpoint = mutex.synchronized({ self.requestUseEndpoint[requestId] }) {
                 //Cancel in queue
-                if let queue = engine.queueForRequest {
-                    queue.async { engine.cancelRequest(requestId: requestId) }
+                if let queue = endpoint.queueForRequest {
+                    queue.async { endpoint.cancelRequest(requestId: requestId) }
                 } else {
                     //Or in current thread
-                    engine.cancelRequest(requestId: requestId)
+                    endpoint.cancelRequest(requestId: requestId)
                 }
             }
         }

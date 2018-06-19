@@ -1,8 +1,8 @@
 //
-//  WebServiceSimpleEngine.swift
-//  WebServiceSwift 2.3.0
+//  WebServiceSimpleEndpoint.swift
+//  WebServiceSwift 3.0.0
 //
-//  Created by ViR (Короткий Виталий) on 01.06.2018.
+//  Created by Короткий Виталий (ViR) on 01.06.2018.
 //  Copyright © 2018 ProVir. All rights reserved.
 //
 
@@ -66,8 +66,8 @@ extension WebServiceSimpleAutoDecoder where ResultType == Data {
 }
 
 
-//MARK: Engine
-public class WebServiceSimpleEngine: WebServiceEngining {
+//MARK: Endpoint
+public class WebServiceSimpleEndpoint: WebServiceEndpoint {
     public let queueForRequest: DispatchQueue?
     public let queueForDataHandler: DispatchQueue? = nil
     public let queueForDataHandlerFromStorage: DispatchQueue? = DispatchQueue.global(qos: .default)

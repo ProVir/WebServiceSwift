@@ -1,8 +1,8 @@
 //
-//  WebServiceAlamofireSimpleEngine.swift
-//  WebServiceSwift 2.3.0
+//  WebServiceAlamofireSimpleEndpoint.swift
+//  WebServiceSwift 3.0.0
 //
-//  Created by ViR (Короткий Виталий) on 01.06.2018.
+//  Created by Короткий Виталий (ViR) on 01.06.2018.
 //  Copyright © 2018 ProVir. All rights reserved.
 //
 
@@ -68,8 +68,8 @@ extension WebServiceAlamofireAutoDecoder where ResultType == Data {
 }
 
 
-//MARK: Engine
-public class WebServiceAlamofireSimpleEngine: WebServiceAlamofireBaseEngine {
+//MARK: Endpoint
+public class WebServiceAlamofireSimpleEndpoint: WebServiceAlamofireBaseEndpoint {
     private let sessionManager: Alamofire.SessionManager
     
     public init(sessionManager: Alamofire.SessionManager = Alamofire.SessionManager.default, queueForRequest: DispatchQueue? = nil, useNetworkActivityIndicator: Bool = true) {
@@ -81,7 +81,7 @@ public class WebServiceAlamofireSimpleEngine: WebServiceAlamofireBaseEngine {
         return request is WebServiceAlamofireBaseRequesting
     }
     
-    public override func performRequest(requestId: UInt64, data: WebServiceAlamofireBaseEngine.RequestData) throws -> DataRequest? {
+    public override func performRequest(requestId: UInt64, data: RequestData) throws -> DataRequest? {
         guard let request = data.request as? WebServiceAlamofireBaseRequesting else {
             throw WebServiceRequestError.notSupportRequest
         }
@@ -89,7 +89,7 @@ public class WebServiceAlamofireSimpleEngine: WebServiceAlamofireBaseEngine {
         return try request.afRequest(sessionManager: sessionManager)
     }
     
-    public override func responseAlamofire(_ response: DataResponse<Data>, requestId: UInt64, requestData: WebServiceAlamofireBaseEngine.RequestData) throws -> Any {
+    public override func responseAlamofire(_ response: DataResponse<Data>, requestId: UInt64, requestData: RequestData) throws -> Any {
         switch response.result {
         case .success(let data):
             if let statusCode = response.response?.statusCode, statusCode >= 300 {

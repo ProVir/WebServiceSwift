@@ -1,8 +1,8 @@
 //
 //  WebServiceMemoryStorage.swift
-//  WebServiceSwift 2.3.0
+//  WebServiceSwift 3.0.0
 //
-//  Created by Короткий Виталий on 18.06.2018.
+//  Created by Короткий Виталий (ViR) on 18.06.2018.
 //  Copyright © 2018 ProVir. All rights reserved.
 //
 
@@ -24,7 +24,7 @@ public extension WebServiceRequestMemoryStoring {
 
 
 /// Simple store in memory for WebService
-public class WebServiceMemoryStorage: WebServiceStoraging {
+public class WebServiceMemoryStorage: WebServiceStorage {
     
     /**
      Constructor with all settings store.

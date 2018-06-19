@@ -90,7 +90,7 @@ class SiteWebProvider: WebServiceProvider, WebServiceDelegate {
 
 //MARK: BaseURL information
 
-///Presentation layer and other don't need dependency from network layer implementation: `baseUrl` don't use `url`, because `url` use only implementation for Engine (protocol `WebServiceHtmlRequesting`). But `url` can use `baseUrl` as part original request.'
+///Presentation layer and other don't need dependency from network layer implementation: `baseUrl` don't use `url`, because `url` use only implementation for Endpoint (protocol `WebServiceHtmlRequesting`). But `url` can use `baseUrl` as part original request.'
 extension SiteWebServiceRequest {
     var baseUrl: URL {
         switch self {

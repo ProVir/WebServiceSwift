@@ -14,18 +14,18 @@ import WebServiceSwift
 extension WebService {
     
     convenience init() {
-        let engine = WebServiceHtmlEngine()
-//        let engine = WebServiceSimpleEngine()
-//        let engine = WebServiceAlamofireSimpleEngine()
+        let endpoint = WebServiceHtmlEndpoint()
+//        let endpoint = WebServiceSimpleEndpoint()
+//        let endpoint = WebServiceAlamofireSimpleEndpoint()
         
-        let mock = WebServiceMockEngine(rawDataFromStoreAlwaysNil: true)
+        let mock = WebServiceMockEndpoint(rawDataFromStoreAlwaysNil: true)
         
-        var storages: [WebServiceStoraging] = []
+        var storages: [WebServiceStorage] = []
         if let storage = WebServiceFileStorage() {
             storages.append(storage)
         }
         
-        self.init(engines: [mock, engine], storages: storages)
+        self.init(endpoints: [mock, endpoint], storages: storages)
     }
     
     static var `default`: WebService {

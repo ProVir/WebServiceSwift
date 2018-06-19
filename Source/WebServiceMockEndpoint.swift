@@ -1,9 +1,9 @@
 //
-//  WebServiceMockEngine.swift
-//  WebServiceSwift 2.3.0
+//  WebServiceMockEndpoint.swift
+//  WebServiceSwift 3.0.0
 //
-//  Created by ViR (Короткий Виталий) on 12.03.2018.
-//  Updated to 2.3.0 by ViR (Короткий Виталий) on 25.05.2018.
+//  Created by Короткий Виталий (ViR) on 12.03.2018.
+//  Updated to 3.0.0 by Короткий Виталий (ViR) on 19.06.2018.
 //  Copyright © 2018 ProVir. All rights reserved.
 //
 
@@ -14,13 +14,13 @@ import Foundation
 
 /// Base protocol for request with support mock data
 public protocol WebServiceMockBaseRequesting {
-    /// Fast switch enable/disable mock data (if `WebServiceMockEngine` as first in array `WebService.engines`).
+    /// Fast switch enable/disable mock data (if `WebServiceMockEndpoint` as first in array `WebService.endpoints`).
     var isSupportedRequest: Bool { get }
     
     /// After timeout mock data send as response. `nil` - without pause.
     var timeWait: TimeInterval? { get }
     
-    /// Identifier for dictionary helpers, `nil` - don't use helper. Helpers are created once and when used within one instance of the engine.
+    /// Identifier for dictionary helpers, `nil` - don't use helper. Helpers are created once and when used within one instance of the endpoint.
     var helperIdentifier: String? { get }
     
     /// Create a helper if it was not created earlier. `nil` - don't use helper
@@ -44,9 +44,9 @@ public extension WebServiceMockRequesting {
 
 
 
-//MARK: Mock Engine
-/// Simple engine for temporary mock requests.
-open class WebServiceMockEngine: WebServiceEngining {
+//MARK: Mock Endpoint
+/// Simple endpoint for temporary mock requests.
+open class WebServiceMockEndpoint: WebServiceEndpoint {
     
     /// Item for store current requests in process
     struct RequestItem {
@@ -81,7 +81,7 @@ open class WebServiceMockEngine: WebServiceEngining {
     }
     
     /**
-     Mock engine constructor.
+     Mock endpoint constructor.
  
      - Parameters:
         - rawDataFromStoreAlwaysNil: If `true` - all read raw data from storage return as nil for supporteds requests. Default: true.

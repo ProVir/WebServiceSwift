@@ -1,8 +1,8 @@
 //
-//  WebServiceAlamofireBaseEngine.swift
-//  WebServiceSwift 2.3.0
+//  WebServiceAlamofireBaseEndpoint.swift
+//  WebServiceSwift 3.0.0
 //
-//  Created by ViR (Короткий Виталий) on 31.05.2018.
+//  Created by Короткий Виталий (ViR) on 31.05.2018.
 //  Copyright © 2018 ProVir. All rights reserved.
 //
 
@@ -10,7 +10,7 @@ import Foundation
 import Alamofire
 
 
-open class WebServiceAlamofireBaseEngine: WebServiceEngining {
+open class WebServiceAlamofireBaseEndpoint: WebServiceEndpoint {
     public let queueForRequest: DispatchQueue?
     public let queueForDataHandler: DispatchQueue? = nil
     public let queueForDataHandlerFromStorage: DispatchQueue? = DispatchQueue.global(qos: .default)
@@ -78,15 +78,15 @@ open class WebServiceAlamofireBaseEngine: WebServiceEngining {
     
     //MARK: - Need Override
     open func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
-        fatalError("WebServiceAlamofireBaseEngine: require override isSupportedRequest(request:rawDataForRestoreFromStorage:) function. ")
+        fatalError("WebServiceAlamofireBaseEndpoint: require override isSupportedRequest(request:rawDataForRestoreFromStorage:) function. ")
     }
     
     open func performRequest(requestId: UInt64, data: RequestData) throws -> Alamofire.DataRequest? {
-        fatalError("WebServiceAlamofireBaseEngine: require override request(data:) function. You need use function startAlamofireRequest(:data:)")
+        fatalError("WebServiceAlamofireBaseEndpoint: require override request(data:) function. You need use function startAlamofireRequest(:data:)")
     }
     
     open func dataHandler(request: WebServiceBaseRequesting, data: Any, isRawFromStorage: Bool) throws -> Any? {
-        fatalError("WebServiceAlamofireBaseEngine: require override dataHandler(request:data:isRawFromStorage:) function. ")
+        fatalError("WebServiceAlamofireBaseEndpoint: require override dataHandler(request:data:isRawFromStorage:) function. ")
     }
     
     

@@ -1,5 +1,5 @@
 //
-//  WebServiceHtmlEngine.swift
+//  WebServiceHtmlEndpoint.swift
 //  WebServiceExample
 //
 //  Created by Короткий Виталий on 24.08.17.
@@ -16,8 +16,8 @@ protocol WebServiceHtmlRequesting: WebServiceBaseRequesting {
 }
 
 
-///Engine for get html data for URL.
-class WebServiceHtmlEngine: WebServiceEngining {
+///Endpoint for get html data for URL.
+class WebServiceHtmlEndpoint: WebServiceEndpoint {
     let queueForRequest: DispatchQueue? = DispatchQueue.global(qos: .background)
     let queueForDataHandler: DispatchQueue? = nil
     let queueForDataHandlerFromStorage: DispatchQueue? = DispatchQueue.global(qos: .default)

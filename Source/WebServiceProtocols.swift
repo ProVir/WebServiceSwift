@@ -1,9 +1,9 @@
 //
 //  WebServiceProtocols.swift
-//  WebServiceSwift 2.3.0
+//  WebServiceSwift 3.0.0
 //
-//  Created by ViR (Короткий Виталий) on 14.06.2017.
-//  Updated to 2.3.0 by ViR (Короткий Виталий) on 24.05.2018.
+//  Created by Короткий Виталий (ViR) on 14.06.2017.
+//  Updated to 3.0.0 by Короткий Виталий (ViR) on 19.06.2018.
 //  Copyright © 2017 ProVir. All rights reserved.
 //
 
@@ -53,10 +53,10 @@ public extension WebService {
 }
 
 
-//MARK: Public Internal - engines and storages
+//MARK: Public Internal - endpoints and storages
 
-/// Protocol for engines in WebService.
-public protocol WebServiceEngining: class {
+/// Protocol for endpoint in WebService.
+public protocol WebServiceEndpoint: class {
     
     /// Thread Dispatch Queue for `request()` and `cancelRequest()` methods.
     var queueForRequest: DispatchQueue? { get }
@@ -74,14 +74,14 @@ public protocol WebServiceEngining: class {
     
     
     /**
-     Asks whether the request supports this engine.
+     Asks whether the request supports this endpoint.
      
      If `rawDataForRestoreFromStorage != nil`, after this method called `processRawDataFromStorage()` method.
      
      - Parameters:
         - request: Request for test.
         - rawDataTypeForRestoreFromStorage: If no nil - request restore raw data from storage with data.
-     - Returns: If request support this engine - return true.
+     - Returns: If request support this endpoint - return true.
      */
     func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool
     
@@ -92,7 +92,7 @@ public protocol WebServiceEngining: class {
      If `queueForRequest != nil`, thread use from `queueForRequest`, else default thread (usually main).
      
      - Parameters:
-        - requestId: Unique id for request. ID generated always unique for all Engines and WebServices. Use for `cancelRequest()`.
+        - requestId: Unique id for request. ID generated always unique for all Endpoints and WebServices. Use for `cancelRequest()`.
         - request: Original request with data.
         - completionWithData: After success get data from server - call this closure with raw data from server.
         - data: Usually binary data and this data saved as rawData in storage.
@@ -100,13 +100,13 @@ public protocol WebServiceEngining: class {
         - error: Response as error.
         - canceled: Call after called method `cancelRequest()` if support this operation.
      */
-    func performRequest(requestId: UInt64, request: WebServiceBaseRequesting,
+    func performRequest(requestId: UInt64,
+                        request: WebServiceBaseRequesting,
                         completionWithData: @escaping (_ data:Any) -> Void,
                         completionWithError: @escaping (_ error:Error) -> Void,
                         canceled: @escaping () -> Void)
     
-    
-    
+
     /**
      Cancel request if this operation is supported. This method is optional.
      
@@ -139,7 +139,7 @@ public protocol WebServiceEngining: class {
 /// Protocol for storages in WebService.
 ///
 /// RawData - data without process, original data from server
-public protocol WebServiceStoraging: class {
+public protocol WebServiceStorage: class {
     
     /**
      Asks whether the request supports this storage.

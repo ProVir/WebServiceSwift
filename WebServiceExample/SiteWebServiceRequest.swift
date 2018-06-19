@@ -34,7 +34,7 @@ extension SiteWebServiceRequest {
 }
 
 
-/// As HTML Request - Support WebServiceHTMLEngine with concrete URL query.
+/// As HTML Request - Support WebServiceHTMLEndpoint with concrete URL query.
 extension SiteWebServiceRequest: WebServiceHtmlRequesting {
     var url: URL { return urlSite }
 }

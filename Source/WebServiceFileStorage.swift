@@ -1,9 +1,9 @@
 //
 //  WebServiceFileStorage.swift
-//  WebServiceSwift 2.3.0
+//  WebServiceSwift 3.0.0
 //
-//  Created by ViR (Короткий Виталий) on 29.07.17.
-//  Updated to 2.3.0 by ViR (Короткий Виталий) on 18.06.2018.
+//  Created by Короткий Виталий (ViR) on 29.07.17.
+//  Updated to 3.0.0 by Короткий Виталий (ViR) on 19.06.2018.
 //  Copyright © 2017 ProVir. All rights reserved.
 //
 
@@ -90,7 +90,7 @@ public extension WebServiceRequestValueFileStoring {
 
 
 /// Simple store on disk for WebService.
-public class WebServiceFileStorage: WebServiceStoraging {
+public class WebServiceFileStorage: WebServiceStorage {
     
     public struct StoreData: Codable {
         var binary: Data
