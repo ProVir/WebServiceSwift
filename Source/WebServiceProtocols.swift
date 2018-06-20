@@ -121,7 +121,7 @@ public protocol WebServiceEndpoint: class {
      
      - Parameters:
         - request: Original request.
-        - rawData: Type data form closure request.completionWithData(). Usually binary Data.
+        - rawData: Type data from closure request.completionWithData(). Usually binary Data.
         - fromStorage: If `true`: data from storage, else data from closure `request.completionWithData()`.
      
      - Throws: Error validation or proccess data from server to end data. Data from server (also rawData) don't save to storage.

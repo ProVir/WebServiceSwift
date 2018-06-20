@@ -18,12 +18,12 @@ public protocol WebServiceSimpleBaseRequesting {
     /// Response type (binary or json) for decode response.
     var simpleResponseType: WebServiceSimpleResponseType { get }
     
-    /// Decode response to value. Used `data.binary` or `data.json` dependency from `simpleResponseType` parameter.
+    /// Decode response to value. Used `data.binary` or `data.json` dependency from `simpleResponseType` parameter. Perofrm in background thread.
     func simpleBaseDecodeResponse(_ data: WebServiceSimpleResponseData) throws -> Any?
 }
 
 public protocol WebServiceSimpleRequesting: WebServiceSimpleBaseRequesting, WebServiceRequesting {
-    /// Decode response to value. Used `data.binary` or `data.json` dependency from `simpleResponseType` parameter.
+    /// Decode response to value. Used `data.binary` or `data.json` dependency from `simpleResponseType` parameter. Perofrm in background thread.
     func simpleDecodeResponse(_ data: WebServiceSimpleResponseData) throws -> ResultType
 }
 
@@ -85,7 +85,7 @@ extension WebServiceSimpleAutoDecoder where ResultType == Data {
 public class WebServiceSimpleEndpoint: WebServiceEndpoint {
     public let queueForRequest: DispatchQueue?
     public let queueForDataHandler: DispatchQueue? = nil
-    public let queueForDataHandlerFromStorage: DispatchQueue? = DispatchQueue.global(qos: .default)
+    public let queueForDataHandlerFromStorage: DispatchQueue? = DispatchQueue.global(qos: .background)
     public let useNetworkActivityIndicator: Bool
     
     /**

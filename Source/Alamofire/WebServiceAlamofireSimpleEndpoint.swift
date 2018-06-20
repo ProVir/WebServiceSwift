@@ -11,14 +11,21 @@ import Alamofire
 
 
 //MARK: Request
+
+/// Base protocol for request use WebServiceAlamofireSimpleEndpoint
 public protocol WebServiceAlamofireBaseRequesting {
+    /// Create alamofire request with use session manager.
     func afRequest(sessionManager: Alamofire.SessionManager) throws -> Alamofire.DataRequest
 
+    /// Response type (binary or json) for decode response.
     var afResponseType: WebServiceAlamofireResponseType { get }
+    
+    /// Decode response to value. Used `data.binary` or `data.json` dependency from `afResponseType` parameter. Perofrm in background thread.
     func afBaseDecodeResponse(_ data: WebServiceAlamofireResponseData) throws -> Any?
 }
 
 public protocol WebServiceAlamofireRequesting: WebServiceAlamofireBaseRequesting, WebServiceRequesting {
+    /// Decode response to value. Used `data.binary` or `data.json` dependency from `afResponseType` parameter. Perofrm in background thread.
     func afDecodeResponse(_ data: WebServiceAlamofireResponseData) throws -> ResultType
 }
 
@@ -29,30 +36,35 @@ public extension WebServiceAlamofireRequesting {
 }
 
 //MARK: Response
+/// Response type to require for decoder
 public enum WebServiceAlamofireResponseType {
     case binary
     case json
 }
 
-public struct WebServiceAlamofireResponseData {
-    //Only one is not null
-    public let binary: Data!
-    public let json: Any!
+/// Response data for decoder
+public enum WebServiceAlamofireResponseData {
+    case binary(Data)
+    case json(Any)
     
-    public init(binary: Data) {
-        self.binary = binary
-        self.json = nil
+    /// Get binary data for decoder
+    public var binary: Data {
+        if case let .binary(value) = self { return value }
+        else { fatalError("Not binary data") }
     }
     
-    public init(json: Any) {
-        self.json = json
-        self.binary = nil
+    /// Get json data for decoder
+    public var json: Any {
+        if case let .json(value) = self { return value }
+        else { fatalError("Not json data") }
     }
 }
 
 //MARK: Auto decoders
+/// Protocol for enable auto implementation response decoder (afResponseType and afDecodeResponse) for certain result types.
 protocol WebServiceAlamofireAutoDecoder: WebServiceRequesting { }
 
+/// Support AutoDecoder for request, when ignored result data from server (ResultType = Void).
 extension WebServiceAlamofireAutoDecoder where ResultType == Void {
     var afResponseType: WebServiceAlamofireResponseType { return .binary }
     func afDecodeResponse(_ data: WebServiceAlamofireResponseData) throws -> Void {
@@ -60,6 +72,7 @@ extension WebServiceAlamofireAutoDecoder where ResultType == Void {
     }
 }
 
+/// Support AutoDecoder for binary reslt type (ResultType = Data)
 extension WebServiceAlamofireAutoDecoder where ResultType == Data {
     var afResponseType: WebServiceAlamofireResponseType { return .binary }
     func afDecodeResponse(_ data: WebServiceAlamofireResponseData) throws -> Data {
@@ -69,14 +82,25 @@ extension WebServiceAlamofireAutoDecoder where ResultType == Data {
 
 
 //MARK: Endpoint
+/// Simple HTTP Endpoint (use Alamofire)
 public class WebServiceAlamofireSimpleEndpoint: WebServiceAlamofireBaseEndpoint {
     private let sessionManager: Alamofire.SessionManager
     
+    /**
+     Simple HTTP Endpoint used Alamofire constructor.
+     
+     - Parameters:
+         - sessionManager: Alamofire.SessionManager for use, default Alamofire.SessionManager.default.
+         - queueForRequest: Thread Dispatch Queue for `perofrmRequest()` and `cancelRequests()` methods.
+         - useNetworkActivityIndicator: When `true`, showed networkActivityIndicator in statusBar when requests in process.
+     */
     public init(sessionManager: Alamofire.SessionManager = Alamofire.SessionManager.default, queueForRequest: DispatchQueue? = nil, useNetworkActivityIndicator: Bool = true) {
         self.sessionManager = sessionManager
         super.init(queueForRequest: queueForRequest, useNetworkActivityIndicator: useNetworkActivityIndicator)
     }
     
+    
+    //MARK: Endpoint implementation
     public override func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
         return request is WebServiceAlamofireBaseRequesting
     }
@@ -92,6 +116,7 @@ public class WebServiceAlamofireSimpleEndpoint: WebServiceAlamofireBaseEndpoint 
     public override func responseAlamofire(_ response: DataResponse<Data>, requestId: UInt64, requestData: RequestData) throws -> Any {
         switch response.result {
         case .success(let data):
+            //Validation data for http status code
             if let statusCode = response.response?.statusCode, statusCode >= 300 {
                 throw WebServiceResponseError.httpStatusCode(statusCode)
             }
@@ -110,11 +135,11 @@ public class WebServiceAlamofireSimpleEndpoint: WebServiceAlamofireBaseEndpoint 
         
         switch request.afResponseType {
         case .binary:
-            return try request.afBaseDecodeResponse(WebServiceAlamofireResponseData(binary: binary))
+            return try request.afBaseDecodeResponse(WebServiceAlamofireResponseData.binary(binary))
             
         case .json:
             let jsonData = try JSONSerialization.jsonObject(with: binary, options: [])
-            return try request.afBaseDecodeResponse(WebServiceAlamofireResponseData(json: jsonData))
+            return try request.afBaseDecodeResponse(WebServiceAlamofireResponseData.json(jsonData))
         }
     }
     
