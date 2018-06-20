@@ -101,7 +101,8 @@ public class WebServiceFileStorage: WebServiceStorage {
     private let fileWorkDispatchQueue: DispatchQueue
     private let filesDir: URL
     private let prefixNameFiles: String
-    private let supportDataClassification: Set<AnyHashable>
+    
+    public let supportDataClassification: Set<AnyHashable>
     
     // MARK: Constructors
     
@@ -149,13 +150,8 @@ public class WebServiceFileStorage: WebServiceStorage {
     
     
     // MARK: WebServiceStoraging
-    public func isSupportedRequestForStorage(_ request: WebServiceBaseRequesting) -> Bool {
+    public func isSupportedRequest(_ request: WebServiceBaseRequesting) -> Bool {
         guard let request = request as? WebServiceRequestBaseFileStoring else {
-            return false
-        }
-        
-        if !supportDataClassification.isEmpty
-            && !supportDataClassification.contains(request.dataClassificationForStorage) {
             return false
         }
         

@@ -39,9 +39,6 @@ public enum WebServiceResponseError: Error {
     
     ///General error http status code (usually when != 200)
     case httpStatusCode(Int)
-    
-    /// Custom error with code and user data
-    case general(Int, Any?)
 }
 
 /**

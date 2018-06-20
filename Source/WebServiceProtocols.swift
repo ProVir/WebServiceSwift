@@ -85,29 +85,26 @@ public protocol WebServiceEndpoint: class {
      */
     func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool
     
-    
     /**
-     Request data from server. Need call `completionWithData` or `completionWithError` or `canceled` and only one.
+     Perform request to server. Need call `completionWithRawData` or `completionWithError` and only one. After performed `completionWithRawData`, `completionWithError` or canceled ignored other this closure.
      
      If `queueForRequest != nil`, thread use from `queueForRequest`, else default thread (usually main).
      
      - Parameters:
-        - requestId: Unique id for request. ID generated always unique for all Endpoints and WebServices. Use for `cancelRequest()`.
+        - requestId: Unique id for request. ID generated always unique for all Endpoints and WebServices. Use for `canceledRequest()`.
         - request: Original request with data.
-        - completionWithData: After success get data from server - call this closure with raw data from server.
+        - completionWithRawData: After success get data from server - call this closure with raw data from server.
         - data: Usually binary data and this data saved as rawData in storage.
         - completionWithError: Call if error get data from server or other error. 
         - error: Response as error.
-        - canceled: Call after called method `cancelRequest()` if support this operation.
      */
     func performRequest(requestId: UInt64,
                         request: WebServiceBaseRequesting,
                         completionWithRawData: @escaping (_ data:Any) -> Void,
                         completionWithError: @escaping (_ error:Error) -> Void)
     
-
     /**
-     Cancel request if this operation is supported. This method is optional.
+     Preformed after canceled request.
      
      If `queueForRequest != nil`, thread use from `queueForRequest`, else default thread (usually main).
  
@@ -115,59 +112,59 @@ public protocol WebServiceEndpoint: class {
     */
     func canceledRequest(requestId: UInt64)
     
-    
     /**
-     Process data from server or store (rawData). 
+     Process data from server or store with rawData.
      
-     For data from server (`isRawFromStorage == false`): if `queueForDataHandler != nil`, thread use from `queueForDataHandler`, else default thread (usually main).
+     For data from server (`fromStorage == false`): if `queueForDataHandler != nil`, thread use from `queueForDataHandler`, else default thread (usually main).
      
-     For data from storage (`isRawFromStorage == true`): use `queueForDataHandlerFromStorage` if != nil.
+     For data from storage (`fromStorage == true`): use `queueForDataHandlerFromStorage` if != nil.
      
      - Parameters:
         - request: Original request.
-        - data: Type data form closure request.completionWithData(). Usually binary Data.
-        - isRawFromStorage: If `true`: data from storage, else data from closure `request.completionWithData()`.
+        - rawData: Type data form closure request.completionWithData(). Usually binary Data.
+        - fromStorage: If `true`: data from storage, else data from closure `request.completionWithData()`.
      
-     - Throws: Error proccess data from server to end data. Data from server (rawData) don't save to storage.
-     - Returns: Result data for response. If == nil, data from server (rawData) don't save to storage.
+     - Throws: Error validation or proccess data from server to end data. Data from server (also rawData) don't save to storage.
+     - Returns: Result data for response. If == nil, data from server (also rawData) don't save to storage.
      */
     func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any?
 }
 
 
-/// Protocol for storages in WebService.
-///
-/// RawData - data without process, original data from server
+/**
+ Protocol for storages in WebService.
+
+ RawData - data without process, original data from server
+ */
 public protocol WebServiceStorage: class {
+    
+    /// Data classification support list. Empty = support all.
+    var supportDataClassification: Set<AnyHashable> { get }
     
     /**
      Asks whether the request supports this storage.
      
-     - Parameters:
-     - request: Request for test.
+     - Parameter request: Request for test.
      - Returns: If request support this storage - return true.
      */
-    func isSupportedRequestForStorage(_ request: WebServiceBaseRequesting) -> Bool
-    
+    func isSupportedRequest(_ request: WebServiceBaseRequesting) -> Bool
     
     /**
-     Read data from store.
+     Read data from storage.
      
      - Parameters:
         - request: Original request.
         - completionHandler: After readed data need call with result data. This closure need call and only one. Be sure to call in the main thread.
-        - isRawData: If data readed as raw type
+        - isRawData: If data readed as raw type.
+        - timeStamp: TimeStamp when saved from server (endpoint).
         - response: Result response enum with data. Can only be .data or .error. If not data - use .data(nil)
      
      - Throws: Error request equivalent call `completionResponse(.error())` and not need call `completionResponse()`. The performance is higher with this error call.
      */
     func readData(request: WebServiceBaseRequesting, completionHandler: @escaping (_ isRawData: Bool, _ timeStamp: Date?, _ response: WebServiceAnyResponse) -> Void) throws
     
-    
     /**
-     Save data from server. Usually call two - for raw data and processed.
-     
-     If write raw data - can not be executed in the main thread.
+     Save data from server (endpoint). Usually call two - for raw and value (after processing) data.
      
      - Parameters: 
         - request: Original request. 
@@ -176,5 +173,4 @@ public protocol WebServiceStorage: class {
     */
     func writeData(request: WebServiceBaseRequesting, data: Any, isRaw: Bool)
 }
-
 

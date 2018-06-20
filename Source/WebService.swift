@@ -47,6 +47,10 @@ public class WebService {
     /// Perform response closures and delegates in dispath queue. Default: main thread.
     public let queueForResponse: DispatchQueue
     
+    /// Ignore endpoint parameter ans always don't use networkActivityIndicator in statusBar when requests in process.
+    public var disableNetworkActivityIndicator = false
+    
+    
     /**
      Constructor for WebService.
      
@@ -111,7 +115,7 @@ public class WebService {
     // MARK: Perform requests
     
     /**
-     Request for server (endpoint). Response result in closure.
+     Request to server (endpoint). Response result in closure.
      
      - Parameters:
         - request: The request with data and result type.
@@ -122,7 +126,7 @@ public class WebService {
     }
     
     /**
-     Request for server (endpoint). Response result in closure.
+     Request to server (endpoint). Response result in closure.
      
      - Parameters:
         - request: The request with data and result type.
@@ -135,7 +139,7 @@ public class WebService {
     }
     
     /**
-     Request for server (endpoint). Response result in closure.
+     Request to server (endpoint). Response result in closure.
      
      - Parameters:
         - request: The hashable (also equatable) request with data and result type.
@@ -289,8 +293,8 @@ public class WebService {
          - request: The request with data.
          - dependencyNextRequest: Type dependency from next performRequest.
          - completionHandler: Closure for read data from storage.
-         - timeStamp: timeStamp when saved from server (endpoint).
-         - response: result read from storage.
+         - timeStamp: TimeStamp when saved from server (endpoint).
+         - response: Result read from storage.
      */
     public func readStorage<RequestType: WebServiceRequesting>(_ request: RequestType, dependencyNextRequest: ReadStorageDependencyType = .notDepend, completionHandler: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
         if let storage = internalFindStorage(request: request) {
@@ -312,8 +316,8 @@ public class WebService {
         - request: The request with data.
         - dependencyNextRequest: Type dependency from next performRequest.
         - completionHandler: Closure for read data from storage.
-        - timeStamp: timeStamp when saved from server (endpoint).
-        - response: result read from storage.
+        - timeStamp: TimeStamp when saved from server (endpoint).
+        - response: Result read from storage.
      */
     public func readStorageAnyData(_ request: WebServiceBaseRequesting,
                                    dependencyNextRequest: ReadStorageDependencyType = .notDepend,
@@ -329,7 +333,7 @@ public class WebService {
     // MARK: Perform requests use delegate for response
     
     /**
-     Request for server (endpoint). Response result send to delegate.
+     Request to server (endpoint). Response result send to delegate.
      
      - Parameters:
         - request: The request with data.
@@ -340,7 +344,7 @@ public class WebService {
     }
     
     /**
-     Request for server (endpoint). Response result send to delegate.
+     Request to server (endpoint). Response result send to delegate.
      
      - Parameters:
          - request: The request with data.
@@ -353,7 +357,7 @@ public class WebService {
     }
     
     /**
-     Request for server (endpoint). Response result send to delegate.
+     Request to server (endpoint). Response result send to delegate.
      
      - Parameters:
          - request: The hashable (also equatable) request with data.
@@ -365,11 +369,12 @@ public class WebService {
     }
     
     /**
-     Read last success data from storage. Response result in default or custom delegate.
+     Read last success data from storage. Response result send to delegate.
      
      - Parameters:
          - request: The request with data.
          - key: unique key for controling requests, use only for response delegate.
+         - dependencyNextRequest: Type dependency from next performRequest.
          - responseDelegate: Weak delegate for response from this request.
      */
     public func readStorage(_ request: WebServiceBaseRequesting, key: AnyHashable? = nil, dependencyNextRequest: ReadStorageDependencyType = .notDepend, responseDelegate delegate: WebServiceDelegate) {
@@ -426,8 +431,6 @@ public class WebService {
     /**
      Cancel all requests with equal this request.
      
-     Signal cancel send to endpoint, but real canceled implementation in endpoint.
-     
      - Parameter request: The request to find in the current queue.
      */
     public func cancelRequests<T: WebServiceBaseRequesting & Hashable>(request: T) {
@@ -438,9 +441,7 @@ public class WebService {
     
     /**
      Cancel all requests for request type.
-     
-     Signal cancel send to endpoint, but real canceled implementation in endpoint.
-     
+
      - Parameter requestType: The WebServiceBaseRequesting.Type to find in the current queue.
      */
     public func cancelRequests(requestType: WebServiceBaseRequesting.Type) {
@@ -451,9 +452,7 @@ public class WebService {
     
     /**
      Cancel all requests with key.
-     
-     Signal cancel send to endpoint, but real canceled implementation in endpoint.
-     
+
      - Parameter key: The key to find in the current queue.
      */
     public func cancelRequests(key: AnyHashable) {
@@ -465,8 +464,6 @@ public class WebService {
     /**
      Cancel all requests with key.Type.
      
-     Signal cancel send to endpoint, but real canceled implementation in endpoint.
-     
      - Parameter keyType: The key.Type to find in the current queue.
      */
     public func cancelRequests<T: Hashable>(keyType: T.Type) {
@@ -475,11 +472,7 @@ public class WebService {
         }
     }
     
-    /**
-     Cancel all requests in current queue.
-     
-     Signal cancel send to endpoint, but real canceled implementation in endpoint.
-     */
+    /// Cancel all requests in current queue.
     public func cancelAllRequests() {
         let requestList = mutex.synchronized { self.requestList }
         internalCancelRequests(ids: Set(requestList.keys))
@@ -588,8 +581,18 @@ public class WebService {
     }
     
     private func internalFindStorage(request: WebServiceBaseRequesting) -> WebServiceStorage? {
+        let dataClass: AnyHashable
+        if let request = request as? WebServiceRequestBaseStoring {
+            dataClass = request.dataClassificationForStorage
+        } else {
+            dataClass = WebServiceDefaultDataClassification
+        }
+        
         for storage in self.storages {
-            if storage.isSupportedRequestForStorage(request) {
+            let supportClasses = storage.supportDataClassification
+            
+            if (supportClasses.isEmpty || supportClasses.contains(dataClass))
+                && storage.isSupportedRequest(request) {
                 return storage
             }
         }
@@ -611,7 +614,7 @@ public class WebService {
     private func internalAddRequest(requestId: UInt64, key: AnyHashable?, requestHashable: AnyHashable?, requestType: WebServiceBaseRequesting.Type, endpoint: WebServiceEndpoint, cancelHandler: @escaping ()->Void) {
         //Increment counts for visible NetworkActivityIndicator in StatusBar if need only for iOS
         #if os(iOS)
-        if endpoint.useNetworkActivityIndicator {
+        if !disableNetworkActivityIndicator && endpoint.useNetworkActivityIndicator {
             WebService.staticMutex.lock()
             WebService.networkActivityIndicatorRequestIds.insert(requestId)
             WebService.staticMutex.unlock()

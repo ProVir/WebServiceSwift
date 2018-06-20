@@ -43,19 +43,14 @@ public class WebServiceMemoryStorage: WebServiceStorage {
         var timeStamp: Date?
     }
     
-    private var supportDataClassification: Set<AnyHashable>
+    public var supportDataClassification: Set<AnyHashable>
     
     private var memoryData = [AnyHashable: StoreData]()
     private let mutex = PThreadMutexLock()
     
     // MARK: WebServiceStoraging
-    public func isSupportedRequestForStorage(_ request: WebServiceBaseRequesting) -> Bool {
+    public func isSupportedRequest(_ request: WebServiceBaseRequesting) -> Bool {
         guard let request = request as? WebServiceRequestMemoryStoring else {
-            return false
-        }
-        
-        if !supportDataClassification.isEmpty
-            && !supportDataClassification.contains(request.dataClassificationForStorage) {
             return false
         }
         
