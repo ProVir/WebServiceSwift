@@ -11,8 +11,8 @@ import Foundation
 /// Simple endpoint for unit mock requests with responseHandler in endpoint.
 public class WebServiceMockRequestEndpoint<RequestType: WebServiceRequesting>: WebServiceEndpoint {
     public let queueForRequest: DispatchQueue? = nil
-    public let queueForDataHandler: DispatchQueue? = nil
-    public let queueForDataHandlerFromStorage: DispatchQueue? = nil
+    public let queueForDataProcessing: DispatchQueue? = nil
+    public let queueForDataProcessingFromStorage: DispatchQueue? = nil
     public let useNetworkActivityIndicator = false
     
     public let mockHandler: (RequestType) throws -> RequestType.ResultType

@@ -19,8 +19,8 @@ protocol WebServiceHtmlRequesting: WebServiceBaseRequesting {
 ///Endpoint for get html data for URL.
 class WebServiceHtmlEndpoint: WebServiceEndpoint {
     let queueForRequest: DispatchQueue? = DispatchQueue.global(qos: .background)
-    let queueForDataHandler: DispatchQueue? = nil
-    let queueForDataHandlerFromStorage: DispatchQueue? = DispatchQueue.global(qos: .default)
+    let queueForDataProcessing: DispatchQueue? = nil
+    let queueForDataProcessingFromStorage: DispatchQueue? = DispatchQueue.global(qos: .default)
     let useNetworkActivityIndicator = true
     
     func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {

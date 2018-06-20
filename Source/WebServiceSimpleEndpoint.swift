@@ -84,8 +84,8 @@ extension WebServiceSimpleAutoDecoder where ResultType == Data {
 /// Simple HTTP Endpoint (use URLSession)
 public class WebServiceSimpleEndpoint: WebServiceEndpoint {
     public let queueForRequest: DispatchQueue?
-    public let queueForDataHandler: DispatchQueue? = nil
-    public let queueForDataHandlerFromStorage: DispatchQueue? = DispatchQueue.global(qos: .background)
+    public let queueForDataProcessing: DispatchQueue? = nil
+    public let queueForDataProcessingFromStorage: DispatchQueue? = DispatchQueue.global(qos: .background)
     public let useNetworkActivityIndicator: Bool
     
     /**

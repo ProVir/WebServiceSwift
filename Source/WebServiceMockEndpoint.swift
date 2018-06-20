@@ -48,8 +48,8 @@ public extension WebServiceMockRequesting {
 /// Simple endpoint for temporary mock requests.
 open class WebServiceMockEndpoint: WebServiceEndpoint {
     public let queueForRequest: DispatchQueue? = nil
-    public let queueForDataHandler: DispatchQueue? = nil
-    public let queueForDataHandlerFromStorage: DispatchQueue? = nil
+    public let queueForDataProcessing: DispatchQueue? = nil
+    public let queueForDataProcessingFromStorage: DispatchQueue? = nil
     public let useNetworkActivityIndicator = false
     
     public var rawDataFromStoreAlwaysNil: Bool

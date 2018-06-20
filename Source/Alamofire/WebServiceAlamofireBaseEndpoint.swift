@@ -12,8 +12,8 @@ import Alamofire
 /// Base Endpoint with support Alamofire.
 open class WebServiceAlamofireBaseEndpoint: WebServiceEndpoint {
     public let queueForRequest: DispatchQueue?
-    public let queueForDataHandler: DispatchQueue? = nil
-    public let queueForDataHandlerFromStorage: DispatchQueue? = DispatchQueue.global(qos: .background)
+    public let queueForDataProcessing: DispatchQueue? = nil
+    public let queueForDataProcessingFromStorage: DispatchQueue? = DispatchQueue.global(qos: .background)
     
     public let useNetworkActivityIndicator: Bool
     
@@ -161,7 +161,7 @@ open class WebServiceAlamofireBaseEndpoint: WebServiceEndpoint {
             self.tasks[requestId] = task
         }
         
-        task.request.responseData(queue: queueForDataHandlerFromStorage) { [weak self] response in
+        task.request.responseData(queue: queueForDataProcessingFromStorage) { [weak self] response in
             if let sSelf = self {
                 sSelf.lock.synchronized {
                     sSelf.tasks.removeValue(forKey: requestId)

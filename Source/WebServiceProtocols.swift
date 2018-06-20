@@ -61,11 +61,11 @@ public protocol WebServiceEndpoint: class {
     /// Thread Dispatch Queue for `perofrmRequest()` and `cancelRequests()` methods.
     var queueForRequest: DispatchQueue? { get }
     
-    /// Thread Dispatch Queue for `dataHandler()` method with data from `performRequest()` method.
-    var queueForDataHandler: DispatchQueue? { get }
+    /// Thread Dispatch Queue for `dataProcessing()` method with data from `performRequest()` method.
+    var queueForDataProcessing: DispatchQueue? { get }
     
-    /// Thread Dispatch Queue for `dataHandler()` method with raw data from store.
-    var queueForDataHandlerFromStorage: DispatchQueue? { get }
+    /// Thread Dispatch Queue for `dataProcessing()` method with raw data from store.
+    var queueForDataProcessingFromStorage: DispatchQueue? { get }
     
     #if os(iOS)
     /// When `true`, showed networkActivityIndicator in statusBar when requests in process.

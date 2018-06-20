@@ -262,7 +262,7 @@ public class WebService {
                                     //Raw data from server
                                     guard requestState == .inWork else { return }
                                     
-                                    if let queue = endpoint.queueForDataHandler {
+                                    if let queue = endpoint.queueForDataProcessing {
                                         queue.async { dataHandler(data) }
                                     } else {
                                         dataHandler(data)
@@ -542,7 +542,7 @@ public class WebService {
                         }
                         
                         //Call handler
-                        if let queue = endpoint.queueForDataHandlerFromStorage {
+                        if let queue = endpoint.queueForDataProcessingFromStorage {
                             queue.async { handler() }
                         } else {
                             handler()
