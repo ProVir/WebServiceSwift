@@ -9,14 +9,21 @@
 import Foundation
 
 //MARK: Request
+
+/// Base protocol for request use WebServiceSimpleEndpoint
 public protocol WebServiceSimpleBaseRequesting {
+    /// Create real request to server
     func simpleRequest() throws -> URLRequest
     
+    /// Response type (binary or json) for decode response.
     var simpleResponseType: WebServiceSimpleResponseType { get }
+    
+    /// Decode response to value. Used `data.binary` or `data.json` dependency from `simpleResponseType` parameter.
     func simpleBaseDecodeResponse(_ data: WebServiceSimpleResponseData) throws -> Any?
 }
 
 public protocol WebServiceSimpleRequesting: WebServiceSimpleBaseRequesting, WebServiceRequesting {
+    /// Decode response to value. Used `data.binary` or `data.json` dependency from `simpleResponseType` parameter.
     func simpleDecodeResponse(_ data: WebServiceSimpleResponseData) throws -> ResultType
 }
 
@@ -27,30 +34,36 @@ public extension WebServiceSimpleRequesting {
 }
 
 //MARK: Response
+/// Response type to require for decoder
 public enum WebServiceSimpleResponseType {
     case binary
     case json
 }
 
-public struct WebServiceSimpleResponseData {
-    //Only one is not null
-    public let binary: Data!
-    public let json: Any!
+/// Response data for decoder
+public enum WebServiceSimpleResponseData {
+    case binary(Data)
+    case json(Any)
     
-    public init(binary: Data) {
-        self.binary = binary
-        self.json = nil
+    /// Get binary data for decoder
+    public var binary: Data {
+        if case let .binary(value) = self { return value }
+        else { fatalError("Not binary data") }
     }
     
-    public init(json: Any) {
-        self.json = json
-        self.binary = nil
+    /// Get json data for decoder
+    public var json: Any {
+        if case let .json(value) = self { return value }
+        else { fatalError("Not json data") }
     }
 }
 
+
 //MARK: Auto decoders
+/// Protocol for enable auto implementation response decoder (simpleResponseType and simpleDecodeResponse) for certain result types.
 protocol WebServiceSimpleAutoDecoder: WebServiceRequesting { }
 
+/// Support AutoDecoder for request, when ignored result data from server (ResultType = Void).
 extension WebServiceSimpleAutoDecoder where ResultType == Void {
     var simpleResponseType: WebServiceSimpleResponseType { return .binary }
     func simpleDecodeResponse(_ data: WebServiceSimpleResponseData) throws -> Void {
@@ -58,6 +71,7 @@ extension WebServiceSimpleAutoDecoder where ResultType == Void {
     }
 }
 
+/// Support AutoDecoder for binary reslt type (ResultType = Data)
 extension WebServiceSimpleAutoDecoder where ResultType == Data {
     var simpleResponseType: WebServiceSimpleResponseType { return .binary }
     func simpleDecodeResponse(_ data: WebServiceSimpleResponseData) throws -> Data {
@@ -67,23 +81,29 @@ extension WebServiceSimpleAutoDecoder where ResultType == Data {
 
 
 //MARK: Endpoint
+/// Simple HTTP Endpoint (use URLSession)
 public class WebServiceSimpleEndpoint: WebServiceEndpoint {
     public let queueForRequest: DispatchQueue?
     public let queueForDataHandler: DispatchQueue? = nil
     public let queueForDataHandlerFromStorage: DispatchQueue? = DispatchQueue.global(qos: .default)
     public let useNetworkActivityIndicator: Bool
     
-    private let session: URLSession
-    
-    private let lock = PThreadMutexLock()
-    private var tasks: [UInt64: TaskData] = [:]
-    
+    /**
+     Simple HTTP Endpoint used URLSession constructor.
+     
+     - Parameters:
+         - session: URLSession for use, default use shared.
+         - queueForRequest: Thread Dispatch Queue for `perofrmRequest()` and `cancelRequests()` methods.
+         - useNetworkActivityIndicator: When `true`, showed networkActivityIndicator in statusBar when requests in process.
+    */
     public init(session: URLSession = URLSession.shared, queueForRequest: DispatchQueue? = nil, useNetworkActivityIndicator: Bool = true) {
         self.session = session
         self.queueForRequest = queueForRequest
         self.useNetworkActivityIndicator = useNetworkActivityIndicator
     }
     
+    
+    //MARK: Endpoint implementation
     public func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
         return request is WebServiceSimpleBaseRequesting
     }
@@ -95,6 +115,7 @@ public class WebServiceSimpleEndpoint: WebServiceEndpoint {
         }
         
         do {
+            //Create Task
             let urlRequest = try request.simpleRequest()
             
             let task = session.dataTask(with: urlRequest) { [weak self] (data, response, error) in
@@ -103,13 +124,15 @@ public class WebServiceSimpleEndpoint: WebServiceEndpoint {
                     return
                 }
                 
-                let containt = sSelf.lock.synchronized {
+                // Remove from queue
+                let contain = sSelf.lock.synchronized {
                     sSelf.tasks.removeValue(forKey: requestId) != nil
                 }
                 
-                if !containt { return }
+                if !contain { return }
                 
                 if let data = data {
+                    //Validation data for http status code
                     if let response = response as? HTTPURLResponse, response.statusCode >= 300 {
                         completionWithError(WebServiceResponseError.httpStatusCode(response.statusCode))
                     } else {
@@ -123,6 +146,7 @@ public class WebServiceSimpleEndpoint: WebServiceEndpoint {
                 }
             }
             
+            //Run task
             let taskData = TaskData(requestId: requestId, task: task)
             lock.synchronized {
                 self.tasks[requestId] = taskData
@@ -148,11 +172,11 @@ public class WebServiceSimpleEndpoint: WebServiceEndpoint {
         
         switch request.simpleResponseType {
         case .binary:
-            return try request.simpleBaseDecodeResponse(WebServiceSimpleResponseData(binary: binary))
+            return try request.simpleBaseDecodeResponse(WebServiceSimpleResponseData.binary(binary))
             
         case .json:
             let jsonData = try JSONSerialization.jsonObject(with: binary, options: [])
-            return try request.simpleBaseDecodeResponse(WebServiceSimpleResponseData(json: jsonData))
+            return try request.simpleBaseDecodeResponse(WebServiceSimpleResponseData.json(jsonData))
         }
     }
     
@@ -161,4 +185,10 @@ public class WebServiceSimpleEndpoint: WebServiceEndpoint {
         var requestId: UInt64
         var task: URLSessionDataTask
     }
+    
+    private let session: URLSession
+    
+    private let lock = PThreadMutexLock()
+    private var tasks: [UInt64: TaskData] = [:]
+    
 }

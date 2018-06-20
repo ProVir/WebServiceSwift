@@ -8,8 +8,7 @@
 
 import Foundation
 
-
-
+/// Simple endpoint for unit mock requests with responseHandler in endpoint.
 public class WebServiceMockRequestEndpoint<RequestType: WebServiceRequesting>: WebServiceEndpoint {
     public let queueForRequest: DispatchQueue? = nil
     public let queueForDataHandler: DispatchQueue? = nil
@@ -17,17 +16,29 @@ public class WebServiceMockRequestEndpoint<RequestType: WebServiceRequesting>: W
     public let useNetworkActivityIndicator = false
     
     public let mockHandler: (RequestType) throws -> RequestType.ResultType
+    
+    /// After timeout mock data send as response. `nil` - without pause.
     public var timeWait: TimeInterval?
+    
+    /// If `true` - all read raw data from storage return as nil for supporteds requests. Default: true.
     public var rawDataFromStoreAlwaysNil: Bool = true
     
-    private var requests: [UInt64: DispatchWorkItem] = [:]
-    
-    
+
+    /**
+     Mock endpoint constructor.
+     
+     - Parameters:
+        - timeWait: After timeout mock data send as response. `nil` - without pause.
+        - mockHandler: responseHandler for requests.
+     */
     public init(timeWait: TimeInterval? = nil, mockHandler: @escaping (RequestType) throws -> RequestType.ResultType) {
         self.mockHandler = mockHandler
         self.timeWait = timeWait
     }
     
+    
+    //MARK: Endpoint implementation
+    private var requests: [UInt64: DispatchWorkItem] = [:]
     
     public func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
         // Support raw data from storage if response from storage always nil.

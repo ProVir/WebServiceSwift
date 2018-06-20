@@ -3,7 +3,7 @@
 //  WebServiceSwift 3.0.0
 //
 //  Created by Короткий Виталий (ViR) on 12.03.2018.
-//  Updated to 3.0.0 by Короткий Виталий (ViR) on 19.06.2018.
+//  Updated to 3.0.0 by Короткий Виталий (ViR) on 20.06.2018.
 //  Copyright © 2018 ProVir. All rights reserved.
 //
 
@@ -52,12 +52,8 @@ open class WebServiceMockEndpoint: WebServiceEndpoint {
     public let queueForDataHandlerFromStorage: DispatchQueue? = nil
     public let useNetworkActivityIndicator = false
     
-    private var helpersArray: [String: Any] = [:]
-    private var requests: [UInt64: DispatchWorkItem] = [:]
-    
     public var rawDataFromStoreAlwaysNil: Bool
     public var alwaysSupported: Bool
-    
     
     /// Need override to support custom requests (not WebServiceMockBaseRequesting)
     open func isSupportedRequest(_ request: WebServiceBaseRequesting) -> Bool {
@@ -84,6 +80,10 @@ open class WebServiceMockEndpoint: WebServiceEndpoint {
         self.rawDataFromStoreAlwaysNil = rawDataFromStoreAlwaysNil
         self.alwaysSupported = alwaysSupported
     }
+    
+    //MARK: Endpoint implementation
+    private var helpersArray: [String: Any] = [:]
+    private var requests: [UInt64: DispatchWorkItem] = [:]
     
     public func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
         // Support raw data from storage if response from storage always nil.

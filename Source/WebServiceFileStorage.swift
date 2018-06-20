@@ -3,17 +3,17 @@
 //  WebServiceSwift 3.0.0
 //
 //  Created by Короткий Виталий (ViR) on 29.07.17.
-//  Updated to 3.0.0 by Короткий Виталий (ViR) on 19.06.2018.
+//  Updated to 3.0.0 by Короткий Виталий (ViR) on 20.06.2018.
 //  Copyright © 2017 ProVir. All rights reserved.
 //
 
 import Foundation
 
 
-/// Base protocol for requests support store data as files.
+/// Base protocol for requests support WebServiceFileStorage.
 public protocol WebServiceRequestBaseFileStoring: WebServiceRequestBaseStoring {
     
-    ///Unique identificator for read and write data if current request support storage. Default use for raw data.
+    /// Unique identificator for read and write data if current request support storage.
     var identificatorForFileStorage: String? { get }
     
     /// If `true` - use save data for disk as internal type with user data, isRaw flag and timeStamp. Else save only user data binary for disk. Default: true.
@@ -24,10 +24,10 @@ public extension WebServiceRequestBaseFileStoring {
     var useWrapperWithMetaDataForFileStorage: Bool { return true }
 }
 
-/// Conform to protocol if requests support store raw data as files.
+/// Conform to protocol if requests support WebServiceFileStorage and store raw data as file.
 public protocol WebServiceRequestRawFileStoring: WebServiceRequestBaseFileStoring { }
 
-/// Conform to protocol if requests support store data as files.
+/// Conform to protocol if requests support WebServiceFileStorage and store value data as file.
 public protocol WebServiceRequestAnyValueFileStoring: WebServiceRequestBaseFileStoring {
     
     /**
@@ -92,6 +92,7 @@ public extension WebServiceRequestValueFileStoring {
 /// Simple store on disk for WebService.
 public class WebServiceFileStorage: WebServiceStorage {
     
+    /// Wrapper for store on disk
     public struct StoreData: Codable {
         var binary: Data
         var isRaw: Bool
@@ -142,7 +143,7 @@ public class WebServiceFileStorage: WebServiceStorage {
     /**
      Constructor with default settings store. Files store in standart caches directory.
      
-     Prefix name for all files: *webServiceSimpleStore*
+     Prefix name for all files: *webServiceSimpleFileStorage_*
      */
     public convenience init?() {
         self.init(prefixNameFiles: "webServiceSimpleFileStorage_")

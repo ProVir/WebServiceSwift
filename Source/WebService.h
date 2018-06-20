@@ -3,7 +3,7 @@
 //  WebServiceSwift 3.0.0
 //
 //  Created by Короткий Виталий (ViR) on 24.08.17.
-//  Updated to 3.0.0 by Короткий Виталий (ViR) on 19.06.18.
+//  Updated to 3.0.0 by Короткий Виталий (ViR) on 20.06.18.
 //  Copyright © 2017 ProVir. All rights reserved.
 //
 
