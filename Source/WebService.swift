@@ -66,23 +66,19 @@ public class WebService {
     }
     
     deinit {
-        let (requestList, requestUseEndpoint) = mutex.synchronized({ (self.requestList, self.requestUseEndpoint) })
+        let requestList = mutex.synchronized({ self.requestList })
+        let requestListIds = Set(requestList.keys)
         
         //End networkActivityIndicator for all requests
         WebService.staticMutex.synchronized {
-            WebService.networkActivityIndicatorRequestIds.subtract(requestList)
+            WebService.networkActivityIndicatorRequestIds.subtract(requestListIds)
         }
         
         //Cancel all requests for endpoint
+        let queue = queueForResponse
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            for (requestId, endpoint) in requestUseEndpoint {
-                //Cancel in queue
-                if let queue = endpoint.queueForRequest {
-                    queue.async { endpoint.cancelRequest(requestId: requestId) }
-                } else {
-                    //Or in main thread
-                    endpoint.cancelRequest(requestId: requestId)
-                }
+            for (_, requestData) in requestList {
+                requestData.cancel(queueForResponse: queue)
             }
         }
     }
@@ -103,8 +99,7 @@ public class WebService {
     private let endpoints: [WebServiceEndpoint]
     private let storages: [WebServiceStorage]
     
-    private var requestList: Set<UInt64> = []   //All requests
-    private var requestUseEndpoint: [UInt64: WebServiceEndpoint] = [:]
+    private var requestList: [UInt64: RequestData] = [:] //All requests
     
     private var requestsForTypes: [String: Set<UInt64>] = [:]        //[Request.Type: [Id]]
     private var requestsForHashs: [AnyHashable: Set<UInt64>] = [:]   //[Request<Hashable>: [Id]]
@@ -195,16 +190,13 @@ public class WebService {
         
         let storage = internalFindStorage(request: request)
         
-        //4. Add request to memory database
+        //4. Request in memory database and Perform request (Step #0 -> Step #4)
         let requestType = type(of: request)
         let requestId = internalNewRequestId()
-        internalAddRequest(requestId: requestId, key: key, requestHashable: requestHashable, requestType: requestType, endpoint: endpoint)
-        
  
-        //5. Perform request (Step #0 -> Step #3)
         var requestState = RequestState.inWork
         
-        //Step #3: Call this closure with result response
+        //Step #4: Call this closure with result response
         let completeHandlerResponse: (WebServiceAnyResponse) -> Void = { [weak self, queueForResponse = self.queueForResponse] response in
             //Usually main thread
             queueForResponse.async {
@@ -231,7 +223,14 @@ public class WebService {
             }
         }
         
-        //Step #2: Data handler closure for raw data from server
+        //Step #0: Add request to memory database
+        internalAddRequest(requestId: requestId, key: key, requestHashable: requestHashable, requestType: requestType, endpoint: endpoint) {
+            //Canceled request
+            completeHandlerResponse(.canceledRequest)
+        }
+        
+        
+        //Step #3: Data handler closure for raw data from server
         let dataHandler: (Any) -> Void = { (data) in
             do {
                 let resultData = try endpoint.dataProcessing(request: request,
@@ -250,7 +249,7 @@ public class WebService {
             }
         }
         
-        //Step #1: Beginer request closure
+        //Step #2: Beginer request closure
         let requestHandler = {
             endpoint.performRequest(requestId: requestId,
                                     request: request,
@@ -269,14 +268,10 @@ public class WebService {
                                   completionWithError: { error in
                                     //Error request
                                     completeHandlerResponse(.error(error))
-            },
-                                  canceled: {
-                                    //Canceled request
-                                    completeHandlerResponse(.canceledRequest)
             })
         }
         
-        //Step #0: Call request in queue
+        //Step #1: Call request in queue
         if let queue = endpoint.queueForRequest {
             queue.async { requestHandler() }
         } else {
@@ -487,7 +482,7 @@ public class WebService {
      */
     public func cancelAllRequests() {
         let requestList = mutex.synchronized { self.requestList }
-        internalCancelRequests(ids: requestList)
+        internalCancelRequests(ids: Set(requestList.keys))
     }
     
     
@@ -613,7 +608,7 @@ public class WebService {
         return WebService.lastRequestId
     }
     
-    private func internalAddRequest(requestId: UInt64, key: AnyHashable?, requestHashable: AnyHashable?, requestType: WebServiceBaseRequesting.Type, endpoint: WebServiceEndpoint) {
+    private func internalAddRequest(requestId: UInt64, key: AnyHashable?, requestHashable: AnyHashable?, requestType: WebServiceBaseRequesting.Type, endpoint: WebServiceEndpoint, cancelHandler: @escaping ()->Void) {
         //Increment counts for visible NetworkActivityIndicator in StatusBar if need only for iOS
         #if os(iOS)
         if endpoint.useNetworkActivityIndicator {
@@ -627,7 +622,7 @@ public class WebService {
         mutex.lock()
         defer { mutex.unlock() }
         
-        requestList.insert(requestId)
+        requestList[requestId] = RequestData(requestId: requestId, endpoint: endpoint, cancelHandler: cancelHandler)
         requestsForTypes["\(requestType)", default: Set<UInt64>()].insert(requestId)
         
         if let key = key {
@@ -637,8 +632,6 @@ public class WebService {
         if let requestHashable = requestHashable {
             requestsForHashs[requestHashable, default: Set<UInt64>()].insert(requestId)
         }
-
-        requestUseEndpoint[requestId] = endpoint
     }
     
     private func internalRemoveRequest(requestId: UInt64, key: AnyHashable?, requestHashable: AnyHashable?, requestType: WebServiceBaseRequesting.Type) {
@@ -650,7 +643,7 @@ public class WebService {
         mutex.lock()
         defer { mutex.unlock() }
 
-        requestList.remove(requestId)
+        requestList.removeValue(forKey: requestId)
         
         let typeKey = "\(requestType)"
         requestsForTypes[typeKey]?.remove(requestId)
@@ -665,8 +658,6 @@ public class WebService {
             requestsForHashs[requestHashable]?.remove(requestId)
             if requestsForHashs[requestHashable]?.isEmpty ?? false { requestsForHashs.removeValue(forKey: requestHashable) }
         }
-  
-        requestUseEndpoint.removeValue(forKey: requestId)
     }
     
     private func internalListRequest<T: Hashable>(keyType: T.Type, onlyFirst: Bool) -> Set<UInt64>? {
@@ -690,20 +681,29 @@ public class WebService {
     
     private func internalCancelRequests(ids: Set<UInt64>) {
         for requestId in ids {
-            if let endpoint = mutex.synchronized({ self.requestUseEndpoint[requestId] }) {
-                //Cancel in queue
-                if let queue = endpoint.queueForRequest {
-                    queue.async { endpoint.cancelRequest(requestId: requestId) }
-                } else {
-                    //Or in current thread
-                    endpoint.cancelRequest(requestId: requestId)
-                }
+            if let requestData = mutex.synchronized({ self.requestList[requestId] }) {
+                requestData.cancel(queueForResponse: queueForResponse)
             }
         }
     }
     
     
     //MARK: Private types
+    private struct RequestData {
+        let requestId: UInt64
+        let endpoint: WebServiceEndpoint
+        let cancelHandler: ()->Void
+        
+        func cancel(queueForResponse: DispatchQueue) {
+            cancelHandler()
+            
+            let queue = endpoint.queueForRequest ?? queueForResponse
+            queue.async {
+                self.endpoint.canceledRequest(requestId: self.requestId)
+            }
+        }
+    }
+    
     private enum RequestState {
         case inWork
         case completed

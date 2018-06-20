@@ -32,21 +32,18 @@ open class WebServiceAlamofireBaseEndpoint: WebServiceEndpoint {
     public struct RequestData {
         public var request: WebServiceBaseRequesting
         
-        public var completionWithData: (Any) -> Void
+        public var completionWithRawData: (Any) -> Void
         public var completionWithError: (Error) -> Void
-        public var canceled: () -> Void
         
         public var innerData: Any?
         
         public init(request: WebServiceBaseRequesting,
-                    completionWithData: @escaping (Any) -> Void,
+                    completionWithRawData: @escaping (Any) -> Void,
                     completionWithError: @escaping (Error) -> Void,
-                    canceled: @escaping () -> Void,
                     innerData: Any? = nil) {
             self.request = request
-            self.completionWithData = completionWithData
+            self.completionWithRawData = completionWithRawData
             self.completionWithError = completionWithError
-            self.canceled = canceled
             self.innerData = innerData
         }
     }
@@ -54,9 +51,9 @@ open class WebServiceAlamofireBaseEndpoint: WebServiceEndpoint {
     private let lock = PThreadMutexLock()
     private var tasks = [UInt64: TaskData]()
     
-    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completionWithRawData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void, canceled: @escaping () -> Void) {
+    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completionWithRawData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void) {
         do {
-            let data = RequestData(request: request, completionWithData: completionWithRawData, completionWithError: completionWithError, canceled: canceled)
+            let data = RequestData(request: request, completionWithRawData: completionWithRawData, completionWithError: completionWithError)
             if let af_request = try self.performRequest(requestId: requestId, data: data) {
                 startAlamofireRequest(af_request, requestId: requestId, data: data)
             }
@@ -65,20 +62,17 @@ open class WebServiceAlamofireBaseEndpoint: WebServiceEndpoint {
         }
     }
     
-    open func cancelRequest(requestId: UInt64) {
-        if let task:TaskData = lock.synchronized({ self.tasks.removeValue(forKey: requestId) }) {
+    open func canceledRequest(requestId: UInt64) {
+        if let task: TaskData = lock.synchronized({ self.tasks.removeValue(forKey: requestId) }) {
             task.request.cancel()
-            task.requestData.canceled()
-            
             canceledAlamofireRequest(task.request, requestId: requestId)
         }
     }
     
     
-    
     //MARK: - Need Override
     open func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
-        fatalError("WebServiceAlamofireBaseEndpoint: require override isSupportedRequest(request:rawDataForRestoreFromStorage:) function. ")
+        fatalError("WebServiceAlamofireBaseEndpoint: require override isSupportedRequest(request:rawDataForRestoreFromStorage:) function.")
     }
     
     open func performRequest(requestId: UInt64, data: RequestData) throws -> Alamofire.DataRequest? {
@@ -86,7 +80,7 @@ open class WebServiceAlamofireBaseEndpoint: WebServiceEndpoint {
     }
     
     open func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any? {
-        fatalError("WebServiceAlamofireBaseEndpoint: require override dataProcessing(request:rawData:fromStorage:) function. ")
+        fatalError("WebServiceAlamofireBaseEndpoint: require override dataProcessing(request:rawData:fromStorage:) function.")
     }
     
     
@@ -124,12 +118,12 @@ open class WebServiceAlamofireBaseEndpoint: WebServiceEndpoint {
                 
                 do {
                     let result = try sSelf.responseAlamofire(response, requestId: requestId, requestData: data)
-                    data.completionWithData(result)
+                    data.completionWithRawData(result)
                 } catch {
                     data.completionWithError(error)
                 }
             } else {
-                data.canceled()
+                data.completionWithError(WebServiceRequestError.endpointInternal)
             }
         }
     }

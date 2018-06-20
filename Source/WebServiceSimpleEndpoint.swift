@@ -88,7 +88,7 @@ public class WebServiceSimpleEndpoint: WebServiceEndpoint {
         return request is WebServiceSimpleBaseRequesting
     }
     
-    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completionWithRawData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void, canceled: @escaping () -> Void) {
+    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completionWithRawData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void) {
         guard let request = request as? WebServiceSimpleBaseRequesting else {
             completionWithError(WebServiceRequestError.notSupportRequest)
             return
@@ -99,7 +99,7 @@ public class WebServiceSimpleEndpoint: WebServiceEndpoint {
             
             let task = session.dataTask(with: urlRequest) { [weak self] (data, response, error) in
                 guard let sSelf = self else {
-                    canceled()
+                    completionWithError(WebServiceRequestError.endpointInternal)
                     return
                 }
                 
@@ -119,11 +119,11 @@ public class WebServiceSimpleEndpoint: WebServiceEndpoint {
                 } else if let error = error {
                     completionWithError(error)
                 } else {
-                    canceled()
+                    completionWithError(WebServiceRequestError.endpointInternal)
                 }
             }
             
-            let taskData = TaskData(requestId: requestId, task: task, canceled: canceled)
+            let taskData = TaskData(requestId: requestId, task: task)
             lock.synchronized {
                 self.tasks[requestId] = taskData
             }
@@ -135,10 +135,9 @@ public class WebServiceSimpleEndpoint: WebServiceEndpoint {
         }
     }
     
-    public func cancelRequest(requestId: UInt64) {
+    public func canceledRequest(requestId: UInt64) {
         if let task: TaskData = lock.synchronized({ self.tasks.removeValue(forKey: requestId) }) {
             task.task.cancel()
-            task.canceled()
         }
     }
     
@@ -161,7 +160,5 @@ public class WebServiceSimpleEndpoint: WebServiceEndpoint {
     private struct TaskData {
         var requestId: UInt64
         var task: URLSessionDataTask
-        
-        var canceled: () -> Void
     }
 }

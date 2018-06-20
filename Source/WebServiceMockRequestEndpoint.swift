@@ -11,13 +11,6 @@ import Foundation
 
 
 public class WebServiceMockRequestEndpoint<RequestType: WebServiceRequesting>: WebServiceEndpoint {
-    
-    /// Item for store current requests in process
-    struct RequestItem {
-        var workItem: DispatchWorkItem
-        var canceled: () -> Void
-    }
-    
     public let queueForRequest: DispatchQueue? = nil
     public let queueForDataHandler: DispatchQueue? = nil
     public let queueForDataHandlerFromStorage: DispatchQueue? = nil
@@ -27,7 +20,7 @@ public class WebServiceMockRequestEndpoint<RequestType: WebServiceRequesting>: W
     public var timeWait: TimeInterval?
     public var rawDataFromStoreAlwaysNil: Bool = true
     
-    private var requests: [UInt64: RequestItem] = [:]
+    private var requests: [UInt64: DispatchWorkItem] = [:]
     
     
     public init(timeWait: TimeInterval? = nil, mockHandler: @escaping (RequestType) throws -> RequestType.ResultType) {
@@ -44,7 +37,7 @@ public class WebServiceMockRequestEndpoint<RequestType: WebServiceRequesting>: W
         return request is RequestType
     }
     
-    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completionWithRawData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void, canceled: @escaping () -> Void) {
+    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completionWithRawData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void) {
         guard let request = request as? RequestType else {
             completionWithError(WebServiceRequestError.notSupportRequest)
             return
@@ -65,14 +58,13 @@ public class WebServiceMockRequestEndpoint<RequestType: WebServiceRequesting>: W
         }
         
         //Run request with pause time
-        requests[requestId] = RequestItem(workItem: workItem, canceled: canceled)
+        requests[requestId] = workItem
         DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + (timeWait ?? 0), execute: workItem)
     }
     
-    public func cancelRequest(requestId: UInt64) {
-        if let requestItem = requests.removeValue(forKey: requestId) {
-            requestItem.workItem.cancel()
-            requestItem.canceled()
+    public func canceledRequest(requestId: UInt64) {
+        if let workItem = requests.removeValue(forKey: requestId) {
+            workItem.cancel()
         }
     }
     

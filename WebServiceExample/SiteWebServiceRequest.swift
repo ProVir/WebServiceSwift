@@ -104,7 +104,7 @@ extension SiteWebServiceRequest: WebServiceRequestValueFileStoring {
 */
 
 extension SiteWebServiceRequest: WebServiceMockRequesting {
-    var isSupportedRequestForMock: Bool { return false }
+    var isSupportedRequestForMock: Bool { return true }
     var mockTimeWait: TimeInterval? { return 3 }
     
     var mockHelperIdentifier: String? { return "template_html" }

@@ -103,8 +103,7 @@ public protocol WebServiceEndpoint: class {
     func performRequest(requestId: UInt64,
                         request: WebServiceBaseRequesting,
                         completionWithRawData: @escaping (_ data:Any) -> Void,
-                        completionWithError: @escaping (_ error:Error) -> Void,
-                        canceled: @escaping () -> Void)
+                        completionWithError: @escaping (_ error:Error) -> Void)
     
 
     /**
@@ -114,7 +113,7 @@ public protocol WebServiceEndpoint: class {
  
      - Parameter requestId: Id for canceled.
     */
-    func cancelRequest(requestId: UInt64)
+    func canceledRequest(requestId: UInt64)
     
     
     /**

@@ -29,8 +29,7 @@ class WebServiceHtmlEndpoint: WebServiceEndpoint {
     
     func performRequest(requestId: UInt64, request: WebServiceBaseRequesting,
                         completionWithRawData: @escaping (_ data: Any) -> Void,
-                        completionWithError: @escaping (_ error: Error) -> Void,
-                        canceled: @escaping () -> Void) {
+                        completionWithError: @escaping (_ error: Error) -> Void) {
         
         guard let url = (request as? WebServiceHtmlRequesting)?.url else {
             completionWithError(WebServiceRequestError.notSupportRequest)
@@ -48,7 +47,7 @@ class WebServiceHtmlEndpoint: WebServiceEndpoint {
         }
     }
     
-    func cancelRequest(requestId: UInt64) { /* Don't support */ }
+    func canceledRequest(requestId: UInt64) { /* Don't support */ }
     
     func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any? {
         guard request is WebServiceHtmlRequesting, let data = rawData as? Data else {
