@@ -172,12 +172,8 @@
 				506CAFCD2084D707008AB016 /* WebServiceTypes.swift */,
 				501D2AE91F4E917A000E3FA3 /* WebServiceProtocols.swift */,
 				50BFAFF7208F4C8A007E8FBD /* WebServiceRequestProvider.swift */,
-				501D2AEB1F4E92A1000E3FA3 /* WebServiceFileStorage.swift */,
-				50D22B0A20D7F91800C44198 /* WebServiceMemoryStorage.swift */,
-				50F4943120565FD1004F1E08 /* WebServiceMockEndpoint.swift */,
-				50D22B0C20D8AE8600C44198 /* WebServiceMockRequestEndpoint.swift */,
-				5054625B20C1884200595948 /* WebServiceSimpleEndpoint.swift */,
 				5054625620C066B500595948 /* PThreadMutexLock.swift */,
+				50D22B0E20DA9FA000C44198 /* General */,
 				5054625220C065B200595948 /* Alamofire */,
 			);
 			path = Source;
@@ -217,6 +213,18 @@
 				501D2AED1F4E9BE5000E3FA3 /* SiteWebServiceRequest.swift */,
 			);
 			name = WebServiceRequests;
+			sourceTree = "<group>";
+		};
+		50D22B0E20DA9FA000C44198 /* General */ = {
+			isa = PBXGroup;
+			children = (
+				501D2AEB1F4E92A1000E3FA3 /* WebServiceFileStorage.swift */,
+				50D22B0A20D7F91800C44198 /* WebServiceMemoryStorage.swift */,
+				50F4943120565FD1004F1E08 /* WebServiceMockEndpoint.swift */,
+				50D22B0C20D8AE8600C44198 /* WebServiceMockRequestEndpoint.swift */,
+				5054625B20C1884200595948 /* WebServiceSimpleEndpoint.swift */,
+			);
+			path = General;
 			sourceTree = "<group>";
 		};
 		9D14E7A17010FD744AF284AD /* Pods */ = {

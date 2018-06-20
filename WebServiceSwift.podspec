@@ -20,17 +20,23 @@ Pod::Spec.new do |s|
   s.tvos.deployment_target = '9.0'
   s.watchos.deployment_target = '2.0'
 
-  s.default_subspec = 'Core'
+  s.default_subspec = 'General'
   
   s.subspec 'Core' do |ss|
     ss.source_files = 'Source/*.{h,swift}'
     ss.public_header_files = 'Source/*.h'
   end
+  
+  s.subspec 'General' do |ss|
+    ss.source_files = 'Source/General/*.swift'
+    
+    ss.dependency 'WebServiceSwift/Core'
+  end
 
   s.subspec 'Alamofire' do |ss|
     ss.source_files = 'Source/Alamofire/*.swift'
     
-    ss.dependency 'WebServiceSwift/Core'
+    ss.dependency 'WebServiceSwift/General'
     ss.dependency 'Alamofire'
   end
   
