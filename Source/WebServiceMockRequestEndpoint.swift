@@ -44,7 +44,7 @@ public class WebServiceMockRequestEndpoint<RequestType: WebServiceRequesting>: W
         return request is RequestType
     }
     
-    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completionWithData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void, canceled: @escaping () -> Void) {
+    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completionWithRawData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void, canceled: @escaping () -> Void) {
         guard let request = request as? RequestType else {
             completionWithError(WebServiceRequestError.notSupportRequest)
             return
@@ -58,7 +58,7 @@ public class WebServiceMockRequestEndpoint<RequestType: WebServiceRequesting>: W
             
             do {
                 let data = try handler(request)
-                completionWithData(data)
+                completionWithRawData(data)
             } catch {
                 completionWithError(error)
             }
@@ -76,9 +76,9 @@ public class WebServiceMockRequestEndpoint<RequestType: WebServiceRequesting>: W
         }
     }
     
-    public func dataHandler(request: WebServiceBaseRequesting, data: Any, isRawFromStorage: Bool) throws -> Any? {
-        if isRawFromStorage { return nil }
-        else { return data }
+    public func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any? {
+        if fromStorage { return nil }
+        else { return rawData }
     }
     
 }

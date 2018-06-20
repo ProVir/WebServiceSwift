@@ -103,8 +103,8 @@ public class WebServiceAlamofireSimpleEndpoint: WebServiceAlamofireBaseEndpoint 
         }
     }
     
-    public override func dataHandler(request: WebServiceBaseRequesting, data: Any, isRawFromStorage: Bool) throws -> Any? {
-        guard let binary = data as? Data, let request = request as? WebServiceAlamofireBaseRequesting else {
+    public override func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any? {
+        guard let binary = rawData as? Data, let request = request as? WebServiceAlamofireBaseRequesting else {
             throw WebServiceRequestError.notSupportDataHandler
         }
         

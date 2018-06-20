@@ -234,9 +234,9 @@ public class WebService {
         //Step #2: Data handler closure for raw data from server
         let dataHandler: (Any) -> Void = { (data) in
             do {
-                let resultData = try endpoint.dataHandler(request: request,
-                                                          data: data,
-                                                          isRawFromStorage: false)
+                let resultData = try endpoint.dataProcessing(request: request,
+                                                             rawData: data,
+                                                             fromStorage: false)
                 
                 if let resultData = resultData {
                     storage?.writeData(request: request, data: data, isRaw: true)
@@ -254,7 +254,7 @@ public class WebService {
         let requestHandler = {
             endpoint.performRequest(requestId: requestId,
                                     request: request,
-                                    completionWithData: { data in
+                                    completionWithRawData: { data in
                                     
                                     //Raw data from server
                                     guard requestState == .inWork else { return }
@@ -541,7 +541,7 @@ public class WebService {
                         //Handler closure with fined endpoint for use next
                         let handler = {
                             do {
-                                let data = try endpoint.dataHandler(request: request, data: rawData, isRawFromStorage: true)
+                                let data = try endpoint.dataProcessing(request: request, rawData: rawData, fromStorage: true)
                                 
                                 queueForResponse.async {
                                     completionHandler(timeStamp, .data(data))

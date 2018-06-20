@@ -28,7 +28,7 @@ class WebServiceHtmlEndpoint: WebServiceEndpoint {
     }
     
     func performRequest(requestId: UInt64, request: WebServiceBaseRequesting,
-                        completionWithData: @escaping (_ data: Any) -> Void,
+                        completionWithRawData: @escaping (_ data: Any) -> Void,
                         completionWithError: @escaping (_ error: Error) -> Void,
                         canceled: @escaping () -> Void) {
         
@@ -40,7 +40,7 @@ class WebServiceHtmlEndpoint: WebServiceEndpoint {
         Alamofire.request(url).responseData { response in
             switch response.result {
             case .success(let data):
-                completionWithData(data)
+                completionWithRawData(data)
                 
             case .failure(let error):
                 completionWithError(error)
@@ -50,8 +50,8 @@ class WebServiceHtmlEndpoint: WebServiceEndpoint {
     
     func cancelRequest(requestId: UInt64) { /* Don't support */ }
     
-    func dataHandler(request: WebServiceBaseRequesting, data: Any, isRawFromStorage: Bool) throws -> Any? {
-        guard request is WebServiceHtmlRequesting, let data = data as? Data else {
+    func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any? {
+        guard request is WebServiceHtmlRequesting, let data = rawData as? Data else {
             throw WebServiceRequestError.notSupportDataHandler
         }
 

@@ -102,7 +102,7 @@ public protocol WebServiceEndpoint: class {
      */
     func performRequest(requestId: UInt64,
                         request: WebServiceBaseRequesting,
-                        completionWithData: @escaping (_ data:Any) -> Void,
+                        completionWithRawData: @escaping (_ data:Any) -> Void,
                         completionWithError: @escaping (_ error:Error) -> Void,
                         canceled: @escaping () -> Void)
     
@@ -132,7 +132,7 @@ public protocol WebServiceEndpoint: class {
      - Throws: Error proccess data from server to end data. Data from server (rawData) don't save to storage.
      - Returns: Result data for response. If == nil, data from server (rawData) don't save to storage.
      */
-    func dataHandler(request: WebServiceBaseRequesting, data: Any, isRawFromStorage: Bool) throws -> Any?
+    func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any?
 }
 
 

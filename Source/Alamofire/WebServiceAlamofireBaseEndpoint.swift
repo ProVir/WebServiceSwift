@@ -54,9 +54,9 @@ open class WebServiceAlamofireBaseEndpoint: WebServiceEndpoint {
     private let lock = PThreadMutexLock()
     private var tasks = [UInt64: TaskData]()
     
-    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completionWithData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void, canceled: @escaping () -> Void) {
+    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completionWithRawData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void, canceled: @escaping () -> Void) {
         do {
-            let data = RequestData(request: request, completionWithData: completionWithData, completionWithError: completionWithError, canceled: canceled)
+            let data = RequestData(request: request, completionWithData: completionWithRawData, completionWithError: completionWithError, canceled: canceled)
             if let af_request = try self.performRequest(requestId: requestId, data: data) {
                 startAlamofireRequest(af_request, requestId: requestId, data: data)
             }
@@ -85,8 +85,8 @@ open class WebServiceAlamofireBaseEndpoint: WebServiceEndpoint {
         fatalError("WebServiceAlamofireBaseEndpoint: require override request(data:) function. You need use function startAlamofireRequest(:data:)")
     }
     
-    open func dataHandler(request: WebServiceBaseRequesting, data: Any, isRawFromStorage: Bool) throws -> Any? {
-        fatalError("WebServiceAlamofireBaseEndpoint: require override dataHandler(request:data:isRawFromStorage:) function. ")
+    open func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any? {
+        fatalError("WebServiceAlamofireBaseEndpoint: require override dataProcessing(request:rawData:fromStorage:) function. ")
     }
     
     

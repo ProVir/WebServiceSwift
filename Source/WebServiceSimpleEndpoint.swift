@@ -88,7 +88,7 @@ public class WebServiceSimpleEndpoint: WebServiceEndpoint {
         return request is WebServiceSimpleBaseRequesting
     }
     
-    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completionWithData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void, canceled: @escaping () -> Void) {
+    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completionWithRawData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void, canceled: @escaping () -> Void) {
         guard let request = request as? WebServiceSimpleBaseRequesting else {
             completionWithError(WebServiceRequestError.notSupportRequest)
             return
@@ -113,7 +113,7 @@ public class WebServiceSimpleEndpoint: WebServiceEndpoint {
                     if let response = response as? HTTPURLResponse, response.statusCode >= 300 {
                         completionWithError(WebServiceResponseError.httpStatusCode(response.statusCode))
                     } else {
-                        completionWithData(data)
+                        completionWithRawData(data)
                     }
                     
                 } else if let error = error {
@@ -142,8 +142,8 @@ public class WebServiceSimpleEndpoint: WebServiceEndpoint {
         }
     }
     
-    public func dataHandler(request: WebServiceBaseRequesting, data: Any, isRawFromStorage: Bool) throws -> Any? {
-        guard let binary = data as? Data, let request = request as? WebServiceSimpleBaseRequesting else {
+    public func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any? {
+        guard let binary = rawData as? Data, let request = request as? WebServiceSimpleBaseRequesting else {
             throw WebServiceRequestError.notSupportDataHandler
         }
         
