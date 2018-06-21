@@ -17,8 +17,11 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
         self.service = webService
     }
     
-    /// Default delegate for responses. Apply before call new request.
+    /// Response delegate for responses. Apply before call new request.
     public weak var delegate: WebServiceDelegate?
+    
+    /// Default excludeDuplicate for hashable requests.
+    public var excludeDuplicateDefault: Bool = false
     
     
     // MARK: Perform requests and read from storage
@@ -31,7 +34,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
         - completionHandler: Closure for response result from server.
      */
     public func performRequest(_ request: RequestType, completionHandler: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
-        service.performRequest(request, completionHandler: completionHandler)
+        service.performBaseRequest(request, key: nil, excludeDuplicate: excludeDuplicateDefault, completionHandler: { completionHandler( $0.convert() ) })
     }
     
     /**
@@ -44,7 +47,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
          - completionHandler: Closure for response result from server.
      */
     public func performRequest(_ request: RequestType, key: AnyHashable, excludeDuplicate: Bool, completionHandler: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
-        service.performRequest(request, key: key, excludeDuplicate: excludeDuplicate, completionHandler: completionHandler)
+        service.performBaseRequest(request, key: key, excludeDuplicate: excludeDuplicate, completionHandler: { completionHandler( $0.convert() ) })
     }
     
     /**
@@ -71,7 +74,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
         - request: The request with data.
      */
     public func performRequest(_ request: RequestType) {
-        service.performRequest(request, responseDelegate: delegate)
+        internalPerformRequest(request, key: nil, excludeDuplicate: excludeDuplicateDefault, responseDelegate: delegate)
     }
     
     /**
@@ -154,6 +157,15 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
     public func cancelRequests<T: Hashable>(keyType: T.Type) {
         service.cancelRequests(keyType: keyType)
     }
+    
+    
+    private func internalPerformRequest(_ request: WebServiceBaseRequesting, key: AnyHashable?, excludeDuplicate: Bool, responseDelegate delegate: WebServiceDelegate?) {
+        service.performBaseRequest(request, key: key, excludeDuplicate: excludeDuplicate) { [weak delegate] response in
+            if let delegate = delegate {
+                delegate.webServiceResponse(request: request, key: key, isStorageRequest: false, response: response)
+            }
+        }
+    }
 }
 
 //MARK: Support Hashable requests
@@ -168,7 +180,7 @@ extension WebServiceRequestProvider where RequestType: Hashable {
          - completionHandler: Closure for response result from server.
      */
     public func performRequest(_ request: RequestType, excludeDuplicate: Bool, completionHandler: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
-        service.performRequest(request, excludeDuplicate: excludeDuplicate, completionHandler: completionHandler)
+        service.performBaseRequest(request, key: nil, excludeDuplicate: excludeDuplicate, completionHandler: { completionHandler( $0.convert() ) })
     }
     
     /**
@@ -179,7 +191,7 @@ extension WebServiceRequestProvider where RequestType: Hashable {
          - excludeDuplicate: Exclude duplicate equatable requests.
      */
     public func performRequest(_ request: RequestType, excludeDuplicate: Bool) {
-        service.performRequest(request, excludeDuplicate: excludeDuplicate, responseDelegate: delegate)
+        internalPerformRequest(request, key: nil, excludeDuplicate: excludeDuplicate, responseDelegate: delegate)
     }
     
     
@@ -203,3 +215,24 @@ extension WebServiceRequestProvider where RequestType: Hashable {
     }
 }
 
+//MARK: Support Empty requests
+extension WebServiceRequestProvider where RequestType: WebServiceEmptyRequesting {
+    
+    /**
+     Request to server (endpoint). Response result in closure.
+     
+     - Parameters:
+        - completionHandler: Closure for response result from server.
+     */
+    public func performRequest(completionHandler: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
+        service.performBaseRequest(RequestType.init(), key: nil, excludeDuplicate: excludeDuplicateDefault, completionHandler: { completionHandler( $0.convert() ) })
+    }
+    
+    /**
+     Request to server (endpoint). Response result send to `WebServiceRequestProvider.delegate`.
+     */
+    public func performRequest() {
+        internalPerformRequest(RequestType.init(), key: nil, excludeDuplicate: excludeDuplicateDefault, responseDelegate: delegate)
+    }
+    
+}

@@ -13,21 +13,6 @@ import Foundation
 import UIKit
 #endif
 
-/// WebService Delegate for responses
-public protocol WebServiceDelegate: class {
-    
-    /**
-     Response from storage or server
-     
-     - Parameters:
-        - request: Original request
-        - key: key from `performRequest` method if have
-        - isStorageRequest: Bool flag - response from storage or server
-        - response: Response enum with results
-     */
-    func webServiceResponse(request: WebServiceBaseRequesting, key: AnyHashable?, isStorageRequest: Bool, response: WebServiceAnyResponse)
-}
-
 
 /// Controller for work. All requests are performed through it.
 public class WebService {

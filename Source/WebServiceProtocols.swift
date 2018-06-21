@@ -20,6 +20,11 @@ public protocol WebServiceRequesting: WebServiceBaseRequesting {
     associatedtype ResultType
 }
 
+/// Generic protocol without parameters for server and with information result type for all types request.
+public protocol WebServiceEmptyRequesting: WebServiceRequesting {
+    init()
+}
+
 
 //MARK: Support storages
 
@@ -36,6 +41,22 @@ public protocol WebServiceRawDataSource {
     var binaryRawData: Data? { get }
 }
 
+//MARK: Delegates
+
+/// WebService Delegate for responses
+public protocol WebServiceDelegate: class {
+    
+    /**
+     Response from storage or server
+     
+     - Parameters:
+     - request: Original request
+     - key: key from `performRequest` method if have
+     - isStorageRequest: Bool flag - response from storage or server
+     - response: Response enum with results
+     */
+    func webServiceResponse(request: WebServiceBaseRequesting, key: AnyHashable?, isStorageRequest: Bool, response: WebServiceAnyResponse)
+}
 
 
 //MARK: Provider
