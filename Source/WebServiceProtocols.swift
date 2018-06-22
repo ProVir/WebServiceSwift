@@ -25,6 +25,13 @@ public protocol WebServiceEmptyRequesting: WebServiceRequesting {
     init()
 }
 
+/// Groups requests, protocol use for `WebServiceGroupProvider`.
+public protocol WebServiceGroupRequests {
+    /// List all type requests in group
+    static var requestTypes: [WebServiceBaseRequesting.Type] { get }
+}
+
+
 
 //MARK: Support storages
 

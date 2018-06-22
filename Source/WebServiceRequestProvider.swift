@@ -42,7 +42,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
      
      - Parameters:
          - request: The request with data and result type.
-         - key: unique key for controling requests - contains and canceled. Also use for excludeDuplicate.
+         - key: Unique key for controling requests - contains and canceled. Also use for excludeDuplicate.
          - excludeDuplicate: Exclude duplicate requests. Requests are equal if their keys match.
          - completionHandler: Closure for response result from server.
      */
@@ -104,7 +104,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
     }
     
     
-    // MARK: Control requests
+    // MARK: Contains requests
     
     /**
      Returns a Boolean value indicating whether the current queue contains requests the given type.
@@ -112,7 +112,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
      - Returns: `true` if one request with RequestType.Type was found in the current queue; otherwise, `false`.
      */
     public func containsRequests() -> Bool {
-        return service.containsRequest(requestType: RequestType.self)
+        return service.containsRequest(type: RequestType.self)
     }
     
     /**
@@ -131,13 +131,15 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
      - Parameter keyType: The type requestKey to find in the all current queue.
      - Returns: `true` if one request with key.Type was found in the current queue; otherwise, `false`.
      */
-    public func containsRequest<T: Hashable>(keyType: T.Type) -> Bool {
+    public func containsRequest<K: Hashable>(keyType: K.Type) -> Bool {
         return service.containsRequest(keyType: keyType)
     }
     
+    //MARK: Cancel requests
+    
     /// Cancel all requests for request type. The RequestType.Type to find in the current queue.
     public func cancelRequests() {
-        service.cancelRequests(requestType: RequestType.self)
+        service.cancelRequests(type: RequestType.self)
     }
     
     /**
@@ -154,7 +156,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
      
      - Parameter keyType: The key.Type to find in the current queue.
      */
-    public func cancelRequests<T: Hashable>(keyType: T.Type) {
+    public func cancelRequests<K: Hashable>(keyType: K.Type) {
         service.cancelRequests(keyType: keyType)
     }
     
@@ -201,8 +203,8 @@ extension WebServiceRequestProvider where RequestType: Hashable {
      - Parameter request: The request to find in the current queue.
      - Returns: `true` if the request was found in the current queue; otherwise, `false`.
      */
-    public func containsRequest(request: RequestType) -> Bool {
-        return service.containsRequest(request: request)
+    public func containsRequest(_ request: RequestType) -> Bool {
+        return service.containsRequest(request)
     }
     
     /**
@@ -210,8 +212,8 @@ extension WebServiceRequestProvider where RequestType: Hashable {
      
      - Parameter request: The request to find in the current queue.
      */
-    public func cancelRequests(request: RequestType) {
-        service.cancelRequests(request: request)
+    public func cancelRequests(_ request: RequestType) {
+        service.cancelRequests(request)
     }
 }
 

@@ -32,6 +32,7 @@
 		50BFAFF9208F4C8E007E8FBD /* WebServiceRequestProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50BFAFF7208F4C8A007E8FBD /* WebServiceRequestProvider.swift */; };
 		50D22B0B20D7F91800C44198 /* WebServiceMemoryStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D22B0A20D7F91800C44198 /* WebServiceMemoryStorage.swift */; };
 		50D22B0D20D8AE8600C44198 /* WebServiceMockRequestEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D22B0C20D8AE8600C44198 /* WebServiceMockRequestEndpoint.swift */; };
+		50D22B1D20DCAB2A00C44198 /* WebServiceGroupProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D22B1C20DCAB2A00C44198 /* WebServiceGroupProvider.swift */; };
 		F453EA236A3F776E9CF4C183 /* Pods_WebServiceExample.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F1924AD271EBC436C8C75A4 /* Pods_WebServiceExample.framework */; };
 /* End PBXBuildFile section */
 
@@ -87,6 +88,7 @@
 		50BFAFF7208F4C8A007E8FBD /* WebServiceRequestProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceRequestProvider.swift; sourceTree = "<group>"; };
 		50D22B0A20D7F91800C44198 /* WebServiceMemoryStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceMemoryStorage.swift; sourceTree = "<group>"; };
 		50D22B0C20D8AE8600C44198 /* WebServiceMockRequestEndpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceMockRequestEndpoint.swift; sourceTree = "<group>"; };
+		50D22B1C20DCAB2A00C44198 /* WebServiceGroupProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceGroupProvider.swift; sourceTree = "<group>"; };
 		50F0804F20AC843B00994710 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		50F4943120565FD1004F1E08 /* WebServiceMockEndpoint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceMockEndpoint.swift; sourceTree = "<group>"; };
 		83873141EF5334067DE0C2D6 /* Pods-WebServiceSwift.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WebServiceSwift.release.xcconfig"; path = "Pods/Target Support Files/Pods-WebServiceSwift/Pods-WebServiceSwift.release.xcconfig"; sourceTree = "<group>"; };
@@ -172,6 +174,7 @@
 				506CAFCD2084D707008AB016 /* WebServiceTypes.swift */,
 				501D2AE91F4E917A000E3FA3 /* WebServiceProtocols.swift */,
 				50BFAFF7208F4C8A007E8FBD /* WebServiceRequestProvider.swift */,
+				50D22B1C20DCAB2A00C44198 /* WebServiceGroupProvider.swift */,
 				5054625620C066B500595948 /* PThreadMutexLock.swift */,
 				50D22B0E20DA9FA000C44198 /* General */,
 				5054625220C065B200595948 /* Alamofire */,
@@ -428,6 +431,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				50D22B1D20DCAB2A00C44198 /* WebServiceGroupProvider.swift in Sources */,
 				5054625520C0665000595948 /* WebServiceAlamofireBaseEndpoint.swift in Sources */,
 				50D22B0D20D8AE8600C44198 /* WebServiceMockRequestEndpoint.swift in Sources */,
 				506CAFCF2084D729008AB016 /* WebServiceTypes.swift in Sources */,

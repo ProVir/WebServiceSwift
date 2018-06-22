@@ -72,6 +72,12 @@ public class WebService {
         }
     }
     
+    /// Clone WebService with only list endpoints, storages and queueForResponse.
+    public func clone() -> WebService {
+        return WebService(endpoints: endpoints, storages: storages, queueForResponse: queueForResponse)
+    }
+    
+    
     //MARK: Private data
     private static var staticMutex = PThreadMutexLock()
     private var mutex = PThreadMutexLock()
@@ -140,7 +146,7 @@ public class WebService {
      
      - Parameters:
         - request: The request with data.
-        - key: unique key for controling requests - contains and canceled. Also use for excludeDuplicate. Default: nil.
+        - key: Unique key for controling requests - contains and canceled. Also use for excludeDuplicate. Default: nil.
         - excludeDuplicate: Exclude duplicate requests. Equal requests alogorithm: test for key if not null, else test requests equal if request is hashable.
         - completionHandler: Closure for response result from server.
      */
@@ -371,7 +377,7 @@ public class WebService {
     }
     
     
-    // MARK: Control requests
+    // MARK: Contains requests
     
     /**
      Returns a Boolean value indicating whether the current queue contains the given request.
@@ -379,7 +385,7 @@ public class WebService {
      - Parameter request: The request to find in the current queue.
      - Returns: `true` if the request was found in the current queue; otherwise, `false`.
      */
-    public func containsRequest<T: WebServiceBaseRequesting & Hashable>(request: T) -> Bool {
+    public func containsRequest<RequestType: WebServiceBaseRequesting & Hashable>(_ request: RequestType) -> Bool {
         return mutex.synchronized { !(requestsForHashs[request]?.isEmpty ?? true) }
     }
     
@@ -389,7 +395,7 @@ public class WebService {
      - Parameter requestType: The type request to find in the all current queue.
      - Returns: `true` if one request with WebServiceBaseRequesting.Type was found in the current queue; otherwise, `false`.
      */
-    public func containsRequest(requestType: WebServiceBaseRequesting.Type) -> Bool {
+    public func containsRequest(type requestType: WebServiceBaseRequesting.Type) -> Bool {
         return mutex.synchronized { !(requestsForTypes["\(requestType)"]?.isEmpty ?? true) }
     }
     
@@ -409,16 +415,19 @@ public class WebService {
      - Parameter keyType: The type requestKey to find in the all current queue.
      - Returns: `true` if one request with key.Type was found in the current queue; otherwise, `false`.
      */
-    public func containsRequest<T: Hashable>(keyType: T.Type) -> Bool {
+    public func containsRequest<K: Hashable>(keyType: K.Type) -> Bool {
         return (internalListRequest(keyType: keyType, onlyFirst: true)?.count ?? 0) > 0
     }
+
+    
+    //MARK: Cancel requests
     
     /**
      Cancel all requests with equal this request.
      
      - Parameter request: The request to find in the current queue.
      */
-    public func cancelRequests<T: WebServiceBaseRequesting & Hashable>(request: T) {
+    public func cancelRequests<RequestType: WebServiceBaseRequesting & Hashable>(_ request: RequestType) {
         if let list = mutex.synchronized({ requestsForHashs[request] }) {
             internalCancelRequests(ids: list)
         }
@@ -429,7 +438,7 @@ public class WebService {
 
      - Parameter requestType: The WebServiceBaseRequesting.Type to find in the current queue.
      */
-    public func cancelRequests(requestType: WebServiceBaseRequesting.Type) {
+    public func cancelRequests(type requestType: WebServiceBaseRequesting.Type) {
         if let list = mutex.synchronized({ requestsForTypes["\(requestType)"] }) {
             internalCancelRequests(ids: list)
         }
@@ -451,7 +460,7 @@ public class WebService {
      
      - Parameter keyType: The key.Type to find in the current queue.
      */
-    public func cancelRequests<T: Hashable>(keyType: T.Type) {
+    public func cancelRequests<K: Hashable>(keyType: K.Type) {
         if let list = internalListRequest(keyType: keyType, onlyFirst: false) {
             internalCancelRequests(ids: list)
         }
@@ -553,6 +562,7 @@ public class WebService {
             }
         }
     }
+    
     
     // MARK: Find endpoints and storages
     private func internalFindEndpoint(request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type? = nil) -> WebServiceEndpoint? {
