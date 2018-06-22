@@ -219,7 +219,11 @@ open class WebServiceAlamofireBaseEndpoint: WebServiceEndpoint {
                 startAlamofireRequest(af_request, requestId: requestId, data: data)
             }
         } catch {
-            completionWithError(error)
+            if let error = error as? WebServiceRequestError {
+                completionWithError(error)
+            } else {
+                completionWithError(WebServiceRequestError.invalidRequest(error))
+            }
         }
     }
     

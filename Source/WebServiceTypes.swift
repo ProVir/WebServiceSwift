@@ -16,6 +16,7 @@ import Foundation
  - `noFoundStorage`: If storage not found in `[storages]` for request
  - `notSupportRequest`: If request after test fot endpoint contains invalid query or etc.
  - `notSupportDataHandler`: If request don't support data handler
+ - `invalidRequest`: Validation request and create request to server failed.
  - `endpointInternal`: Internal error in endpoint.
  */
 public enum WebServiceRequestError: Error {
@@ -25,6 +26,7 @@ public enum WebServiceRequestError: Error {
     case notSupportRequest
     case notSupportDataHandler
     
+    case invalidRequest(Error)
     case endpointInternal
 }
 

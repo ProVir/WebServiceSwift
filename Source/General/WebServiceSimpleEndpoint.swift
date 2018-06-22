@@ -155,7 +155,7 @@ public class WebServiceSimpleEndpoint: WebServiceEndpoint {
             task.resume()
             
         } catch {
-            completionWithError(error)
+            completionWithError(WebServiceRequestError.invalidRequest(error))
         }
     }
     
