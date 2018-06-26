@@ -29,8 +29,11 @@ public class WebServiceRestrictedProvider {
         self.requestTypesAsKeys = Set(requestTypes.map { "\($0)" })
     }
     
-    // Response delegate for responses. Apply before call new request.
+    /// Response delegate for responses. Apply before call new request.
     public weak var delegate: WebServiceDelegate?
+    
+    /// When `true` - response result from storage send to delegate only if have data. 
+    public var responseStorageOnlyDataForDelegate: Bool = false
     
     
     /// MARK: Test request for support
@@ -147,11 +150,15 @@ public class WebServiceRestrictedProvider {
          - request: The request with data.
          - key: unique key for controling requests, use only for response delegate.
          - dependencyNextRequest: Type dependency from next performRequest.
+         - responseOnlyData: When `true` - response result send to delegate only if have data. Default use `responseStorageOnlyDataForDelegate`.
      */
-    public func readStorage(_ request: WebServiceBaseRequesting, key: AnyHashable? = nil, dependencyNextRequest: WebService.ReadStorageDependencyType = .notDepend) {
+    public func readStorage(_ request: WebServiceBaseRequesting, key: AnyHashable? = nil, dependencyNextRequest: WebService.ReadStorageDependencyType = .notDepend, responseOnlyData: Bool? = nil) {
         guard testRequest(type: type(of: request)) else { return }
         if let delegate = delegate {
-            service.readStorage(request, key: key, dependencyNextRequest: dependencyNextRequest, responseDelegate: delegate)
+            service.readStorage(request, key: key,
+                                dependencyNextRequest: dependencyNextRequest,
+                                responseOnlyData: responseOnlyData ?? responseStorageOnlyDataForDelegate,
+                                responseDelegate: delegate)
         }
     }
     

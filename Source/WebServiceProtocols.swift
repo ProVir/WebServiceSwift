@@ -75,7 +75,7 @@ public protocol WebServiceProvider {
 
 public extension WebService {
     /// Create provider with this WebService
-    func getProvider<T: WebServiceProvider>() -> T {
+    func createProvider<T: WebServiceProvider>() -> T {
         return T.init(webService: self)
     }
 }

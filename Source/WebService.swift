@@ -366,10 +366,15 @@ public class WebService {
          - request: The request with data.
          - key: unique key for controling requests, use only for response delegate.
          - dependencyNextRequest: Type dependency from next performRequest.
+         - responseOnlyData: When `true` - response result send to delegate only if have data. Default false.
          - responseDelegate: Weak delegate for response from this request.
      */
-    public func readStorage(_ request: WebServiceBaseRequesting, key: AnyHashable? = nil, dependencyNextRequest: ReadStorageDependencyType = .notDepend, responseDelegate delegate: WebServiceDelegate) {
+    public func readStorage(_ request: WebServiceBaseRequesting, key: AnyHashable? = nil, dependencyNextRequest: ReadStorageDependencyType = .notDepend, responseOnlyData: Bool = false, responseDelegate delegate: WebServiceDelegate) {
         readStorageAnyData(request, dependencyNextRequest: dependencyNextRequest) { [weak delegate] _, response in
+            if responseOnlyData == false { }
+            else if case .data = response { }
+            else { return }
+            
             if let delegate = delegate {
                 delegate.webServiceResponse(request: request, key: key, isStorageRequest: true, response: response)
             }
