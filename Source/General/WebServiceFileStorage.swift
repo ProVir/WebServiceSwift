@@ -4,7 +4,7 @@
 //
 //  Created by Короткий Виталий (ViR) on 29.07.17.
 //  Updated to 3.0.0 by Короткий Виталий (ViR) on 20.06.2018.
-//  Copyright © 2017 ProVir. All rights reserved.
+//  Copyright © 2017 - 2018 ProVir. All rights reserved.
 //
 
 import Foundation
