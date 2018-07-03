@@ -1,4 +1,4 @@
- ![WebServiceSwift](https://raw.githubusercontent.com/ProVir/WebServiceSwift/dev/WebServiceSwiftLogo.png) 
+ ![WebServiceSwift](https://raw.githubusercontent.com/ProVir/WebServiceSwift/master/WebServiceSwiftLogo.png) 
 
 
 [![CocoaPods Compatible](https://cocoapod-badges.herokuapp.com/v/WebServiceSwift/badge.png)](http://cocoapods.org/pods/WebServiceSwift)
