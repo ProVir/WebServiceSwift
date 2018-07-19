@@ -118,7 +118,7 @@ public class WebServiceFileStorage: WebServiceStorage {
      */
     public init(filesDir: URL, prefixNameFiles: String, supportDataClassification: Set<AnyHashable> = [], filesThreadLabel: String = "ru.provir.WebServiceSimpleFileStorage.filesThread") {
         fileWorkDispatchQueue = DispatchQueue(label: filesThreadLabel,
-                                              qos: .default)
+                                              qos: .background)
         
         self.filesDir = filesDir
         self.prefixNameFiles = prefixNameFiles

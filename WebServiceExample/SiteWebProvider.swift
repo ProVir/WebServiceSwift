@@ -41,7 +41,7 @@ class SiteWebProvider: WebServiceProvider, WebServiceDelegate {
     let requestProvider: WebServiceRequestProvider<SiteWebServiceRequest>
     
     required init(webService: WebService) {
-        requestProvider = webService.getProvider()
+        requestProvider = webService.createProvider()
         requestProvider.delegate = self
     }
     

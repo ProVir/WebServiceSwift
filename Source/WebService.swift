@@ -384,6 +384,11 @@ public class WebService {
     
     // MARK: Contains requests
     
+    /// Returns a Boolean value indicating whether the current queue contains many requests.
+    public func containsManyRequests() -> Bool {
+        return mutex.synchronized { !requestList.isEmpty }
+    }
+    
     /**
      Returns a Boolean value indicating whether the current queue contains the given request.
      
@@ -427,6 +432,12 @@ public class WebService {
     
     //MARK: Cancel requests
     
+    /// Cancel all requests in current queue.
+    public func cancelAllRequests() {
+        let requestList = mutex.synchronized { self.requestList }
+        internalCancelRequests(ids: Set(requestList.keys))
+    }
+    
     /**
      Cancel all requests with equal this request.
      
@@ -469,12 +480,6 @@ public class WebService {
         if let list = internalListRequest(keyType: keyType, onlyFirst: false) {
             internalCancelRequests(ids: list)
         }
-    }
-    
-    /// Cancel all requests in current queue.
-    public func cancelAllRequests() {
-        let requestList = mutex.synchronized { self.requestList }
-        internalCancelRequests(ids: Set(requestList.keys))
     }
     
     
