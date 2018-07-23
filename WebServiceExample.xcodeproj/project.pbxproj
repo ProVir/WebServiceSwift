@@ -26,6 +26,8 @@
 		5054625A20C1026800595948 /* WebServiceAlamofireSimpleEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625920C1026800595948 /* WebServiceAlamofireSimpleEndpoint.swift */; };
 		5054625C20C1884200595948 /* WebServiceSimpleEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625B20C1884200595948 /* WebServiceSimpleEndpoint.swift */; };
 		506CAFCF2084D729008AB016 /* WebServiceTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 506CAFCD2084D707008AB016 /* WebServiceTypes.swift */; };
+		507529A521032E61008A167A /* WebServiceDataBaseStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 507529A421032E61008A167A /* WebServiceDataBaseStorage.swift */; };
+		507529A82103321A008A167A /* WebServiceDataBaseStorage.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 507529A62103321A008A167A /* WebServiceDataBaseStorage.xcdatamodeld */; };
 		50844338207D244900C757C7 /* WebServiceMockEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50F4943120565FD1004F1E08 /* WebServiceMockEndpoint.swift */; };
 		50AB6AB020883C2F00C1E093 /* SiteWebProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50AB6AAF20883C2F00C1E093 /* SiteWebProvider.swift */; };
 		50AB6AB220883F3100C1E093 /* WebService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50AB6AB120883F3100C1E093 /* WebService.swift */; };
@@ -82,6 +84,8 @@
 		5054625920C1026800595948 /* WebServiceAlamofireSimpleEndpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceAlamofireSimpleEndpoint.swift; sourceTree = "<group>"; };
 		5054625B20C1884200595948 /* WebServiceSimpleEndpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceSimpleEndpoint.swift; sourceTree = "<group>"; };
 		506CAFCD2084D707008AB016 /* WebServiceTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceTypes.swift; sourceTree = "<group>"; };
+		507529A421032E61008A167A /* WebServiceDataBaseStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceDataBaseStorage.swift; sourceTree = "<group>"; };
+		507529A72103321A008A167A /* WebServiceDataBaseStorage.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = WebServiceDataBaseStorage.xcdatamodel; sourceTree = "<group>"; };
 		50A9162420B09C4C00EA2E9D /* WebServiceSwift.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; fileEncoding = 4; path = WebServiceSwift.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		50AB6AAF20883C2F00C1E093 /* SiteWebProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteWebProvider.swift; sourceTree = "<group>"; };
 		50AB6AB120883F3100C1E093 /* WebService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebService.swift; sourceTree = "<group>"; };
@@ -222,10 +226,12 @@
 			isa = PBXGroup;
 			children = (
 				501D2AEB1F4E92A1000E3FA3 /* WebServiceFileStorage.swift */,
+				507529A421032E61008A167A /* WebServiceDataBaseStorage.swift */,
 				50D22B0A20D7F91800C44198 /* WebServiceMemoryStorage.swift */,
 				50F4943120565FD1004F1E08 /* WebServiceMockEndpoint.swift */,
 				50D22B0C20D8AE8600C44198 /* WebServiceMockRequestEndpoint.swift */,
 				5054625B20C1884200595948 /* WebServiceSimpleEndpoint.swift */,
+				507529A62103321A008A167A /* WebServiceDataBaseStorage.xcdatamodeld */,
 			);
 			path = General;
 			sourceTree = "<group>";
@@ -435,11 +441,13 @@
 				5054625520C0665000595948 /* WebServiceAlamofireBaseEndpoint.swift in Sources */,
 				50D22B0D20D8AE8600C44198 /* WebServiceMockRequestEndpoint.swift in Sources */,
 				506CAFCF2084D729008AB016 /* WebServiceTypes.swift in Sources */,
+				507529A521032E61008A167A /* WebServiceDataBaseStorage.swift in Sources */,
 				50844338207D244900C757C7 /* WebServiceMockEndpoint.swift in Sources */,
 				50BFAFF9208F4C8E007E8FBD /* WebServiceRequestProvider.swift in Sources */,
 				501D2AFB1F527D05000E3FA3 /* WebService.swift in Sources */,
 				5054625820C066FD00595948 /* PThreadMutexLock.swift in Sources */,
 				5054625A20C1026800595948 /* WebServiceAlamofireSimpleEndpoint.swift in Sources */,
+				507529A82103321A008A167A /* WebServiceDataBaseStorage.xcdatamodeld in Sources */,
 				50D22B0B20D7F91800C44198 /* WebServiceMemoryStorage.swift in Sources */,
 				501D2AFA1F527D03000E3FA3 /* WebServiceProtocols.swift in Sources */,
 				5054625C20C1884200595948 /* WebServiceSimpleEndpoint.swift in Sources */,
@@ -702,6 +710,19 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		507529A62103321A008A167A /* WebServiceDataBaseStorage.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				507529A72103321A008A167A /* WebServiceDataBaseStorage.xcdatamodel */,
+			);
+			currentVersion = 507529A72103321A008A167A /* WebServiceDataBaseStorage.xcdatamodel */;
+			path = WebServiceDataBaseStorage.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = 501D2AB51F4E8DD0000E3FA3 /* Project object */;
 }

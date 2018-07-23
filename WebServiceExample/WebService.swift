@@ -21,6 +21,9 @@ extension WebService {
         let mock = WebServiceMockEndpoint(rawDataFromStoreAlwaysNil: true)
         
         var storages: [WebServiceStorage] = []
+        if let storage = WebServiceDataBaseStorage() {
+            storages.append(storage)
+        }
         if let storage = WebServiceFileStorage() {
             storages.append(storage)
         }

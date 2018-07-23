@@ -40,6 +40,10 @@ public protocol WebServiceRequestBaseStoring: WebServiceBaseRequesting {
     var dataClassificationForStorage: AnyHashable { get }
 }
 
+public extension WebServiceRequestBaseStoring {
+    var dataClassificationForStorage: AnyHashable { return WebServiceDefaultDataClassification }
+}
+
 /// Default data classification for storages.
 public let WebServiceDefaultDataClassification = "default"
 

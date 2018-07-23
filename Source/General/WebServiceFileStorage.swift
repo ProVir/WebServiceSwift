@@ -66,14 +66,6 @@ public protocol WebServiceRequestValueFileStoring: WebServiceRequestAnyValueFile
     func readDataFromFileStorage(data: Data) throws -> ResultType?
 }
 
-public extension WebServiceRequestRawFileStoring {
-    var dataClassificationForStorage: AnyHashable { return WebServiceDefaultDataClassification }
-}
-
-public extension WebServiceRequestAnyValueFileStoring {
-    var dataClassificationForStorage: AnyHashable { return WebServiceDefaultDataClassification }
-}
-
 public extension WebServiceRequestValueFileStoring {
     func writeAnyDataToFileStorage(value: Any) -> Data? {
         if let value = value as? ResultType {
@@ -143,10 +135,10 @@ public class WebServiceFileStorage: WebServiceStorage {
     /**
      Constructor with default settings store. Files store in standart caches directory.
      
-     Prefix name for all files: *webServiceSimpleFileStorage_*
+     Prefix name for all files: *webServiceFileStorage_*
      */
     public convenience init?() {
-        self.init(prefixNameFiles: "webServiceSimpleFileStorage_")
+        self.init(prefixNameFiles: "webServiceFileStorage_")
     }
     
     
@@ -188,7 +180,7 @@ public class WebServiceFileStorage: WebServiceStorage {
                         }
                         
                     } else if let request = request as? WebServiceRequestAnyValueFileStoring {
-                        //Readed value and can encode
+                        //Readed value and can decode
                         do {
                             if let data = try request.readAnyDataFromFileStorage(data: storeData.binary) {
                                 completionHandler(false, storeData.timeStamp, .data(data))
@@ -220,7 +212,7 @@ public class WebServiceFileStorage: WebServiceStorage {
                     
                 } else if let binaryData = binaryData {
                     if let request = request as? WebServiceRequestAnyValueFileStoring {
-                        //Readed value and can encode
+                        //Readed value and can decode
                         do {
                             if let data = try request.readAnyDataFromFileStorage(data: binaryData) {
                                 completionHandler(false, nil, .data(data))
@@ -303,6 +295,13 @@ public class WebServiceFileStorage: WebServiceStorage {
         
         fileWorkDispatchQueue.async {
             do {
+                if !FileManager.default.fileExists(atPath: url.path) {
+                    DispatchQueue.main.async {
+                        completionHandler(nil, WebServiceResponseError.notFoundData)
+                    }
+                    return
+                }
+                
                 let binData = try Data(contentsOf: url)
                 var data = try PropertyListDecoder().decode(StoreData.self, from: binData)
                 
