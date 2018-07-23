@@ -267,4 +267,16 @@ public class WebServiceRestrictedProvider {
        service.cancelRequests(keyType: keyType)
     }
     
+    
+    //MARK: Delete data in Storages
+    
+    /**
+     Delete data in storage for concrete request.
+     
+     - Parameter request: Original request.
+     */
+    public func deleteInStorage<RequestType: WebServiceBaseRequesting>(request: RequestType) {
+        guard testRequest(type: RequestType.self) else { return }
+        service.deleteInStorage(request: request)
+    }
 }

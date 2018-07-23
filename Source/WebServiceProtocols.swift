@@ -204,5 +204,16 @@ public protocol WebServiceStorage: class {
         - isRaw: Type data for save.
     */
     func writeData(request: WebServiceBaseRequesting, data: Any, isRaw: Bool)
+    
+    
+    /**
+     Delete data in storage for concrete request.
+     
+     - Parameter request: Original request.
+     */
+    func deleteData(request: WebServiceBaseRequesting)
+    
+    /// Delete all data in storage.
+    func deleteAllData()
 }
 

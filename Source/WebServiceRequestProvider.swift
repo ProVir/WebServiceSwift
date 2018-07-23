@@ -167,7 +167,18 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
         service.cancelRequests(keyType: keyType)
     }
     
+    //MARK: Delete data in Storages
     
+    /**
+     Delete data in storage for concrete request.
+     
+     - Parameter request: Original request.
+     */
+    public func deleteInStorage(request: RequestType) {
+        service.deleteInStorage(request: request)
+    }
+    
+    //MARK: Internal
     private func internalPerformRequest(_ request: WebServiceBaseRequesting, key: AnyHashable?, excludeDuplicate: Bool, responseDelegate delegate: WebServiceDelegate?) {
         service.performBaseRequest(request, key: key, excludeDuplicate: excludeDuplicate) { [weak delegate] response in
             if let delegate = delegate {

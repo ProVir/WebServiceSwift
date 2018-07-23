@@ -483,6 +483,57 @@ public class WebService {
     }
     
     
+    //MARK: Delete data in Storages
+    
+    /**
+     Delete data in storage for concrete request.
+     
+     - Parameter request: Original request.
+     */
+    public func deleteInStorage(request: WebServiceBaseRequesting) {
+        if let storage = internalFindStorage(request: request) {
+            storage.deleteData(request: request)
+        }
+    }
+    
+    /**
+     Delete all data in storages. Used only storages with support concrete data classification.
+     
+     - Parameter with: Data Classification for find all storages.
+     */
+    public func deleteAllInStorages(with dataClassification: AnyHashable) {
+        for storage in self.storages {
+            let supportClasses = storage.supportDataClassification
+            
+            if supportClasses.contains(dataClassification) {
+                storage.deleteAllData()
+            }
+        }
+    }
+    
+    /**
+     Delete all data in storages. Used only storages with support any data classification.
+     */
+    public func deleteAllInStoragesWithAnyDataClassification() {
+        for storage in self.storages {
+            let supportClasses = storage.supportDataClassification
+            
+            if supportClasses.isEmpty {
+                storage.deleteAllData()
+            }
+        }
+    }
+    
+    /**
+     Delete all data in all storages.
+     */
+    public func deleteAllInStorages() {
+        for storage in self.storages {
+            storage.deleteAllData()
+        }
+    }
+    
+    
     //MARK: - Private functions
     private func internalPerformRequest(_ request: WebServiceBaseRequesting, key: AnyHashable?, excludeDuplicate: Bool, responseDelegate delegate: WebServiceDelegate?) {
         performBaseRequest(request, key: key, excludeDuplicate: excludeDuplicate) { [weak delegate] response in

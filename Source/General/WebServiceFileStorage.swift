@@ -96,6 +96,7 @@ public class WebServiceFileStorage: WebServiceStorage {
     private let prefixNameFiles: String
     
     public let supportDataClassification: Set<AnyHashable>
+    public var supportFindFilesUsePrefixNameForDeleteAll = true
     
     // MARK: Constructors
     
@@ -288,6 +289,36 @@ public class WebServiceFileStorage: WebServiceStorage {
             }
         }
     }
+    
+    public func deleteData(request: WebServiceBaseRequesting) {
+        guard let identificator = (request as? WebServiceRequestBaseFileStoring)?.identificatorForFileStorage else {
+            return
+        }
+        
+        let url = filesDir.appendingPathComponent("\(prefixNameFiles)\(identificator)")
+        
+        fileWorkDispatchQueue.async {
+            try? FileManager.default.removeItem(at: url)
+        }
+    }
+    
+    public func deleteAllData() {
+        if !supportFindFilesUsePrefixNameForDeleteAll { return }
+        
+        fileWorkDispatchQueue.async { [filesDir, prefixNameFiles] in
+            guard let urls = try? FileManager.default
+                .contentsOfDirectory(at: filesDir,
+                                     includingPropertiesForKeys: nil,
+                                     options: [.skipsHiddenFiles]) else { return }
+            
+            for url in urls {
+                if url.lastPathComponent.hasPrefix(prefixNameFiles) {
+                    try? FileManager.default.removeItem(at: url)
+                }
+            }
+        }
+    }
+    
 
     //MARK: - Storage private
     private func privateReadStoreData(identificator: String, completionHandler: @escaping (StoreData?, Error?) -> Void) {

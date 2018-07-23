@@ -83,4 +83,17 @@ public class WebServiceMemoryStorage: WebServiceStorage {
         }
     }
     
+    public func deleteData(request: WebServiceBaseRequesting) {
+        if let request = request as? WebServiceRequestMemoryStoring, let key = request.keyForMemoryStorage {
+            mutex.synchronized {
+                memoryData.removeValue(forKey: key)
+            }
+        }
+    }
+    
+    public func deleteAllData() {
+        mutex.synchronized {
+            memoryData.removeAll()
+        }
+    }
 }

@@ -82,8 +82,7 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
     
     private let managedObjectContext: NSManagedObjectContext
     
-    // MARK: Constructors
-    
+    // MARK: Constructor
     public init?(sqliteFileUrl: URL? = nil, supportDataClassification: Set<AnyHashable> = []) {
         self.supportDataClassification = supportDataClassification
         
@@ -213,6 +212,28 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
         item.timeStamp = Date()
         
         saveContext()
+    }
+    
+    public func deleteData(request: WebServiceBaseRequesting) {
+        guard let identificator = (request as? WebServiceRequestDataBaseStoring)?.identificatorForDataBaseStorage else {
+            return
+        }
+        
+        if let item = findStoreData(identificator: identificator) {
+            managedObjectContext.delete(item)
+            saveContext()
+        }
+    }
+    
+    public func deleteAllData() {
+        let fetchRequest: NSFetchRequest<Item> = Item.fetchRequest()
+        if let results = try? managedObjectContext.fetch(fetchRequest) {
+            for item in results {
+                managedObjectContext.delete(item)
+            }
+            
+            saveContext()
+        }
     }
     
     
