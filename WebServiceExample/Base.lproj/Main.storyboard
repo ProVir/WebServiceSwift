@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="12121" systemVersion="16G29" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="1DO-qr-Vig">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14113" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="1DO-qr-Vig">
     <device id="retina4_7" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="12089"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14088"/>
+        <capability name="Navigation items with more than one left or right bar item" minToolsVersion="7.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--Raw mode:-->
+        <!--View Controller-->
         <scene sceneID="tne-QT-ifu">
             <objects>
                 <viewController automaticallyAdjustsScrollViewInsets="NO" id="BYZ-38-t0r" customClass="ViewController" customModule="WebServiceExample" customModuleProvider="target" sceneMemberID="viewController">
@@ -44,15 +45,22 @@
                             <constraint firstItem="9fv-SN-Usd" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" id="ucn-x3-mJK"/>
                         </constraints>
                     </view>
-                    <navigationItem key="navigationItem" title="Raw mode:" id="dfS-u4-Ydh">
-                        <barButtonItem key="leftBarButtonItem" title="Select site" style="done" id="vR4-fT-DYO">
-                            <connections>
-                                <action selector="actionSelect:" destination="BYZ-38-t0r" id="uD0-9p-FFz"/>
-                            </connections>
-                        </barButtonItem>
+                    <navigationItem key="navigationItem" id="dfS-u4-Ydh">
+                        <leftBarButtonItems>
+                            <barButtonItem systemItem="trash" id="VL6-Sn-GGI">
+                                <connections>
+                                    <action selector="actionDeleteAll:" destination="BYZ-38-t0r" id="naf-M4-bX2"/>
+                                </connections>
+                            </barButtonItem>
+                            <barButtonItem title="Select site" style="done" id="vR4-fT-DYO">
+                                <connections>
+                                    <action selector="actionSelect:" destination="BYZ-38-t0r" id="uD0-9p-FFz"/>
+                                </connections>
+                            </barButtonItem>
+                        </leftBarButtonItems>
                         <barButtonItem key="rightBarButtonItem" id="8JP-8q-94b">
                             <switch key="customView" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" id="1De-Hx-Q0s">
-                                <rect key="frame" x="310" y="6" width="51" height="31"/>
+                                <rect key="frame" x="308" y="6.5" width="51" height="31"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <connections>
                                     <action selector="actionChangeRaw" destination="BYZ-38-t0r" eventType="valueChanged" id="uID-jS-Vwg"/>
@@ -68,13 +76,14 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
+            <point key="canvasLocation" x="134" y="139"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="UhE-ql-7U1">
             <objects>
                 <navigationController id="1DO-qr-Vig" sceneMemberID="viewController">
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="9uJ-If-dn0">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="44"/>
+                        <rect key="frame" x="0.0" y="20" width="375" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
                     <connections>

@@ -10,71 +10,97 @@ import Foundation
 import WebServiceSwift
 
 
-//MARK: Request
-enum SiteWebServiceRequest: WebServiceRequesting, Equatable {
-    case siteSearch(SiteSearchType, domain: String)
-    case siteMail(SiteMailType)
-    case siteYouTube
-    
-    typealias ResultType = String
-}
-
-enum SiteSearchType: String {
-    case google
-    case yandex
-}
-
-enum SiteMailType: String {
-    case google
-    case mail
-    case yandex
-}
-
-
 //MARK: Provider
 protocol SiteWebProviderDelegate: class {
-    func webServiceResponse(request: SiteWebServiceRequest, isStorageRequest: Bool, html: String)
-    func webServiceResponse(request: SiteWebServiceRequest, isStorageRequest: Bool, error: Error)
+    func webServiceResponse(request: WebServiceBaseRequesting, isStorageRequest: Bool, html: String)
+    func webServiceResponse(request: WebServiceBaseRequesting, isStorageRequest: Bool, error: Error)
 }
 
-class SiteWebProvider: WebServiceProvider, WebServiceDelegate {
-    let requestProvider: WebServiceRequestProvider<SiteWebServiceRequest>
+class SiteWebProvider: WebServiceProvider {
+    private let webService: WebService
     
     required init(webService: WebService) {
-        requestProvider = webService.createProvider()
-        requestProvider.delegate = self
+        self.webService = webService
     }
     
     weak var delegate: SiteWebProviderDelegate?
     
-    ///Request use SiteWebServiceProviderDelegate
-    func requestHtmlData(_ request: SiteWebServiceRequest, includeResponseStorage: Bool) {
-        if includeResponseStorage {
-            requestProvider.readStorage(request, dependencyNextRequest: .dependFull)
-        }
-        
-        requestProvider.performRequest(request)
+    //MARK: Request use SiteWebProviderDelegate
+    func requestHtmlDataFromSiteSearch(_ request: SiteWebServiceRequests.SiteSearch, includeResponseStorage: Bool) {
+        if includeResponseStorage { internalReadStorageHtmlData(request, dataFromStorage: nil) }
+        webService.performRequest(request, excludeDuplicate: true, responseDelegate: self)
     }
     
-    ///Request use closures
-    func requestHtmlData(_ request: SiteWebServiceRequest, dataFromStorage: ((_ data:String) -> Void)? = nil, completionHandler: @escaping (_ response:WebServiceResponse<String>) -> Void) {
+    func requestHtmlDataFromSiteMail(_ request: SiteWebServiceRequests.SiteMail, includeResponseStorage: Bool) {
+        if includeResponseStorage { internalReadStorageHtmlData(request, dataFromStorage: nil) }
+        webService.performRequest(request, key: request.site, excludeDuplicate: true, responseDelegate: self)
+    }
+    
+    func requestHtmlDataFromSiteYouTube(includeResponseStorage: Bool) {
+        let request = SiteWebServiceRequests.SiteYouTube()
+        if includeResponseStorage { internalReadStorageHtmlData(request, dataFromStorage: nil) }
+        webService.performRequest(request, responseDelegate: self)
+    }
+    
+    //MARK: Request use closures
+    func requestHtmlDataFromSiteSearch(_ request: SiteWebServiceRequests.SiteSearch,
+                                       dataFromStorage: ((_ data:String) -> Void)? = nil,
+                                       completionHandler: @escaping (_ response: WebServiceResponse<String>) -> Void) {
+        if let dataFromStorage = dataFromStorage { internalReadStorageHtmlData(request, dataFromStorage: dataFromStorage) }
+        webService.performRequest(request, completionHandler: completionHandler)
+    }
+    
+    func requestHtmlDataFromSiteMail(_ request: SiteWebServiceRequests.SiteMail,
+                                     dataFromStorage: ((_ data:String) -> Void)? = nil,
+                                     completionHandler: @escaping (_ response: WebServiceResponse<String>) -> Void) {
+        if let dataFromStorage = dataFromStorage { internalReadStorageHtmlData(request, dataFromStorage: dataFromStorage) }
+        webService.performRequest(request, completionHandler: completionHandler)
+    }
+    
+    func requestHtmlDataFromSiteYouTube(dataFromStorage: ((_ data:String) -> Void)? = nil,
+                                        completionHandler: @escaping (_ response: WebServiceResponse<String>) -> Void) {
+        let request = SiteWebServiceRequests.SiteYouTube()
+        if let dataFromStorage = dataFromStorage { internalReadStorageHtmlData(request, dataFromStorage: dataFromStorage) }
+        webService.performRequest(request, completionHandler: completionHandler)
+    }
+    
+    func cancelAllRequests() {
+        webService.cancelRequests(type: SiteWebServiceRequests.SiteSearch.self)
+        webService.cancelRequests(keyType: SiteWebServiceRequests.SiteMail.Site.self)
+        webService.cancelRequests(SiteWebServiceRequests.SiteYouTube())
+    }
+    
+    //MARK: - Private
+    private func internalReadStorageHtmlData(_ request: WebServiceBaseRequesting, dataFromStorage: ((_ data: String) -> Void)?) {
         if let dataFromStorage = dataFromStorage {
-            requestProvider.readStorage(request, dependencyNextRequest: .dependFull) { _, response in
+            webService.readStorageAnyData(request, dependencyNextRequest: .dependFull) { _, response in
+                let response = response.convert(String.self)
                 if case .data(let data) = response {
                     dataFromStorage(data)
                 }
             }
+        } else {
+            webService.readStorage(request, dependencyNextRequest: .dependFull, responseOnlyData: true, responseDelegate: self)
         }
-        
-        requestProvider.performRequest(request, completionHandler: completionHandler)
     }
     
-    ///Override needed
+}
+
+extension SiteWebProvider: WebServiceDelegate {
     func webServiceResponse(request: WebServiceBaseRequesting, key: AnyHashable?, isStorageRequest: Bool, response: WebServiceAnyResponse) {
-        guard let request = request as? SiteWebServiceRequest else { return }
         
-        let response = response.convert(request: request)
-        switch response {
+        let responseText: WebServiceResponse<String>
+        if let request = request as? SiteWebServiceRequests.SiteSearch {
+            responseText = response.convert(request: request)
+        } else if let request = request as? SiteWebServiceRequests.SiteMail {
+            responseText = response.convert(request: request)
+        } else if let request = request as? SiteWebServiceRequests.SiteYouTube {
+            responseText = response.convert(request: request)
+        } else {
+            return
+        }
+        
+        switch responseText {
         case .data(let html):
             delegate?.webServiceResponse(request: request, isStorageRequest: isStorageRequest, html: html)
             
@@ -87,40 +113,3 @@ class SiteWebProvider: WebServiceProvider, WebServiceDelegate {
     }
 }
 
-
-//MARK: BaseURL information
-
-///Presentation layer and other don't need dependency from network layer implementation: `baseUrl` don't use `url`, because `url` use only implementation for Endpoint (protocol `WebServiceHtmlRequesting`). But `url` can use `baseUrl` as part original request.'
-extension SiteWebServiceRequest {
-    var baseUrl: URL {
-        switch self {
-        case .siteSearch(let type, domain: let domain):
-            return type.baseUrl(domain: domain)
-            
-        case .siteMail(let type):
-            return type.baseUrl()
-            
-        case .siteYouTube:
-            return URL(string: "https://www.youtube.com")!
-        }
-    }
-}
-
-extension SiteSearchType {
-    func baseUrl(domain: String) -> URL {
-        switch self {
-        case .google: return URL(string: "https://google.\(domain)")!
-        case .yandex: return URL(string: "https://yandex.\(domain)")!
-        }
-    }
-}
-
-extension SiteMailType {
-    func baseUrl() -> URL {
-        switch self {
-        case .google: return URL(string: "https://mail.google.com")!
-        case .yandex: return URL(string: "https://mail.yandex.ru")!
-        case .mail: return URL(string: "https://e.mail.ru")!
-        }
-    }
-}

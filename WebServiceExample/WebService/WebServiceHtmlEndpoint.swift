@@ -23,6 +23,14 @@ class WebServiceHtmlEndpoint: WebServiceEndpoint {
     let queueForDataProcessingFromStorage: DispatchQueue? = DispatchQueue.global(qos: .default)
     let useNetworkActivityIndicator = true
     
+    /// Data from server as raw, used only as example
+    struct ServerData: WebServiceRawDataSource {
+        let statusCode: Int
+        let binary: Data
+        
+        var binaryRawData: Data? { return binary }
+    }
+    
     func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
         return request is WebServiceHtmlRequesting
     }
@@ -39,7 +47,8 @@ class WebServiceHtmlEndpoint: WebServiceEndpoint {
         Alamofire.request(url).responseData { response in
             switch response.result {
             case .success(let data):
-                completionWithRawData(data)
+                completionWithRawData(ServerData(statusCode: response.response?.statusCode ?? 0,
+                                                 binary: data))
                 
             case .failure(let error):
                 completionWithError(error)
@@ -50,11 +59,20 @@ class WebServiceHtmlEndpoint: WebServiceEndpoint {
     func canceledRequest(requestId: UInt64) { /* Don't support */ }
     
     func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any? {
-        guard request is WebServiceHtmlRequesting, let data = rawData as? Data else {
+        guard request is WebServiceHtmlRequesting else {
+            throw WebServiceRequestError.notSupportDataHandler
+        }
+        
+        let binary: Data
+        if let data = rawData as? Data {
+            binary = data
+        } else if let data = rawData as? ServerData {
+            binary = data.binary
+        } else {
             throw WebServiceRequestError.notSupportDataHandler
         }
 
-        return String(data: data, encoding: .utf8) ?? String(data: data, encoding: .windowsCP1251)
+        return String(data: binary, encoding: .utf8) ?? String(data: binary, encoding: .windowsCP1251)
     }
 }
 

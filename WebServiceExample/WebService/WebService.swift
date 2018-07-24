@@ -9,12 +9,15 @@
 import Foundation
 import WebServiceSwift
 
+enum WebServiceDataClass: String {
+    case temporary
+}
 
 ///Default implementation and setup WebService
 extension WebService {
     
-    convenience init() {
-        let endpoint = WebServiceHtmlEndpoint()
+    static func createDefault() -> WebService {
+        let endpoint = WebServiceHtmlV2Endpoint()
 //        let endpoint = WebServiceSimpleEndpoint()
 //        let endpoint = WebServiceAlamofireSimpleEndpoint()
         
@@ -27,15 +30,17 @@ extension WebService {
         if let storage = WebServiceFileStorage() {
             storages.append(storage)
         }
+        storages.append(WebServiceMemoryStorage(supportDataClassification: [WebServiceDataClass.temporary]))
+        
         
         /*
         let template = "<html><body>%[BODY]%</body></html>"
-        let mockRequest = WebServiceMockRequestEndpoint.init(timeWait: 3) { (request: SiteWebServiceRequest) -> String in
+        let mockRequest = WebServiceMockRequestEndpoint.init(timeWait: 3) { (request: SiteWebServiceRequests.SiteSearch) -> String in
             return template.replacingOccurrences(of: "%[BODY]%", with: "<b>Hello world from MockRequestEndpoint!</b>")
         }
-         */
+        */
         
-        self.init(endpoints: [/*mockRequest, */mock, endpoint], storages: storages)
+        return .init(endpoints: [/*mockRequest, */mock, endpoint], storages: storages)
     }
     
     static var `default`: WebService {
@@ -44,5 +49,5 @@ extension WebService {
 }
 
 private struct WebServiceStatic {
-    static let `default` = WebService()
+    static let `default` = WebService.createDefault()
 }
