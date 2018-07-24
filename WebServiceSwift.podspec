@@ -28,8 +28,11 @@ Pod::Spec.new do |s|
   end
   
   s.subspec 'General' do |ss|
-      ss.source_files = 'Source/General/*.{swift,xcdatamodeld}'
-    
+    ss.source_files = ['Source/General/*.{swift,xcdatamodeld}', 'Source/General/*.xcdatamodeld/*.xcdatamodel']
+    ss.resources = ['Source/General/*.xcdatamodeld', 'Source/General/*.xcdatamodeld/*.xcdatamodel']
+    ss.preserve_paths = 'Source/General/*.xcdatamodeld'
+
+    ss.framework  = 'CoreData'
     ss.dependency 'WebServiceSwift/Core'
   end
 
