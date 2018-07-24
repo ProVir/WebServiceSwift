@@ -10,7 +10,7 @@ import Foundation
 
 /// Base protocol for requests support many storages.
 public protocol WebServiceRequestBaseGeneralStoring:
-                    WebServiceRequestBaseFileStoring, WebServiceRequestDataBaseStoring {
+                    WebServiceRequestBaseFileStoring, WebServiceRequestDataBaseStoring, WebServiceRequestMemoryStoring {
     
     /// Unique identificator for read and write data if current request support storage.
     var identificatorForStorage: String? { get }
@@ -22,7 +22,7 @@ public protocol WebServiceRequestRawGeneralStoring: WebServiceRequestBaseGeneral
 
 /// Conform to protocol if requests support many storages and store data.
 public protocol WebServiceRequestValueGeneralStoring: WebServiceRequestBaseGeneralStoring,
-                    WebServiceRequestValueFileStoring, WebServiceRequestValueDataBaseStoring, WebServiceRequestMemoryStoring {
+                    WebServiceRequestValueFileStoring, WebServiceRequestValueDataBaseStoring {
     /**
      Coding data from custom type to binary data.
      
@@ -77,13 +77,10 @@ public extension WebServiceRequestValueGeneralStoring {
 }
 
 //MARK: Support WebServiceMemoryStorage
-public extension WebServiceRequestValueGeneralStoring {
+public extension WebServiceRequestBaseGeneralStoring {
     var keyForMemoryStorage: AnyHashable? {
         return identificatorForStorage
     }
-    
-    var useRawDataForMemoryStorage: Bool {
-        return false
-    }
 }
+
 

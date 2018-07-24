@@ -105,6 +105,23 @@ public class WebServiceRestrictedProvider {
         service.readStorage(request, dependencyNextRequest: dependencyNextRequest, completionHandler: completionHandler)
     }
     
+    /**
+     Read last success data from storage without information result type data. Response result in closure.
+     
+     - Parameters:
+         - request: The request with data.
+         - dependencyNextRequest: Type dependency from next performRequest.
+         - completionHandler: Closure for read data from storage.
+         - timeStamp: TimeStamp when saved from server (endpoint).
+         - response: Result read from storage.
+     */
+    public func readStorageAnyData(_ request: WebServiceBaseRequesting,
+                                   dependencyNextRequest: WebService.ReadStorageDependencyType = .notDepend,
+                                   completionHandler: @escaping (_ timeStamp: Date?, _ response: WebServiceAnyResponse) -> Void) {
+        guard testRequest(type: type(of: request)) else { return }
+        service.readStorageAnyData(request, dependencyNextRequest: dependencyNextRequest, completionHandler: completionHandler)
+    }
+    
     
     // MARK: Perform requests use delegate for response
     
