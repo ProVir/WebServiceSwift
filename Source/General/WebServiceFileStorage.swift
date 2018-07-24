@@ -47,7 +47,7 @@ public protocol WebServiceRequestAnyValueFileStoring: WebServiceRequestBaseFileS
     func readAnyDataFromFileStorage(data: Data) throws -> Any?
 }
 
-/// Conform to protocol if requests support store data as files.
+/// Conform to protocol if requests support WebServiceFileStorage and store data as files.
 public protocol WebServiceRequestValueFileStoring: WebServiceRequestAnyValueFileStoring, WebServiceRequesting {
     /**
      Coding data from custom type to binary data.

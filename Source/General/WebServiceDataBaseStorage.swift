@@ -9,17 +9,17 @@
 import Foundation
 import CoreData
 
-/// Base protocol for requests support WebServiceFileStorage.
+/// Base protocol for requests support WebServiceDataBaseStorage.
 public protocol WebServiceRequestDataBaseStoring: WebServiceRequestBaseStoring {
     
     /// Unique identificator for read and write data if current request support storage.
     var identificatorForDataBaseStorage: String? { get }
 }
 
-/// Conform to protocol if requests support WebServiceFileStorage and store raw data as file.
+/// Conform to protocol if requests support WebServiceDataBaseStorage and store raw data in data base.
 public protocol WebServiceRequestRawDataBaseStoring: WebServiceRequestDataBaseStoring { }
 
-/// Conform to protocol if requests support WebServiceFileStorage and store value data as file.
+/// Conform to protocol if requests support WebServiceDataBaseStorage and store value data in data base.
 public protocol WebServiceRequestAnyValueDataBaseStoring: WebServiceRequestDataBaseStoring {
     
     /**
@@ -39,7 +39,7 @@ public protocol WebServiceRequestAnyValueDataBaseStoring: WebServiceRequestDataB
     func readAnyDataFromDataBaseStorage(data: Data) throws -> Any?
 }
 
-/// Conform to protocol if requests support store data as files.
+/// Conform to protocol if requests support WebServiceDataBaseStorage and store data in data base.
 public protocol WebServiceRequestValueDataBaseStoring: WebServiceRequestAnyValueDataBaseStoring, WebServiceRequesting {
     /**
      Coding data from custom type to binary data.
@@ -74,7 +74,7 @@ public extension WebServiceRequestValueDataBaseStoring {
 }
 
 
-/// Simple store on disk for WebService.
+/// Simple store in sqlite data base (CoreData) for WebService.
 public class WebServiceDataBaseStorage: WebServiceStorage {
     typealias Item = WebServiceDataBaseStorage_Item
     

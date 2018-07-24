@@ -63,8 +63,8 @@ extension SiteWebServiceRequest: WebServiceAlamofireRequesting {
 
 
 //MARK: Store support
-extension SiteWebServiceRequest: WebServiceRequestRawDataBaseStoring {
-    var identificatorForDataBaseStorage: String? {
+extension SiteWebServiceRequest: WebServiceRequestRawGeneralStoring {
+    var identificatorForStorage: String? {
         switch self {
         case .siteSearch(let type, domain: let domain):
             return type.rawValue + ".\(domain)"
@@ -78,20 +78,20 @@ extension SiteWebServiceRequest: WebServiceRequestRawDataBaseStoring {
     }
 }
 
-extension SiteWebServiceRequest: WebServiceRequestRawFileStoring {
-    var identificatorForFileStorage: String? {
-        switch self {
-        case .siteSearch(let type, domain: let domain):
-            return type.rawValue + ".\(domain)"
-
-        case .siteMail(let type):
-            return type.rawValue
-
-        case .siteYouTube:
-            return "siteYouTube"
-        }
-    }
-}
+//extension SiteWebServiceRequest: WebServiceRequestRawFileStoring {
+//    var identificatorForFileStorage: String? {
+//        switch self {
+//        case .siteSearch(let type, domain: let domain):
+//            return type.rawValue + ".\(domain)"
+//
+//        case .siteMail(let type):
+//            return type.rawValue
+//
+//        case .siteYouTube:
+//            return "siteYouTube"
+//        }
+//    }
+//}
 
 /*
 extension SiteWebServiceRequest: WebServiceRequestValueFileStoring {
