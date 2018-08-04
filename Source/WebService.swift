@@ -165,13 +165,13 @@ public class WebService {
         if excludeDuplicate, let key = key {
             if containsRequest(key: key) {
                 readStorageRequestInfo?.setDuplicate()
-                completionHandler(.duplicateRequest)
+                completionHandler(.canceledRequest(duplicate: true))
                 return
             }
         } else if excludeDuplicate, let requestHashable = requestHashable {
             if mutex.synchronized({ !(requestsForHashs[requestHashable]?.isEmpty ?? true) }) {
                 readStorageRequestInfo?.setDuplicate()
-                completionHandler(.duplicateRequest)
+                completionHandler(.canceledRequest(duplicate: true))
                 return
             }
         }
@@ -210,19 +210,19 @@ public class WebService {
                     readStorageRequestInfo?.setState(requestState)
                     completionHandler(.error(error))
                     
-                case .canceledRequest, .duplicateRequest:
+                case .canceledRequest(duplicate: let duplicate):
                     requestState = .canceled
                     readStorageRequestInfo?.setState(requestState)
-                    completionHandler(.canceledRequest)
+                    completionHandler(.canceledRequest(duplicate: duplicate))
                 }
             }
         }
         
         //Step #0: Add request to memory database
-        internalAddRequest(requestId: requestId, key: key, requestHashable: requestHashable, requestType: requestType, endpoint: endpoint) {
+        internalAddRequest(requestId: requestId, key: key, requestHashable: requestHashable, requestType: requestType, endpoint: endpoint, cancelHandler: {
             //Canceled request
-            completeHandlerResponse(.canceledRequest)
-        }
+            completeHandlerResponse(.canceledRequest(duplicate: false))
+        })
         
         
         //Step #3: Data handler closure for raw data from server
@@ -232,10 +232,8 @@ public class WebService {
                                                              rawData: data,
                                                              fromStorage: false)
                 
-                if let resultData = resultData {
-                    storage?.writeData(request: request, data: data, isRaw: true)
-                    storage?.writeData(request: request, data: resultData, isRaw: false)
-                }
+                storage?.writeData(request: request, data: data, isRaw: true)
+                storage?.writeData(request: request, data: resultData, isRaw: false)
                 
                 completeHandlerResponse(.data(resultData))
                 
@@ -564,9 +562,9 @@ public class WebService {
                 if nextRequestInfo?.canRead() ?? true {
                     handler(timeStamp, response)
                 } else if nextRequestInfo?.isDuplicate ?? false {
-                    handler(timeStamp, .duplicateRequest)
+                    handler(timeStamp, .canceledRequest(duplicate: true))
                 } else {
-                    handler(timeStamp, .canceledRequest)
+                    handler(timeStamp, .canceledRequest(duplicate: false))
                 }
             }
         }
@@ -576,10 +574,10 @@ public class WebService {
             try storage.readData(request: request) { [weak self, queueForResponse = self.queueForResponse] isRawData, timeStamp, response in
                 if (nextRequestInfo?.canRead() ?? true) == false {
                     self?.queueForResponse.async {
-                        completionHandler(nil, .canceledRequest)
+                        completionHandler(nil, .canceledRequest(duplicate: false))
                     }
                     
-                } else if isRawData, let rawData = response.dataAnyResponse() {
+                } else if isRawData, let rawData = response.dataResponse() {
                     if let endpoint = self?.internalFindEndpoint(request: request, rawDataTypeForRestoreFromStorage: type(of: rawData)) {
                         //Handler closure with fined endpoint for use next
                         let handler = {

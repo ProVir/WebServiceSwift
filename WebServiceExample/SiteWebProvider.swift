@@ -107,7 +107,7 @@ extension SiteWebProvider: WebServiceDelegate {
         case .error(let error):
             delegate?.webServiceResponse(request: request, isStorageRequest: isStorageRequest, error: error)
             
-        case .canceledRequest, .duplicateRequest:
+        case .canceledRequest:
             break
         }
     }

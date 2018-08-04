@@ -30,11 +30,15 @@ class WebServiceHtmlV2Endpoint: WebServiceAlamofireBaseEndpoint {
         return Alamofire.request(url)
     }
     
-    override func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any? {
+    override func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any {
         guard request is WebServiceHtmlRequesting, let binary = rawData as? Data else {
-            throw WebServiceRequestError.notSupportDataHandler
+            throw WebServiceRequestError.notSupportDataProcessing
         }
         
-        return String(data: binary, encoding: .utf8) ?? String(data: binary, encoding: .windowsCP1251)
+        if let result = String(data: binary, encoding: .utf8) ?? String(data: binary, encoding: .windowsCP1251) {
+            return result
+        } else {
+            throw WebServiceResponseError.invalidData
+        }
     }
 }

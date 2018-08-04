@@ -157,9 +157,9 @@ public protocol WebServiceEndpoint: class {
         - fromStorage: If `true`: data from storage, else data from closure `request.completionWithData()`.
      
      - Throws: Error validation or proccess data from server to end data. Data from server (also rawData) don't save to storage.
-     - Returns: Result data for response. If == nil, data from server (also rawData) don't save to storage.
+     - Returns: Result data for response.
      */
-    func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any?
+    func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any
 }
 
 
@@ -189,7 +189,7 @@ public protocol WebServiceStorage: class {
         - completionHandler: After readed data need call with result data. This closure need call and only one. Be sure to call in the main thread.
         - isRawData: If data readed as raw type.
         - timeStamp: TimeStamp when saved from server (endpoint).
-        - response: Result response enum with data. Can only be .data or .error. If not data - use .data(nil)
+        - response: Result response enum with data. Can only be .data or .error. If not data - use .error(WebServiceResponseError.notFoundData)
      
      - Throws: Error request equivalent call `completionResponse(.error())` and not need call `completionResponse()`. The performance is higher with this error call.
      */

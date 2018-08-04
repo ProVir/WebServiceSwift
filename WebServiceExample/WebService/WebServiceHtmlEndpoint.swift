@@ -58,9 +58,9 @@ class WebServiceHtmlEndpoint: WebServiceEndpoint {
     
     func canceledRequest(requestId: UInt64) { /* Don't support */ }
     
-    func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any? {
+    func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any {
         guard request is WebServiceHtmlRequesting else {
-            throw WebServiceRequestError.notSupportDataHandler
+            throw WebServiceRequestError.notSupportDataProcessing
         }
         
         let binary: Data
@@ -69,10 +69,10 @@ class WebServiceHtmlEndpoint: WebServiceEndpoint {
         } else if let data = rawData as? ServerData {
             binary = data.binary
         } else {
-            throw WebServiceRequestError.notSupportDataHandler
+            throw WebServiceRequestError.notSupportDataProcessing
         }
 
-        return String(data: binary, encoding: .utf8) ?? String(data: binary, encoding: .windowsCP1251)
+        return String(data: binary, encoding: .utf8) ?? String(data: binary, encoding: .windowsCP1251) ?? ""
     }
 }
 

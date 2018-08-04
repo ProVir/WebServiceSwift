@@ -3,7 +3,7 @@
 //  WebServiceSwift 3.0.0
 //
 //  Created by Короткий Виталий (ViR) on 16.04.2018.
-//  Updated to 3.0.0 by Короткий Виталий (ViR) on 20.06.2018.
+//  Updated to 3.0.0 by Короткий Виталий (ViR) on 04.08.2018.
 //  Copyright © 2018 ProVir. All rights reserved.
 //
 
@@ -24,7 +24,7 @@ public enum WebServiceRequestError: Error {
     case notFoundStorage
     
     case notSupportRequest
-    case notSupportDataHandler
+    case notSupportDataProcessing
     
     case invalidRequest(Error)
     case endpointInternal
@@ -54,8 +54,7 @@ public enum WebServiceResponseError: Error {
 public enum WebServiceResponse<T> {
     case data(T)
     case error(Error)
-    case canceledRequest
-    case duplicateRequest
+    case canceledRequest(duplicate: Bool)
     
     /// Data if success response
     public func dataResponse() -> T? {
@@ -73,7 +72,7 @@ public enum WebServiceResponse<T> {
         }
     }
     
-    /// Is canceled request
+    /// Is canceled request, also true when duplicated request
     public var isCanceled: Bool {
         switch self {
         case .canceledRequest: return true
@@ -81,27 +80,18 @@ public enum WebServiceResponse<T> {
         }
     }
     
-    /// Error duplicate for request
-    public var isDuplicateError: Bool {
+    /// Canceled becouse duplicate request
+    public var isDuplicate: Bool {
         switch self {
-        case .duplicateRequest: return true
+        case .canceledRequest(duplicate: let duplicate): return duplicate
         default: return false
         }
     }
 }
 
 /// WebService result response from endpoint without information for type
-public typealias WebServiceAnyResponse = WebServiceResponse<Any?>
+public typealias WebServiceAnyResponse = WebServiceResponse<Any>
 
-extension WebServiceResponse where T == Any? {
-    /// Data if success response
-    public func dataAnyResponse() -> Any? {
-        switch self {
-        case .data(let d): return d
-        default: return nil
-        }
-    }
-}
 
 ///Response from other type
 public extension WebServiceResponse {
@@ -129,11 +119,8 @@ public extension WebServiceResponse {
         case .error(let error):
             return .error(error)
             
-        case .canceledRequest:
-            return .canceledRequest
-            
-        case .duplicateRequest:
-            return .duplicateRequest
+        case .canceledRequest(duplicate: let duplicate):
+            return .canceledRequest(duplicate: duplicate)
         }
     }
 }

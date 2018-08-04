@@ -19,7 +19,7 @@ public protocol WebServiceSimpleBaseRequesting {
     var simpleResponseType: WebServiceSimpleResponseType { get }
     
     /// Decode response to value. Used `data.binary` or `data.json` dependency from `simpleResponseType` parameter. Perofrm in background thread.
-    func simpleBaseDecodeResponse(_ data: WebServiceSimpleResponseData) throws -> Any?
+    func simpleBaseDecodeResponse(_ data: WebServiceSimpleResponseData) throws -> Any
 }
 
 public protocol WebServiceSimpleRequesting: WebServiceSimpleBaseRequesting, WebServiceRequesting {
@@ -28,7 +28,7 @@ public protocol WebServiceSimpleRequesting: WebServiceSimpleBaseRequesting, WebS
 }
 
 public extension WebServiceSimpleRequesting {
-    func simpleBaseDecodeResponse(_ data: WebServiceSimpleResponseData) throws -> Any? {
+    func simpleBaseDecodeResponse(_ data: WebServiceSimpleResponseData) throws -> Any {
         return try simpleDecodeResponse(data)
     }
 }
@@ -165,9 +165,9 @@ public class WebServiceSimpleEndpoint: WebServiceEndpoint {
         }
     }
     
-    public func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any? {
+    public func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any {
         guard let binary = rawData as? Data, let request = request as? WebServiceSimpleBaseRequesting else {
-            throw WebServiceRequestError.notSupportDataHandler
+            throw WebServiceRequestError.notSupportDataProcessing
         }
         
         switch request.simpleResponseType {

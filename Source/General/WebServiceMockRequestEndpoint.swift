@@ -79,8 +79,8 @@ public class WebServiceMockRequestEndpoint<RequestType: WebServiceRequesting>: W
         }
     }
     
-    public func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any? {
-        if fromStorage { return nil }
+    public func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any {
+        if fromStorage { throw WebServiceRequestError.notSupportDataProcessing }
         else { return rawData }
     }
     

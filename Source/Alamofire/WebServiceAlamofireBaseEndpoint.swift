@@ -99,9 +99,9 @@ open class WebServiceAlamofireBaseEndpoint: WebServiceEndpoint {
          - fromStorage: If `true`: data from storage, else data from method `responseAlamofire()`.
      
      - Throws: Error validation or proccess data from server to end data. Data from server (also rawData) don't save to storage.
-     - Returns: Result data for response. If == nil, data from server (also rawData) don't save to storage.
+     - Returns: Result data for response.
      */
-    open func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any? {
+    open func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any {
         fatalError("WebServiceAlamofireBaseEndpoint: require override dataProcessing(request:rawData:fromStorage:) function.")
     }
     

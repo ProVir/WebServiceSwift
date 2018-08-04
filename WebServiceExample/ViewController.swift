@@ -109,7 +109,7 @@ class ViewController: UIViewController {
             case .error(let error):
                 self?.webServiceResponse(isStorageRequest: false, error: error)
                 
-            case .canceledRequest, .duplicateRequest:
+            case .canceledRequest:
                 break
             }
         }
@@ -139,7 +139,7 @@ class ViewController: UIViewController {
             case .error(let error):
                 self?.webServiceResponse(isStorageRequest: false, error: error)
                 
-            case .canceledRequest, .duplicateRequest:
+            case .canceledRequest:
                 break
             }
         }

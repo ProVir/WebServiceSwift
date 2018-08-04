@@ -21,7 +21,7 @@ public protocol WebServiceAlamofireBaseRequesting {
     var afResponseType: WebServiceAlamofireResponseType { get }
     
     /// Decode response to value. Used `data.binary` or `data.json` dependency from `afResponseType` parameter. Perofrm in background thread.
-    func afBaseDecodeResponse(_ data: WebServiceAlamofireResponseData) throws -> Any?
+    func afBaseDecodeResponse(_ data: WebServiceAlamofireResponseData) throws -> Any
 }
 
 public protocol WebServiceAlamofireRequesting: WebServiceAlamofireBaseRequesting, WebServiceRequesting {
@@ -30,7 +30,7 @@ public protocol WebServiceAlamofireRequesting: WebServiceAlamofireBaseRequesting
 }
 
 public extension WebServiceAlamofireRequesting {
-    func afBaseDecodeResponse(_ data: WebServiceAlamofireResponseData) throws -> Any? {
+    func afBaseDecodeResponse(_ data: WebServiceAlamofireResponseData) throws -> Any {
         return try afDecodeResponse(data)
     }
 }
@@ -128,9 +128,9 @@ public class WebServiceAlamofireSimpleEndpoint: WebServiceAlamofireBaseEndpoint 
         }
     }
     
-    public override func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any? {
+    public override func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any {
         guard let binary = rawData as? Data, let request = request as? WebServiceAlamofireBaseRequesting else {
-            throw WebServiceRequestError.notSupportDataHandler
+            throw WebServiceRequestError.notSupportDataProcessing
         }
         
         switch request.afResponseType {
