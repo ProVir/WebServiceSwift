@@ -164,7 +164,8 @@ public protocol WebServiceEndpoint: class {
 
 
 /**
- Protocol for storages in WebService.
+ Protocol for storages in WebService. All requests need.
+ The class must be thread safe.
 
  RawData - data without process, original data from server
  */
@@ -197,6 +198,7 @@ public protocol WebServiceStorage: class {
     
     /**
      Save data from server (endpoint). Usually call two - for raw and value (after processing) data.
+     Warning: Usually used not in main thread.
      
      - Parameters: 
         - request: Original request. 

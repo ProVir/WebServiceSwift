@@ -127,45 +127,47 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
     }
     
     public func readData(request: WebServiceBaseRequesting, completionHandler: @escaping (Bool, Date?, WebServiceAnyResponse) -> Void) throws {
-        guard let request = request as? WebServiceRequestDataBaseStoring, let identificator = request.identificatorForDataBaseStorage else {
-            completionHandler(false, nil, .error(WebServiceResponseError.notFoundData))
-            return
-        }
-        
-        guard let item = self.findStoreData(identificator: identificator), let binary = item.binary else {
-            completionHandler(false, nil, .error(WebServiceResponseError.notFoundData))
-            return
-        }
-        
-        //Read Item from CoreData
-        var timeStamp = item.timeStamp
-        if timeStamp?.timeIntervalSinceNow ?? -0.1 > 0 {
-            timeStamp = nil
-        }
-        
-        if item.isRaw {
-            //Readed RAW data - use if supported request
-            if request is WebServiceRequestRawDataBaseStoring {
-                completionHandler(true, timeStamp, .data(binary))
-            } else {
-                completionHandler(true, nil, .error(WebServiceResponseError.notFoundData))
+        DispatchQueue.main.async {
+            guard let request = request as? WebServiceRequestDataBaseStoring, let identificator = request.identificatorForDataBaseStorage else {
+                completionHandler(false, nil, .error(WebServiceResponseError.notFoundData))
+                return
             }
             
-        } else if let request = request as? WebServiceRequestAnyValueDataBaseStoring {
-            //Readed value and can decode
-            do {
-                if let data = try request.readAnyDataFromDataBaseStorage(data: binary) {
-                    completionHandler(false, timeStamp, .data(data))
+            guard let item = self.findStoreData(identificator: identificator), let binary = item.binary else {
+                completionHandler(false, nil, .error(WebServiceResponseError.notFoundData))
+                return
+            }
+            
+            //Read Item from CoreData
+            var timeStamp = item.timeStamp
+            if timeStamp?.timeIntervalSinceNow ?? -0.1 > 0 {
+                timeStamp = nil
+            }
+            
+            if item.isRaw {
+                //Readed RAW data - use if supported request
+                if request is WebServiceRequestRawDataBaseStoring {
+                    completionHandler(true, timeStamp, .data(binary))
                 } else {
-                    completionHandler(false, nil, .error(WebServiceResponseError.notFoundData))
+                    completionHandler(true, nil, .error(WebServiceResponseError.notFoundData))
                 }
-            } catch {
-                completionHandler(false, nil, .error(error))
+                
+            } else if let request = request as? WebServiceRequestAnyValueDataBaseStoring {
+                //Readed value and can decode
+                do {
+                    if let data = try request.readAnyDataFromDataBaseStorage(data: binary) {
+                        completionHandler(false, timeStamp, .data(data))
+                    } else {
+                        completionHandler(false, nil, .error(WebServiceResponseError.notFoundData))
+                    }
+                } catch {
+                    completionHandler(false, nil, .error(error))
+                }
+                
+            } else {
+                //Value don't supported request
+                completionHandler(false, nil, .error(WebServiceResponseError.notFoundData))
             }
-            
-        } else {
-            //Value don't supported request
-            completionHandler(false, nil, .error(WebServiceResponseError.notFoundData))
         }
     }
     
@@ -200,18 +202,20 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
         else { return }
         
         //Save in CoreData
-        let item = findStoreData(identificator: identificator) ?? {
-            let entityDescription = NSEntityDescription.entity(forEntityName: "Item", in: self.managedObjectContext)!
-            let item = Item(entity: entityDescription, insertInto: self.managedObjectContext)
-            item.idItem = identificator
-            return item
-        }()
-        
-        item.isRaw = isRaw
-        item.binary = binary
-        item.timeStamp = Date()
-        
-        saveContext()
+        DispatchQueue.main.async {
+            let item = self.findStoreData(identificator: identificator) ?? {
+                let entityDescription = NSEntityDescription.entity(forEntityName: "Item", in: self.managedObjectContext)!
+                let item = Item(entity: entityDescription, insertInto: self.managedObjectContext)
+                item.idItem = identificator
+                return item
+                }()
+            
+            item.isRaw = isRaw
+            item.binary = binary
+            item.timeStamp = Date()
+            
+            self.saveContext()
+        }
     }
     
     public func deleteData(request: WebServiceBaseRequesting) {
@@ -219,20 +223,36 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
             return
         }
         
-        if let item = findStoreData(identificator: identificator) {
-            managedObjectContext.delete(item)
-            saveContext()
+        let handler =  {
+            if let item = self.findStoreData(identificator: identificator) {
+                self.managedObjectContext.delete(item)
+                self.saveContext()
+            }
+        }
+        
+        if Thread.isMainThread {
+            handler()
+        } else {
+            DispatchQueue.main.async(execute: handler)
         }
     }
     
     public func deleteAllData() {
-        let fetchRequest: NSFetchRequest<Item> = Item.fetchRequest()
-        if let results = try? managedObjectContext.fetch(fetchRequest) {
-            for item in results {
-                managedObjectContext.delete(item)
+        let handler = {
+            let fetchRequest: NSFetchRequest<Item> = Item.fetchRequest()
+            if let results = try? self.managedObjectContext.fetch(fetchRequest) {
+                for item in results {
+                    self.managedObjectContext.delete(item)
+                }
+                
+                self.saveContext()
             }
-            
-            saveContext()
+        }
+        
+        if Thread.isMainThread {
+            handler()
+        } else {
+            DispatchQueue.main.async(execute: handler)
         }
     }
     
