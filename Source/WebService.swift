@@ -266,7 +266,7 @@ public class WebService {
         
         //Step #1: Call request in queue
         if let queue = endpoint.queueForRequest {
-            queue.async { requestHandler() }
+            queue.async(execute: requestHandler)
         } else {
             requestHandler()
         }
@@ -596,7 +596,7 @@ public class WebService {
                         
                         //Call handler
                         if let queue = endpoint.queueForDataProcessingFromStorage {
-                            queue.async { handler() }
+                            queue.async(execute: handler)
                         } else {
                             handler()
                         }

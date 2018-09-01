@@ -59,14 +59,13 @@ public class WebServiceMemoryStorage: WebServiceStorage {
     
     public func readData(request: WebServiceBaseRequesting, completionHandler: @escaping (Bool, Date?, WebServiceAnyResponse) -> Void) throws {
         guard let request = request as? WebServiceRequestMemoryStoring, let key = request.keyForMemoryStorage else {
-            completionHandler(false, nil, .error(WebServiceResponseError.notFoundData))
-            return
+            throw WebServiceResponseError.notFoundData
         }
         
         if let storeData = mutex.synchronized({ memoryData[key] }) {
             completionHandler(storeData.isRaw, storeData.timeStamp, .data(storeData.data))
         } else {
-            completionHandler(false, nil, .error(WebServiceResponseError.notFoundData))
+            throw WebServiceResponseError.notFoundData
         }
     }
     

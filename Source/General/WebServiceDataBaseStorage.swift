@@ -79,13 +79,12 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
     typealias Item = WebServiceDataBaseStorage_Item
     
     public let supportDataClassification: Set<AnyHashable>
-    
     private let managedObjectContext: NSManagedObjectContext
     
     // MARK: Constructor
     public init?(sqliteFileUrl: URL? = nil, supportDataClassification: Set<AnyHashable> = []) {
         self.supportDataClassification = supportDataClassification
-        
+
         //Setup CoreData
         //1. NSManagedObjectModel
         guard let modelUrl = Bundle(for: WebServiceDataBaseStorage.self).url(forResource: "WebServiceDataBaseStorage", withExtension: "momd"),
@@ -98,7 +97,7 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
         
         //2. NSPersistentStoreCoordinator
         let persistentStoreCoordinator = NSPersistentStoreCoordinator(managedObjectModel: managedObjectModel)
-
+        
         do {
             try persistentStoreCoordinator.addPersistentStore(ofType: NSSQLiteStoreType, configurationName: nil, at: fileUrl, options: nil)
         } catch {
@@ -107,7 +106,7 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
         }
         
         //3.
-        self.managedObjectContext = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        self.managedObjectContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
         self.managedObjectContext.persistentStoreCoordinator = persistentStoreCoordinator;
     }
     
@@ -127,12 +126,11 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
     }
     
     public func readData(request: WebServiceBaseRequesting, completionHandler: @escaping (Bool, Date?, WebServiceAnyResponse) -> Void) throws {
-        DispatchQueue.main.async {
-            guard let request = request as? WebServiceRequestDataBaseStoring, let identificator = request.identificatorForDataBaseStorage else {
-                completionHandler(false, nil, .error(WebServiceResponseError.notFoundData))
-                return
-            }
-            
+        guard let request = request as? WebServiceRequestDataBaseStoring, let identificator = request.identificatorForDataBaseStorage else {
+            throw WebServiceResponseError.notFoundData
+        }
+        
+        managedObjectContext.perform {
             guard let item = self.findStoreData(identificator: identificator), let binary = item.binary else {
                 completionHandler(false, nil, .error(WebServiceResponseError.notFoundData))
                 return
@@ -202,7 +200,7 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
         else { return }
         
         //Save in CoreData
-        DispatchQueue.main.async {
+        managedObjectContext.perform {
             let item = self.findStoreData(identificator: identificator) ?? {
                 let entityDescription = NSEntityDescription.entity(forEntityName: "Item", in: self.managedObjectContext)!
                 let item = Item(entity: entityDescription, insertInto: self.managedObjectContext)
@@ -223,22 +221,16 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
             return
         }
         
-        let handler =  {
+        managedObjectContext.perform {
             if let item = self.findStoreData(identificator: identificator) {
                 self.managedObjectContext.delete(item)
                 self.saveContext()
             }
         }
-        
-        if Thread.isMainThread {
-            handler()
-        } else {
-            DispatchQueue.main.async(execute: handler)
-        }
     }
     
     public func deleteAllData() {
-        let handler = {
+        managedObjectContext.perform {
             let fetchRequest: NSFetchRequest<Item> = Item.fetchRequest()
             if let results = try? self.managedObjectContext.fetch(fetchRequest) {
                 for item in results {
@@ -247,12 +239,6 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
                 
                 self.saveContext()
             }
-        }
-        
-        if Thread.isMainThread {
-            handler()
-        } else {
-            DispatchQueue.main.async(execute: handler)
         }
     }
     

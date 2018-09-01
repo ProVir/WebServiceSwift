@@ -159,8 +159,7 @@ public class WebServiceFileStorage: WebServiceStorage {
     
     public func readData(request: WebServiceBaseRequesting, completionHandler: @escaping (Bool, Date?, WebServiceAnyResponse) -> Void) throws {
         guard let request = request as? WebServiceRequestBaseFileStoring, let identificator = request.identificatorForFileStorage else {
-            completionHandler(false, nil, .error(WebServiceResponseError.notFoundData))
-            return
+            throw WebServiceResponseError.notFoundData
         }
         
         if request.useWrapperWithMetaDataForFileStorage {
@@ -204,7 +203,6 @@ public class WebServiceFileStorage: WebServiceStorage {
             })
             
         } else {
-            
             //Read binary user data from file
             privateReadBinaryData(identificator: identificator) { (binaryData, error) in
                 if let error = error {
@@ -246,7 +244,6 @@ public class WebServiceFileStorage: WebServiceStorage {
                     completionHandler(false, nil, .error(WebServiceResponseError.notFoundData))
                 }
             }
-            
         }
     }
     
