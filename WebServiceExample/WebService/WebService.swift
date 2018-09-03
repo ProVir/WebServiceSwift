@@ -9,7 +9,7 @@
 import Foundation
 import WebServiceSwift
 
-enum WebServiceDataClass: String {
+enum WebServiceDataClass: Hashable {
     case temporary
 }
 
@@ -24,14 +24,15 @@ extension WebService {
         let mock = WebServiceMockEndpoint(rawDataFromStoreAlwaysNil: true)
         
         var storages: [WebServiceStorage] = []
+        storages.append(WebServiceMemoryStorage(supportDataClassification: [WebServiceDataClass.temporary]))
+        
         if let storage = WebServiceDataBaseStorage() {
             storages.append(storage)
         }
+        
         if let storage = WebServiceFileStorage() {
             storages.append(storage)
         }
-        storages.append(WebServiceMemoryStorage(supportDataClassification: [WebServiceDataClass.temporary]))
-        
         
         /*
         let template = "<html><body>%[BODY]%</body></html>"

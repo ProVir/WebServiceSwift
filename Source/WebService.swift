@@ -499,7 +499,7 @@ public class WebService {
      
      - Parameter with: Data Classification for find all storages.
      */
-    public func deleteAllInStorages(with dataClassification: AnyHashable) {
+    public func deleteAllInStorages(withDataClassification dataClassification: AnyHashable) {
         for storage in self.storages {
             let supportClasses = storage.supportDataClassification
             

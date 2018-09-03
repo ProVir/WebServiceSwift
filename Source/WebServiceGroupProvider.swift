@@ -59,7 +59,11 @@ public class WebServiceRestrictedProvider {
          - completionHandler: Closure for response result from server.
      */
     public func performRequest<RequestType: WebServiceRequesting>(_ request: RequestType, completionHandler: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
-        guard testRequest(type: RequestType.self) else { return }
+        guard testRequest(type: RequestType.self) else {
+            completionHandler(.canceledRequest(duplicate: false))
+            return
+        }
+        
         service.performRequest(request, completionHandler: completionHandler)
     }
     
@@ -73,7 +77,11 @@ public class WebServiceRestrictedProvider {
          - completionHandler: Closure for response result from server.
      */
     public func performRequest<RequestType: WebServiceRequesting>(_ request: RequestType, key: AnyHashable, excludeDuplicate: Bool, completionHandler: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
-        guard testRequest(type: RequestType.self) else { return }
+        guard testRequest(type: RequestType.self) else {
+            completionHandler(.canceledRequest(duplicate: false))
+            return
+        }
+        
         service.performRequest(request, key: key, excludeDuplicate: excludeDuplicate, completionHandler: completionHandler)
     }
     
@@ -86,7 +94,11 @@ public class WebServiceRestrictedProvider {
          - completionHandler: Closure for response result from server.
      */
     public func performRequest<RequestType: WebServiceRequesting & Hashable>(_ request: RequestType, excludeDuplicate: Bool, completionHandler: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
-        guard testRequest(type: RequestType.self) else { return }
+        guard testRequest(type: RequestType.self) else {
+            completionHandler(.canceledRequest(duplicate: false))
+            return
+        }
+        
         service.performRequest(request, excludeDuplicate: excludeDuplicate, completionHandler: completionHandler)
     }
     
@@ -101,7 +113,11 @@ public class WebServiceRestrictedProvider {
          - response: Result read from storage.
      */
     public func readStorage<RequestType: WebServiceRequesting>(_ request: RequestType, dependencyNextRequest: WebService.ReadStorageDependencyType = .notDepend, completionHandler: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
-        guard testRequest(type: RequestType.self) else { return }
+        guard testRequest(type: RequestType.self) else {
+            completionHandler(nil, .canceledRequest(duplicate: false))
+            return
+        }
+        
         service.readStorage(request, dependencyNextRequest: dependencyNextRequest, completionHandler: completionHandler)
     }
     
@@ -118,7 +134,11 @@ public class WebServiceRestrictedProvider {
     public func readStorageAnyData(_ request: WebServiceBaseRequesting,
                                    dependencyNextRequest: WebService.ReadStorageDependencyType = .notDepend,
                                    completionHandler: @escaping (_ timeStamp: Date?, _ response: WebServiceAnyResponse) -> Void) {
-        guard testRequest(type: type(of: request)) else { return }
+        guard testRequest(type: type(of: request)) else {
+            completionHandler(nil, .canceledRequest(duplicate: false))
+            return
+        }
+        
         service.readStorageAnyData(request, dependencyNextRequest: dependencyNextRequest, completionHandler: completionHandler)
     }
     
@@ -131,7 +151,11 @@ public class WebServiceRestrictedProvider {
      - Parameter request: The request with data.
      */
     public func performRequest(_ request: WebServiceBaseRequesting) {
-        guard testRequest(type: type(of: request)) else { return }
+        guard testRequest(type: type(of: request)) else {
+            delegate?.webServiceResponse(request: request, key: nil, isStorageRequest: false, response: .canceledRequest(duplicate: false))
+            return
+        }
+        
         service.performRequest(request, responseDelegate: delegate)
     }
     
@@ -144,7 +168,11 @@ public class WebServiceRestrictedProvider {
          - excludeDuplicate: Exclude duplicate requests. Requests are equal if their keys match.
      */
     public func performRequest(_ request: WebServiceBaseRequesting, key: AnyHashable, excludeDuplicate: Bool) {
-        guard testRequest(type: type(of: request)) else { return }
+        guard testRequest(type: type(of: request)) else {
+            delegate?.webServiceResponse(request: request, key: key, isStorageRequest: false, response: .canceledRequest(duplicate: false))
+            return
+        }
+        
         service.performRequest(request, key: key, excludeDuplicate: excludeDuplicate, responseDelegate: delegate)
     }
     
@@ -156,7 +184,11 @@ public class WebServiceRestrictedProvider {
          - excludeDuplicate: Exclude duplicate equatable requests.
      */
     public func performRequest<RequestType: WebServiceBaseRequesting & Hashable>(_ request: RequestType, excludeDuplicate: Bool) {
-        guard testRequest(type: RequestType.self) else { return }
+        guard testRequest(type: RequestType.self) else {
+            delegate?.webServiceResponse(request: request, key: nil, isStorageRequest: false, response: .canceledRequest(duplicate: false))
+            return
+        }
+        
         service.performRequest(request, excludeDuplicate: excludeDuplicate, responseDelegate: delegate)
     }
     
@@ -170,7 +202,13 @@ public class WebServiceRestrictedProvider {
          - responseOnlyData: When `true` - response result send to delegate only if have data. Default use `responseStorageOnlyDataForDelegate`.
      */
     public func readStorage(_ request: WebServiceBaseRequesting, key: AnyHashable? = nil, dependencyNextRequest: WebService.ReadStorageDependencyType = .notDepend, responseOnlyData: Bool? = nil) {
-        guard testRequest(type: type(of: request)) else { return }
+        guard testRequest(type: type(of: request)) else {
+            if !(responseOnlyData ?? responseStorageOnlyDataForDelegate) {
+                delegate?.webServiceResponse(request: request, key: key, isStorageRequest: true, response: .canceledRequest(duplicate: false))
+            }
+            return
+        }
+        
         if let delegate = delegate {
             service.readStorage(request, key: key,
                                 dependencyNextRequest: dependencyNextRequest,

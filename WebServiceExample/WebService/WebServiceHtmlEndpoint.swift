@@ -20,7 +20,7 @@ protocol WebServiceHtmlRequesting: WebServiceBaseRequesting {
 class WebServiceHtmlEndpoint: WebServiceEndpoint {
     let queueForRequest: DispatchQueue? = DispatchQueue.global(qos: .background)
     let queueForDataProcessing: DispatchQueue? = nil
-    let queueForDataProcessingFromStorage: DispatchQueue? = DispatchQueue.global(qos: .default)
+    let queueForDataProcessingFromStorage: DispatchQueue? = DispatchQueue.global(qos: .background)
     let useNetworkActivityIndicator = true
     
     /// Data from server as raw, used only as example

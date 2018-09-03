@@ -5,8 +5,8 @@ Pod::Spec.new do |s|
   s.description  = <<-DESC
 			Written in Swift.
 			Network layer as Service. 
-			Contained simple cache storage on disk as files.
-			Contained mock endpoint for test response without API.
+			Contained simple cache storages (on disk as files, used CoreData or in memory).
+			Contained mock endpoints for test response without API.
                    DESC
 
   s.homepage     = "https://github.com/ProVir/WebServiceSwift"
