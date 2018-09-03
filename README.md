@@ -13,8 +13,11 @@ Network layer as Service. Service as an interface for interacting with your web 
 - [Communication](#communication)
 - [Installation](#installation)
 - [Usage (English / Русский)](#usage-english--%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9)
-- [Simple File Storage](#simple-file-storage)
-- [Mock Engine](#mock-engine)
+- [Endpoints](#endpoints)
+- [Manage requests](#manage-requests)
+- [Providers](#providers)
+- [Storages](#storages)
+- [Mock Endpoints](#mock-endpoints)
 - [Author](#author)
 - [License](#license)
 
@@ -27,31 +30,18 @@ Network layer as Service. Service as an interface for interacting with your web 
 ## Features
 
 - [x] Easy interface for use
-- [x] All work with network in inner engine and storage, hided from interface. 
+- [x] All work with network in inner endpoint and storage, hided from interface. 
 - [x] Support Dispatch Queue.
 - [x] One class for work with many types requests. 
-- [x] One class for work with many engines and storages.
-- [x] Simple storage on disk in package. Easy - add only engine and work!
-- [x] Support NetworkActivityIndicator on iOS (from 2.2).
-- [x] Thread safe (from 2.2).
-- [x] Responses with concrete type in completion handler closures (from 2.2). 
-- [x] Providers for requests (have RequestProvider) for work with only concrete request (from 2.2). Used to indicate more explicit dependencies (DIP). 
-- [x] MockEngine for temporary or test  response data without use real api engine (from 2.2). 
-- [ ] Simple HTTP Engine.  
-
-## Warnings - in version 2.3 there will be changes
-
-#### Removed `WebServiceBaseRequesting.requestKey` parameter
-The parameter is no longer responsible for the uniqueness and management of running requests. Instead of this parameter, the following features will be added:
-1. Only requests with the implementation of a `Hashable` protocol are unique. `Equatable`, but not `Hashable` requests ignoring. 
-2. Added parameter `key: AnyHashable` for `performRequests()` methods. It changes the algorithm for determining the uniqueness of the request, the uniqueness of the request is determined by it.  
-
-#### Removed `WebService.excludeDuplicateRequestsDefault` and `WebServiceBaseRequesting.excludeDuplicate` parameters. Added parameter `excludeDuplicate: Bool` for `performRequests()` methods. 
-Now the condition of the absence of duplicate requests is set only at the moment of execution of the request itself.  It is recommended not to use the parameter `WebService.excludeDuplicateRequestsDefault`. 
-
-#### From `WebServiceMockRequesting` removed default implementation parameters and functions. 
-Always use all the parameters in your implementation. 
-
+- [x] One instance for work with many endpoints and storages.
+- [x] Simple storages (on disk, data base or in memory) in package. Easy - add only own api endpoint and ready!
+- [x] Support NetworkActivityIndicator on iOS.
+- [x] Thread safe.
+- [x] Responses with concrete type in completion handler closures. 
+- [x] Providers for requests (have RequestProvider and GroupProvider) for work with only concrete requests. Used to indicate more explicit dependencies (DIP). 
+- [x] Mock endpoints for temporary or test response data without use real api endpoint. 
+- [x] Full support Alamofire (include base endpoint).
+- [x] Simple HTTP Endpoints (NSURLSession or Alamofire).  
 
 
 ## Requirements
@@ -80,7 +70,7 @@ Always use all the parameters in your implementation.
 $ gem install cocoapods
 ```
 
-> CocoaPods 1.1.0+ is required to build WebServiceSwift 2.1.0+.
+> CocoaPods 1.1.0+ is required to build WebServiceSwift 3.0.0+.
 
 To integrate WebServiceSwift into your Xcode project using CocoaPods, specify it in your `Podfile`:
 
@@ -90,9 +80,20 @@ platform :ios, '8.0'
 use_frameworks!
 
 target '<Your Target Name>' do
-    pod 'WebServiceSwift', '~> 2.2'
+    pod 'WebServiceSwift', '~> 3.0'
 end
 ```
+
+Also you can use Alamofire endpoints:
+```ruby
+pod 'WebServiceSwift/Alamofire', '~> 3.0'
+```
+
+Or only core without simple endpoints and storages:
+```ruby
+pod 'WebServiceSwift/Core', '~> 3.0'
+```
+
 
 Then, run the following command:
 
@@ -114,7 +115,7 @@ $ brew install carthage
 To integrate WebServiceSwift into your Xcode project using Carthage, specify it in your `Cartfile`:
 
 ```ogdl
-github "ProVir/WebServiceSwift" ~> 2.2
+github "ProVir/WebServiceSwift" ~> 3.0
 ```
 
 Run `carthage update` to build the framework and drag the built `WebServiceSwift.framework` into your Xcode project.
@@ -127,7 +128,7 @@ Once you have your Swift package set up, adding WebServiceSwift as a dependency 
 
 ```swift
 dependencies: [
-    .Package(url: "https://github.com/ProVir/WebServiceSwift.git", majorVersion: 2)
+    .Package(url: "https://github.com/ProVir/WebServiceSwift.git", majorVersion: 3)
 ]
 ```
 
@@ -144,32 +145,36 @@ Copy files from directory `Source` in your project.
 
 To use the library, you need:
 1. Create at least one type of request that implements the `WebServiceRequesting` protocol.
-2. Create at least one class for work with the network (engine), implementing the protocol `WebServiceEngining`. It should provide its own protocol, the implementation of which with queries using the extensions will allow this engine to process the request.
-3. If desired, you can create a class for storing hashes or use the existing one - `WebServiceSimpleStore`.
-4. If desired, you can create a class for mocks requests when part API don't completed - `WebServiceMockEngine`.  It is recommended to use it first in the array of `engines`.
+2. Create at least one class for work with the network (endpoint), implementing the protocol `WebServiceEndpoint`. It should provide its own protocol, the implementation of which with queries using the extensions will allow this endpoint to process the request (see example).
+3. If desired, you can create a class for storing caches last responses or use the existing - `WebServiceFileStorage`, `WebServiceDataBaseStorage` or `WebServiceMemoryStorage`.
+4. If desired, you can create a class for mocks requests when part API don't completed - `WebServiceMockEndpoint` or its subclass, `WebServiceMockRequestEndpoint` for one type request. It is recommended to use it first in the array of `endpoints`.
 5. Write method to generate a `WebService` object. For example can be used factory to generate a WebService object or write an extension for it with a convenience constructor. 
 
 **Note:** To use the library, remember to include it in each file: `import WebServiceSwift`.
 
-The project has a less abstract example of using the library, which can be downloaded separately.
+The project has a less abstract example of using the library, which can be downloaded separately. Study the classes `WebServiceSimpleEndpoint` и `WebServiceAlamofireSimpleEndpoint` - they are a good example of its endpoint.
+
+To create non-compliant copies of a service with the same set of endpoints and storages, you can call `WebService.clone ()`. Each copy independently manages its requests and cancels them automatically when an instance of the service is deinited.
 
 #
 
 Для использования библиотеки вам нужно:
 1. Создать как минимум один тип запроса, реализующий протокол `WebServiceRequesting`. 
-2. Создать как минимум один класс для работ с сетью, реализующий протокол `WebServiceEngining`.  Он должен предоставлять собственный протокол, реализация которого у запросов с помощью расширения позволит этому движку обрабатывать запрос.
-3. По желанию можно создать класс для хранения хешей или использовать существующий - `WebServiceSimpleStore`.  
-4. По желанию можно создать класс для обработки mock запросов в случаях, когда часть АПИ не реализована - `WebServiceMockEngine`. Рекомендуется использовать его первым в списке `engines`. 
+2. Создать как минимум один класс для работы с сетью, реализующий протокол `WebServiceEndpoint`.  Он должен предоставлять собственный протокол, реализация которого у запросов с помощью расширения позволит этому классу обрабатывать запрос (смотрите пример).
+3. По желанию можно создать класс для хранения кешей последних ответов или использовать существующие - `WebServiceFileStorage`, `WebServiceDataBaseStorage` или `WebServiceMemoryStorage`.
+4. По желанию можно создать класс для обработки mock запросов в случаях, когда часть АПИ не реализована - `WebServiceMockEndpoint` или наследоваться от него, `WebServiceMockRequestEndpoint` для одного типа запроса. Рекомендуется использовать его первым в списке `endpoints`. 
 5. Написать метод получение готового объекта сервиса `WebService` . К примеру, можно использовать фабрику или написать для сервиса расширение с конструктором, вызывающий базовый конструктор с параметрами.
 
 **Замечание:** для использования библиотеки не забудьте ее подключить в каждом файле: `import WebServiceSwift`.
 
-В проекте есть менее абстрактный пример использования библиотеки, который можно скачать отдельно. 
+В проекте есть менее абстрактный пример использования библиотеки, который можно скачать отдельно.  Изучите классы `WebServiceSimpleEndpoint` и `WebServiceAlamofireSimpleEndpoint` - они являются хорошим примером своего обработчика (endpoint).
+
+Для создания независмых копий сервиса с одинаковым набором обработчиков и хранилищ вы можете вызвать `WebService.clone()`. Каждая копия независимо управляет своими запросами и отменяет их автоматически при удалении экземпляра сервиса. 
 
 
-### Base usage
+### Endpoints
 
-#### An example request structure:
+#### An example request structure (swift 4.1+):
 
 ```swift
 struct ExampleRequest: WebServiceRequesting, Hashable {
@@ -180,33 +185,33 @@ struct ExampleRequest: WebServiceRequesting, Hashable {
 }
 ```
 
-Such types of requests can be as many as you like and for their processing you can use different engines. There can also be several versions of the storage.
+Such types of requests can be as many as you like and for their processing you can use different endpoints, automatically selected from the array. There can also be several versions of the storage.
+Typically, you should create your own endpoint to interact with the API, but sometimes you may have enough of the basic functionality of the ready-made solutions - `WebServiceSimpleEndpoint` or` WebServiceAlamofireSimpleEndpoint`.
 
-Таких типов запросов может быть сколько угодно и для их обработки можно использовать разные движки (engines). Разновидностей хранилища тоже может быть несколько.
+Таких типов запросов может быть сколько угодно и для их обработки можно использовать разные обработчики (endpoints), выбираемые из списка автоматически. Разновидностей хранилищ тоже может быть несколько.
+Как правило вам следует создать свой собственный обработчик (endpoint) для взаимодействия с АПИ, но иногда может хватить базового функционала готовых решений - `WebServiceSimpleEndpoint` или `WebServiceAlamofireSimpleEndpoint`. 
 
 
-
-#### Example of a class for working with a network using a library [Alamofire](https://github.com/Alamofire/Alamofire):
+#### Example of a own endpoint for working with a network using a library [Alamofire](https://github.com/Alamofire/Alamofire):
 
 ```swift
 protocol WebServiceHtmlRequesting: WebServiceBaseRequesting {
     var url: URL { get }
 }
 
-class WebServiceHtmlEngine: WebServiceEngining {
+class WebServiceHtmlEngine: WebServiceEndpoint {
     let queueForRequest: DispatchQueue? = DispatchQueue.global(qos: .background)
-    let queueForDataHandler: DispatchQueue? = nil
-    let queueForDataHandlerFromStorage: DispatchQueue? = DispatchQueue.global(qos: .default)
+    let queueForDataProcessing: DispatchQueue? = nil
+    let queueForDataProcessingFromStorage: DispatchQueue? = DispatchQueue.global(qos: .background)
     let useNetworkActivityIndicator = true
 
     func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
         return request is WebServiceHtmlRequesting
     }
 
-    func performRequest(requestId:UInt64, request:WebServiceBaseRequesting,
-                        completionWithData: @escaping (_ data:Any) -> Void,
-                        completionWithError: @escaping (_ error:Error) -> Void,
-                        canceled: @escaping () -> Void) {
+    func performRequest(requestId: UInt64, request: WebServiceBaseRequesting,
+                        completionWithRawData: @escaping (_ data: Any) -> Void,
+                        completionWithError: @escaping (_ error: Error) -> Void) {
 
         guard let url = (request as? WebServiceHtmlRequesting)?.url else {
             completionWithError(WebServiceRequestError.notSupportRequest)
@@ -216,7 +221,7 @@ class WebServiceHtmlEngine: WebServiceEngining {
         Alamofire.request(url).responseData { response in
             switch response.result {
             case .success(let data):
-                completionWithData(data)
+                completionWithRawData(data)
 
             case .failure(let error):
                 completionWithError(error)
@@ -224,24 +229,64 @@ class WebServiceHtmlEngine: WebServiceEngining {
         }
     }
 
-    func cancelRequest(requestId: UInt64) { /* Don't support */ }
+    func canceledRequest(requestId: UInt64) { /* Don't support in example */ }
 
-    func dataHandler(request: WebServiceBaseRequesting, data: Any, isRawFromStorage: Bool) throws -> Any? {
-        guard request is WebServiceHtmlRequesting, let data = data as? Data else {
-            throw WebServiceRequestError.notSupportDataHandler
+    func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any {
+        guard request is WebServiceHtmlRequesting, let binary = rawData as? Data else {
+            throw WebServiceRequestError.notSupportDataProcessing
         }
-
-        return String(data: data, encoding: .utf8) ?? String(data: data, encoding: .windowsCP1251)
+    
+        if let result = String(data: binary, encoding: .utf8) ?? String(data: binary, encoding: .windowsCP1251) {
+            return result
+        } else {
+            throw WebServiceResponseError.invalidData
+        }
     }
 }
 ```
 
-Working with the network is not a prerequisite for the engine. Behind this layer, you can hide the work with the database or at least temporarily put a stub. On the interface service side, this is not important and during the development of the engine can be unnoticeably replaced, without changing the code of the requests themselves.
+#### Example of a endpoint with use Alamofire base endpoint:
 
-Вовсе не обязательно движок (engine) должен работать с сетью. За этим слоем вы можете скрыть работу с БД или вовсе временно выставить заглушку. Со стороны интерфейса сервиса это не важно и в процессе разработки движки можно незаметно подменять, не меняя код самих запросов. 
+```swift
+class WebServiceHtmlV2Endpoint: WebServiceAlamofireBaseEndpoint {
+    init() {
+        super.init(queueForRequest: DispatchQueue.global(qos: .background), useNetworkActivityIndicator: true)
+    }
+
+    override func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
+        return request is WebServiceHtmlRequesting
+    }
+
+    override func performRequest(requestId: UInt64, data: RequestData) throws -> Alamofire.DataRequest? {
+        guard let url = (data.request as? WebServiceHtmlRequesting)?.url else {
+            throw WebServiceRequestError.notSupportRequest
+        }
+
+        return Alamofire.request(url)
+    }
+
+    override func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any {
+        guard request is WebServiceHtmlRequesting, let binary = rawData as? Data else {
+            throw WebServiceRequestError.notSupportDataProcessing
+        }
+
+        if let result = String(data: binary, encoding: .utf8) ?? String(data: binary, encoding: .windowsCP1251) {
+            return result
+        } else {
+            throw WebServiceResponseError.invalidData
+        }
+    }
+}
+```
 
 
-#### Simple request support concrete engine example:
+
+Working with the network is not a prerequisite for the endpoint. Behind this layer, you can hide the work with the database or at least temporarily put a stub. On the interface service side, this is not important and during the development of the endpoint can be unnoticeably replaced, without changing the code of the requests themselves.
+
+Вовсе не обязательно обработчик (endpoint) должен работать с сетью. За этим слоем вы можете скрыть работу с БД или вовсе временно выставить заглушку. Со стороны интерфейса сервиса это не важно и в процессе разработки обработчики можно незаметно подменять, не меняя код самих запросов. 
+
+
+#### Simple request support concrete endpoint example:
 
 ```swift
 extension ExampleRequest: WebServiceHtmlRequesting {
@@ -249,32 +294,30 @@ extension ExampleRequest: WebServiceHtmlRequesting {
         /* .... Logic create URL from param1 and param2 ... */
     }
     
-    var responseDecoder: WebServiceHtmlResponseDecoder {
-        /* ... Create concrete decoder for data from server ... */
+    func decodeResponse(data: Data) throws -> String {
+        /* ... Create concrete decoder data from server and decoding ... */
     }
 }
 ```
 
-Each request must implement the support protocols for each engine that can handle it. If multiple engines are supported by a single query, then the first engine, supported from the list `engines`, is selected for processing.
+Each request must implement the support protocols for each endpoint that can handle it. If multiple endpoints are supported by a single request, then the first endpoint, supported from the array `endpoints`, is selected for processing.
 
-Каждый запрос должен реализовать протоколы поддержки каждого движка, который может его обрабатывать. Если поддерживается несколько движков одним запросом, то выбирается первый поддерживаемый из списка `engines` для обработки. 
+Каждый запрос должен реализовать протоколы поддержки каждого обработчика (endpoint), который может его обрабатывать. Если поддерживается несколько обработчиков одним запросом, то выбирается первый поддерживаемый из списка `endpoints` для обработки. 
 
 
 #### WebService create service - used factory constructor example:
 
 ```swift
 extension WebService {
-    convenience init(delegate: WebServiceDelegate? = nil) {
-        let engine = WebServiceEngine()
+    convenience init() {
+        let endpoint = WebServiceEndpoint()
         
         var storages: [WebServiceStoraging] = []
-        if let storage = WebServiceSimpleStore() {
+        if let storage = WebServiceDataBaseStorage() {
             storages.append(storage)
         }
         
-        self.init(engines: [WebServiceMockEngine(), engine], storages: storages)
-        
-        self.delegate = delegate
+        self.init(engines: [WebServiceMockEndpoint(), endpoint], storages: storages)
     }
 }
 ```
@@ -284,14 +327,14 @@ You can also make support for a singleton - an example of this approach is in th
 Также можно сделать поддержку синглетона - пример такого подхода есть в исходниках. 
 
 
-#### An example of using the closure and without reading the hash from the disk:
+#### An example of using the closure:
 
 ```swift
 let webService = WebService()
 
 webService.performRequest(ExampleRequest(param1: val1, param2: val2)) { [weak self] response in
     switch response {
-    case .canceledRequest, .duplicateRequest: 
+    case .canceledRequest: 
         break
 
     case .data(let dataCustomType):
@@ -308,19 +351,19 @@ We pass the data in request, on the output we get the ready object for display.
 Передаем данные в запросе, на выходе получаем готовый объект для отображения. 
 
 
-#### An example using a delegate and reading a hash from disk:
+#### An example using a delegate:
 
 ```swift
-let webService = WebService(delegate: self)
+let webService = WebService()
 
-webService.performRequest(ExampleRequest(param1: val1, param2: val2), includeResponseStorage: true)
+webService.performRequest(ExampleRequest(param1: val1, param2: val2), responseDelegate: self)
 
-func webServiceResponse(request: WebServiceRequesting, isStorageRequest: Bool, response: WebServiceAnyResponse) {
+func webServiceResponse(request: WebServiceRequesting, key: AnyHashable?, isStorageRequest: Bool, response: WebServiceAnyResponse) {
     if let request = request as? ExampleRequest {
         let response = response.convert(request: request)
 
         switch response {
-        case .canceledRequest, .duplicateRequest: 
+        case .canceledRequest: 
             break
 
         case .data(let dataCustomType):
@@ -337,74 +380,317 @@ func webServiceResponse(request: WebServiceRequesting, isStorageRequest: Bool, r
 }
 ```
 
-If data from the disk is received earlier than from the network, or there will be an error in retrieving data from the network - hashed data will return to the delegate (`isStorageRequest = true`), otherwise only data from the network will be received.
+### Manage requests
 
-Если данные с диска будут получены раньше, чем с сети, либо произойдет ошибка получения данных с сети - хешированные данные вернутся в делегат (`isStorageRequest = true`), иначе будут получены данные только с сети.
+Executable requests can be controlled - check for execution (containt) and cancel. In endpoint, you can implement a method of canceling query execution - this is necessary for optimizations, regardless of whether you cancel the request in the endpoint, the request will be canceled and its results ignored.
+
+You can manage requests in several ways:
+- All: `containsManyRequests()` and `cancelAllRequests()`;
+- On a request instance, if it is hashabled (`Request: WebServiceBaseRequesting, Hashable`): `containsRequest(Request)` and `cancelRequests(Request)`;
+- By request type: `containsRequest(type: WebServiceBaseRequesting.Type)` and `cancelRequests(type: WebServiceBaseRequesting.Type)`;
+- By the key (more on this): `containsRequest(key:)` and `cancelRequests(key:)`;
+- By type of key: `containsRequest(keyType:)` and `cancelRequests(keyType:)`.
+
+All canceled requests will end with an response `WebServiceResponse.canceledRequest(duplicate: false)`.
 
 
-#### Example of requesting hash data without requesting a server:
+Выполняемыми запросами можно управлять - проверять на выполнение (containt) и отменять (cancel). В endpoint можно реализовать метод отмены выполнения запроса - это нужно для оптимизаций, не зависимо отмените ли вы запрос в endpoint, запрос будет отменен и его результаты проигнорированы. 
+
+Запросами можно управлять несколькими способами:
+- Всеми: `containsManyRequests()` и `cancelAllRequests()`;
+- По экземпляру запроса, если он хешируемый (`Request: WebServiceBaseRequesting, Hashable`): `containsRequest(Request)` и `cancelRequests(Request)`;
+- По типу запроса: `containsRequest(type: WebServiceBaseRequesting.Type)` и `cancelRequests(type: WebServiceBaseRequesting.Type)`;
+- По ключу (об этом далее): `containsRequest(key:)` и `cancelRequests(key:)`;
+- По типу ключа: `containsRequest(keyType:)` и `cancelRequests(keyType:)`.
+
+Все отмененные запросы завершатся с ответом `WebServiceResponse.canceledRequest(duplicate: false)`.
+
+
+#### Example contains and cancel requests:
 
 ```swift
-let webService = WebService()
+struct ExampleKey: Hashable {
+    let value: String
+}
 
-webService.requestReadStorage(ExampleRequest(param1: val1, param2: val2)) { [weka self] response in
+let isContains1 = webService.containsRequest(ExampleRequest(param1: val1, param2: val2))
+let isContains2 = webService.containsRequest(type: ExampleRequest.self)
+let isContains3 = webService.containsRequest(key: ExampleKey(value: val1))
+let isContains3 = webService.containsRequest(keyType: ExampleKey.self)
+
+webService.cancelRequests(ExampleRequest(param1: val1, param2: val2))
+webService.cancelRequests(type: ExampleRequest.self)
+webService.cancelRequests(key: ExampleKey(value: val1))
+webService.cancelRequests(keyType: ExampleKey.self)
+```
+
+You can also exclude duplicate requests. For this, the request must implement the protocol `Hashable` or use a key for requests (any type that implements the protocol` Hashable`).
+Requests that turn out to be duplicates will immediately end with the response `WebServiceResponse.canceledRequest(duplicate: true)`.
+
+Также можно исключать дублирующие запросы. Для этого запрос должен реализовывать протокол `Hashable` или использовать ключ (key) для запросов (любой тип реализующий протокол `Hashable`). 
+Запросы которые окажутся дублирующими сразу завершатся с ответом `WebServiceResponse.canceledRequest(duplicate: true)`.
+
+#### Example use test for duplicates requests:
+
+```swift
+webService.performRequest(ExampleRequest(param1: val1, param2: val2), excludeDuplicate: true) { [weak self] response in
     switch response {
-    case .canceledRequest, .duplicateRequest: 
+    case .canceledRequest(duplicate: let duplicate): 
+        if duplicate {
+            print("Request is duplicate!")
+        }
+
+    case .data(let dataCustomType):
+        self?.dataFromServer = dataCustomType
+
+    case .error(let error):
+        self?.showError(error)
+    }
+}
+
+webService.performRequest(ExampleRequest(param1: val1, param2: val2), key: ExampleKey(value: val1), excludeDuplicate: true) { [weak self] response in
+    switch response {
+    case .canceledRequest(duplicate: let duplicate): 
+        if duplicate {
+            print("Key is duplicate!")
+        }
+
+    case .data(let dataCustomType):
+        self?.dataFromServer = dataCustomType
+
+    case .error(let error):
+        self?.showError(error)
+    }
+}
+```
+
+### Providers
+
+To add more explicit dependencies to your project, as well as to protect against errors of a certain type, you can use providers. Providers are wrappers over WebService and hide it with private access. They provide access only to a limited type of requests in the form of convenient interfaces, excluding a certain class of errors in the code. The main purpose of the provider is to give the access to the permissible part of the WebService functional in the right place in the code.
+
+Для добавления более явных зависимостей в ваш проекта, а также для защиты от ошибок определеного типа, вы можете использовать провайдеры. Провайдеры являются обертками над WebService и скрывают его с private доступом. Они предоставляют доступ только ограниченному типу запросов в виде удобных интерфейсов, исключающие определенный класс ошибок в коде. Основная цель провайдера - в нужном месте в коде дать доступ только к допустимой части функционала WebService. 
+
+#### Example own provider:
+
+```swift
+struct SiteWebServiceRequests: WebServiceGroupRequests {
+    static let requestTypes: [WebServiceBaseRequesting.Type] 
+        = [ExampleRequest.self, GetList.self]
+    
+    struct Example: WebServiceRequesting, Hashable {
+        let site: String  
+        let domainRu: Bool
+    
+        typealias ResultType = String
+    }
+    
+    struct GetList: WebServiceEmptyRequesting, Hashable {
+        typealias ResultType = [String]
+    }
+}
+
+
+class SiteWebProvider: WebServiceProvider {
+    private let webService: WebService
+
+    required init(webService: WebService) {
+        self.webService = webService
+    }
+    
+    enum Site: String {
+    case google
+    case yandex
+    }
+
+    func requestExampleData(site: Site, domainRu: Bool = true, completionHandler: @escaping (_ response: WebServiceResponse<String>) -> Void) {
+        webService.performRequest(SiteWebServiceRequests.Example(site: site.rawValue, domainRu: domainRu), completionHandler: completionHandler)
+    }
+}
+```
+
+You can use two ready-made template provider classes - `WebServiceRequestProvider` (for one type of request) and `WebServiceGroupProvider` (for a group of requests). To support your set of valid requests, you can use `WebServiceRestrictedProvider` instead of `WebServiceGroupProvider`.
+
+Вы можете использовать два готовых шаблоных класса провайдера - `WebServiceRequestProvider` (для одноготипа запроса) и `WebServiceGroupProvider` (для группы запросов). Для поддержки своего набора допустимых запросов вместо `WebServiceGroupProvider` вы можете использовать `WebServiceRestrictedProvider`.
+
+#### Example providers:
+
+```swift
+let getListSiteWebProvider: WebServiceRequestProvider<SiteWebServiceRequests.GetList>
+let exampleSiteWebProvider: WebServiceRequestProvider<SiteWebServiceRequests.Example>
+let siteWebProvider:        WebServiceGroupProvider<SiteWebServiceRequests>
+
+init(webService: WebService) {
+    getListSiteWebProvider = webService.createProvider()
+    exampleSiteWebProvider = webService.createProvider()
+    siteWebProvider = webService.createProvider()
+}
+
+func performRequests() {
+    // RequestProvider for WebServiceEmptyRequesting
+    getListSiteWebProvider.performRequest() { [weak self] response in
+        switch response {
+        case .canceledRequest(duplicate: let duplicate): 
+            break
+    
+        case .data(let list):
+            self?.sites = list
+    
+        case .error(let error):
+            self?.showError(error)
+        }
+    }
+    
+    // RequestProvider for request with params
+    exampleSiteWebProvider.performRequest(.init(site: "google", domainRu: false)) { _ in }
+    
+    // GroupProvider, if request don't contains in group - assert (crash in debug, .canceledRequests in release usually).
+    siteWebProvider.performRequest(SiteWebServiceRequests.Example(site: "yandex", domainRu: true)) { _ in }
+}
+```
+
+
+### Storages
+
+Для того чтобы приложение могло работать без интернета, очень полезно сохранять полученные данные в постоянном хранилище, т.к. данные сохраненные на устройстве пользователя читаются как правило куда быстрее чем через сеть и не зависят от состояния подключения к сети интернет.  В большинстве случаев для этого хватает сохранять последний полученный ответ с сервера и предоставлять его по требованию. Именно для этого случая предосмотрено хранилище в сервисе.
+
+Вы можете сделать свой класс хранилища - нужно реализовать протокол `WebServiceStorage`. Но как правило этого не требуется, т.к. уже есть готовые классы для использования, которые покрывают все необходимые случаи использования - `WebServiceFileStorage`, `WebServiceDataBaseStorage` и `WebServiceMemoryStorage`. В большинстве случаев вы будете использовать только один на выбор, но в случае более сложной логики их можно комбинировать и повторять с разными настройками, разделяя их класификацией данных (подробнее об этом ниже). 
+
+Не каждый запрос сохраняется в хранилище, а только те которые соотвествуют либо общему протоколу хранения (рекомендуется), либо протоколу конкретного типа храннилища. 
+Данные могут храниться как правило в двух варианта:
+- Raw: необработанные данные с сервера (как правило бинарные). Такой тип данных после чтения отправляется на обработку в подходящий обработчик (endpoint);
+- Value: обработанные данные. Такой тип данных после чтения сразу отправляется как результирующий. 
+
+Raw удобен тем что не нужно писать конвертер в бинаные данные, т.к. приходящие данные с сервера как правило уже в этом виде.
+Value более оптимизирован, т.к. данные уже обработаны и не требует повтороной обработки, но требуется предоставить конвертеры в бинарный тип и обратно (обычно используется Codable). 
+Если сложность обработки с сервера и в конветере в бинарный тип одинакова, то приемущественно лучше использовать Raw, иначе по возможности Value - зависит от данных и обработчика запроса. 
+
+Обычно хранилища могут предоставить вместе с данными время (timeStamp) когда данные были сохранены - это позволяет оценить устарели ли данные для использования. 
+
+Данные в хранилищах можно удалять по одному из признаков:
+- Для конкретного запроса: `WebService.deleteInStorage(request:)`;
+- Все данные в хранилищах предназначенные только для данных определенной классификации: `WebService.deleteAllInStorages(withDataClassification:)`;
+- Все данные в хранилищах предназначенные для любой классификации, хранилища с конкретным списком классификаций будут пропущены: `WebService.deleteAllInStoragesWithAnyDataClassification()`;
+- Все хранилища: `WebService.deleteAllInStorages()`;
+
+
+#### Example support request storing:
+
+```swift
+extension SiteWebServiceRequests.Example: WebServiceRequestRawGeneralStoring {
+    var identificatorForStorage: String? {
+        return "SiteWebServiceRequests_Example"
+    }
+}
+
+extension SiteWebServiceRequests.GetList: WebServiceRequestValueGeneralStoring {
+    var identificatorForStorage: String? {
+        return "SiteWebServiceRequests_GetList"
+    }
+    
+    func writeDataToStorage(value: [String]) -> Data? {
+        return try? PropertyListEncoder().encode(value)
+    }
+    
+    func readDataFromStorage(data: Data) throws -> [String]? {
+        return try PropertyListDecoder().decode([String].self, from: data)
+    }
+}
+```
+
+Для удобства разделения способа хранения запросы можно класификовать по определенному типу хранения - какоему именно решаете вы. По умолчанию все данные классифицируются как `WebServiceDefaultDataClassification = "default"`. 
+К примеру может быть популярен такой случай: обычные кеши, кеши пользователя (удаляются при выходе из аккаунта) и временные кеши хранящийся только в оперативной памяти пока приложение запущено. На каждый класс данных есть свое хранилище. 
+
+#### Example data classification:
+
+```swift
+enum WebServiceDataClass: Hashable {
+    case user
+    case temporary
+}
+
+extension WebService {
+    static func create() -> WebService {
+        let endpoint = WebServiceHtmlV2Endpoint()
+
+        var storages: [WebServiceStorage] = []
+        
+        // Support temporary in memory Data Classification
+        storages.append(WebServiceMemoryStorage(supportDataClassification: [WebServiceDataClass.temporary]))
+   
+        // Support user Data Classification
+        if let dbUserURL = try? FileManager.default.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: false).appendingPathComponent("userCaches.sqlite"),
+           let storage = WebServiceDataBaseStorage(sqliteFileUrl: dbUserURL, supportDataClassification: [WebServiceDataClass.user]) {
+            storages.append(storage)
+        }
+        
+        // Support any Data Classification (also can use WebServiceDataBaseStorage())
+        if let storage = WebServiceFileStorage() {
+            storages.append(storage)
+        }
+
+        return .init(endpoints: [endpoint], storages: storages)
+    }
+    
+    func clearUserCaches() {
+        deleteAllInStorages(withDataClassification: WebServiceDataClass.user)
+    }
+}
+
+extension UserWebServiceRequests.GetInformation: WebServiceRequestRawGeneralStoring {
+    var identificatorForStorage: String? {
+        return "UserInformation"
+    }
+    
+    var dataClassificationForStorage: AnyHashable { 
+        return WebServiceDataClass.user
+    }
+}
+```
+
+Данные их хранилища всегда нужно запрашивать явно. Это запрос можно привязать к запросу на сервер в двух вариантах:
+- `ReadStorageDependencyType.dependSuccessResult`: Запрос к хранилищу будет отменен если данные с сервера прийдут раньше без ошибки;
+- `ReadStorageDependencyType.dependFull`: Запрос к хранилищу будет отменен если данные с сервера прийдут раньше без ошибки или сам запрос на сервер будет отменен или окажется дублирующим;
+
+Запрос к серверу, к которому привязывается запрос к хранилищу должен быть вызван сразу после запроса к хранилищу - именно этот запрос будет привязан в независимости от его типа. 
+Отменять явно запросы в хранилище можно только через связанный как `ReadStorageDependencyType.dependFull` основной запрос на сервер. 
+
+
+#### Example read data in storages:
+
+```swift
+let request = ExampleRequest(param1: val1, param2: val2)
+
+webService.readStorageData(request, dependencyNextRequest: .dependFull) { [weak self] timeStamp, response in
+    if case .data(let data) = response {
+        if let timeStamp = timeStamp, timeStamp.timeIntervalSinceNow > -3600 {   //no longer than 1 hour
+            self?.dataFromStorage = data
+        }
+    }
+}
+
+webService.performRequest(request, excludeDuplicate: true) { [weak self] response in
+    switch response {
+    case .canceledRequest: 
         break
 
     case .data(let dataCustomType):
-        self?.dataFromStorage = dataCustomType
-    
+        self?.dataFromServer = dataCustomType
+
     case .error(let error):
         self?.showError(error)
-    }  
+    }
 }
-```
 
-You can also request data from the storage. In case of a reading error, you will be able to find out the reason. Enums `.canceledRequest` and `.duplicateRequest` will never be returned.
-
-Также можно отдельно запросить данные с хеша. В случае ошибки чтения можно будет узнать причину. Значения `.canceledRequest` и `.duplicateRequest` никогда не будут возвращены. 
-
-
-
-### Simple File Storage
-
-For support response data store in `WebServiceSimpleFileStorage` you need conform to `WebServiceRequestRawStorage` (save raw binary data from server and decode in engine when read) or `WebServiceRequestValueStorage` (save any decoded types from server).
-
-
-#### Example of request support storage as raw data:
-
-```swift
-extension ExampleRequest: WebServiceRequestRawStorage {
-    var identificatorForRawStorage: String? {
-        return "example_data.bin"
+webService.readStorageData(TestRequest(), dependencyNextRequest: .notDepend) { [weak self] timeStamp, response in
+    if case .data(let data) = response {
+        self?.testData = data
     }
 }
 ```
 
-#### Example of request support storage as value data:
 
-```swift
-extension ExampleRequest: WebServiceRequestValueStorage {
-    var identificatorForValueStorage: String? {
-        return "example_data.txt"
-    }
 
-    func writeDataToStorage(value: Any) -> Data? {
-        if let value = value as? String {
-            return value.data(using: String.Encoding.utf8)
-        } else {
-            return nil
-        }
-    }
-
-    func readDataFromStorage(data: Data) throws -> Any? {
-        return String(data: data, encoding: String.Encoding.utf8)
-    }
-}
-```
-
-### Mock Engine
+### Mock Endpoints
 
 If part of the API is not available or you just need to generate temporary test data, you can use the `WebServiceMockEngine`. The mock engine emulates receiving and processing data from a real server and returns exactly the data that you specify.
 
