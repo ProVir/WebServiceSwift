@@ -26,7 +26,7 @@ struct SiteWebServiceMock {
 
 extension SiteWebServiceRequests.SiteSearch: WebServiceMockRequesting {
     var isSupportedRequestForMock: Bool { return false }
-    var mockTimeWait: TimeInterval? { return 3 }
+    var mockTimeDelay: TimeInterval? { return 3 }
     
     var mockHelperIdentifier: String? { return SiteWebServiceMock.helperIdentifier }
     func mockCreateHelper() -> Any? { return SiteWebServiceMock.createHelper() }
@@ -38,7 +38,7 @@ extension SiteWebServiceRequests.SiteSearch: WebServiceMockRequesting {
 
 extension SiteWebServiceRequests.SiteMail: WebServiceMockRequesting {
     var isSupportedRequestForMock: Bool { return false }
-    var mockTimeWait: TimeInterval? { return 4 }
+    var mockTimeDelay: TimeInterval? { return 4 }
     
     var mockHelperIdentifier: String? { return SiteWebServiceMock.helperIdentifier }
     func mockCreateHelper() -> Any? { return SiteWebServiceMock.createHelper() }
@@ -50,7 +50,7 @@ extension SiteWebServiceRequests.SiteMail: WebServiceMockRequesting {
 
 extension SiteWebServiceRequests.SiteYouTube: WebServiceMockRequesting {
     var isSupportedRequestForMock: Bool { return false }
-    var mockTimeWait: TimeInterval? { return 1 }
+    var mockTimeDelay: TimeInterval? { return 1 }
     
     var mockHelperIdentifier: String? { return SiteWebServiceMock.helperIdentifier }
     func mockCreateHelper() -> Any? { return SiteWebServiceMock.createHelper() }

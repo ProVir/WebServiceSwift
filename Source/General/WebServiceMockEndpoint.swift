@@ -18,7 +18,7 @@ public protocol WebServiceMockBaseRequesting {
     var isSupportedRequestForMock: Bool { get }
     
     /// After timeout mock data send as response. `nil` - without pause.
-    var mockTimeWait: TimeInterval? { get }
+    var mockTimeDelay: TimeInterval? { get }
     
     /// Identifier for dictionary helpers, `nil` - don't use helper. Helpers are created once and when used within one instance of the endpoint.
     var mockHelperIdentifier: String? { get }
@@ -128,7 +128,7 @@ open class WebServiceMockEndpoint: WebServiceEndpoint {
         
         //Run request with pause time
         requests[requestId] = workItem
-        DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + (request.mockTimeWait ?? 0), execute: workItem)
+        DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + (request.mockTimeDelay ?? 0), execute: workItem)
     }
     
     public func canceledRequest(requestId: UInt64) {

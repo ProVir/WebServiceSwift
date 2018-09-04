@@ -36,7 +36,7 @@ extension WebService {
         
         /*
         let template = "<html><body>%[BODY]%</body></html>"
-        let mockRequest = WebServiceMockRequestEndpoint.init(timeWait: 3) { (request: SiteWebServiceRequests.SiteSearch) -> String in
+        let mockRequest = WebServiceMockRequestEndpoint.init(timeDelay: 3) { (request: SiteWebServiceRequests.SiteSearch) -> String in
             return template.replacingOccurrences(of: "%[BODY]%", with: "<b>Hello world from MockRequestEndpoint!</b>")
         }
         */
