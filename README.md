@@ -128,7 +128,7 @@ Once you have your Swift package set up, adding WebServiceSwift as a dependency 
 
 ```swift
 dependencies: [
-    .Package(url: "https://github.com/ProVir/WebServiceSwift.git", majorVersion: 3)
+    .package(url: "https://github.com/ProVir/WebServiceSwift.git", from: "3.0.0")
 ]
 ```
 
@@ -355,9 +355,9 @@ extension WebService {
 }
 ```
 
-You can also make support for a singleton - an example of this approach is in the source code.
+You can also make support for a singleton - an example of this approach is in the source code example.
 
-Также можно сделать поддержку синглетона - пример такого подхода есть в исходниках. 
+Также можно сделать поддержку синглетона - пример такого подхода есть в исходниках примера. 
 
 
 #### An example of using the closure:
@@ -426,6 +426,7 @@ You can manage requests in several ways:
 
 All canceled requests will end with an response `WebServiceResponse.canceledRequest(duplicate: false)`.
 
+#
 
 Выполняемыми запросами можно управлять - проверять на выполнение (containt) и отменять (cancel). В endpoint можно реализовать метод отмены выполнения запроса - это нужно для оптимизаций, не зависимо отмените ли вы запрос в endpoint, запрос будет отменен и его результаты проигнорированы. 
 
@@ -457,10 +458,10 @@ webService.cancelRequests(key: ExampleKey(value: val1))
 webService.cancelRequests(keyType: ExampleKey.self)
 ```
 
-You can also exclude duplicate requests. For this, the request must implement the protocol `Hashable` or use a key for requests (any type that implements the protocol` Hashable`).
+You can also exclude duplicate requests. For this, the request must implement the protocol `Hashable` or use a key when perform request (any type that implements the protocol` Hashable`).
 Requests that turn out to be duplicates will immediately end with the response `WebServiceResponse.canceledRequest(duplicate: true)`.
 
-Также можно исключать дублирующие запросы. Для этого запрос должен реализовывать протокол `Hashable` или использовать ключ (key) для запросов (любой тип реализующий протокол `Hashable`). 
+Также можно исключать дублирующие запросы. Для этого запрос должен реализовывать протокол `Hashable` или использовать ключ (key) при запросе (любой тип реализующий протокол `Hashable`). 
 Запросы которые окажутся дублирующими сразу завершатся с ответом `WebServiceResponse.canceledRequest(duplicate: true)`.
 
 #### Example use test for duplicates requests:
@@ -499,9 +500,9 @@ webService.performRequest(ExampleRequest(param1: val1, param2: val2), key: Examp
 
 ### Providers
 
-To add more explicit dependencies to your project, as well as to protect against errors of a certain type, you can use providers. Providers are wrappers over WebService and hide it with private access. They provide access only to a limited type of requests in the form of convenient interfaces, excluding a certain class of errors in the code. The main purpose of the provider is to give the access to the permissible part of the WebService functional in the right place in the code.
+To add more explicit dependencies to your project, as well as to protect against certain errors, you can use providers. Providers are wrappers over WebService and hide it with private access. They provide access only to a limited type of requests in the form of convenient interfaces, excluding a certain class of errors in the code. The main purpose of the provider is to give the access to the permissible part of the WebService functional in the right place in the code.
 
-Для добавления более явных зависимостей в ваш проекта, а также для защиты от ошибок определеного типа, вы можете использовать провайдеры. Провайдеры являются обертками над WebService и скрывают его с private доступом. Они предоставляют доступ только ограниченному типу запросов в виде удобных интерфейсов, исключающие определенный класс ошибок в коде. Основная цель провайдера - в нужном месте в коде дать доступ только к допустимой части функционала WebService. 
+Для добавления более явных зависимостей в ваш проект, а также для защиты от некоторых ошибок, вы можете использовать провайдеры. Провайдеры являются обертками над WebService и скрывают его private доступом. Они предоставляют доступ только ограниченному типу запросов в виде удобных интерфейсов, исключающие определенный класс ошибок в коде. Основная цель провайдера - в нужном месте в коде дать доступ только к допустимой части функционала WebService. 
 
 #### Example own provider:
 
@@ -541,9 +542,9 @@ class SiteWebProvider: WebServiceProvider {
 }
 ```
 
-You can use two ready-made template provider classes - `WebServiceRequestProvider` (for one type of request) and `WebServiceGroupProvider` (for a group of requests). To support your set of valid requests, you can use `WebServiceRestrictedProvider` instead of `WebServiceGroupProvider`.
+You can use two ready-made generic provider classes - `WebServiceRequestProvider` (for one type of request) and `WebServiceGroupProvider` (for a group of requests). To support your set of valid requests, you can use `WebServiceRestrictedProvider` instead of `WebServiceGroupProvider`.
 
-Вы можете использовать два готовых шаблоных класса провайдера - `WebServiceRequestProvider` (для одноготипа запроса) и `WebServiceGroupProvider` (для группы запросов). Для поддержки своего набора допустимых запросов вместо `WebServiceGroupProvider` вы можете использовать `WebServiceRestrictedProvider`.
+Вы можете использовать два готовых шаблоных класса провайдера - `WebServiceRequestProvider` (для одного типа запроса) и `WebServiceGroupProvider` (для группы запросов). Для поддержки своего набора допустимых запросов вместо `WebServiceGroupProvider` доступен `WebServiceRestrictedProvider`.
 
 #### Example providers:
 
@@ -609,7 +610,7 @@ The data in storages can be deleted according to one of the following characteri
 
 Для того чтобы приложение могло работать без интернета, очень полезно сохранять полученные данные в постоянном хранилище, т.к. данные сохраненные на устройстве пользователя читаются как правило куда быстрее чем через сеть и не зависят от состояния подключения к сети интернет.  В большинстве случаев для этого хватает сохранять последний полученный ответ с сервера и предоставлять его по требованию. Именно для этого случая предосмотрено хранилище в сервисе.
 
-Вы можете сделать свой класс хранилища - нужно реализовать протокол `WebServiceStorage`. Но как правило этого не требуется, т.к. уже есть готовые классы для использования, которые покрывают все необходимые случаи использования - `WebServiceFileStorage`, `WebServiceDataBaseStorage` и `WebServiceMemoryStorage`. В большинстве случаев вы будете использовать только один на выбор, но в случае более сложной логики их можно комбинировать и повторять с разными настройками, разделяя их класификацией данных (подробнее об этом ниже). 
+Вы можете сделать свой класс хранилища - нужно реализовать протокол `WebServiceStorage`. Но как правило этого не требуется, т.к. уже есть готовые классы для использования, которые покрывают все необходимые случаи использования - `WebServiceFileStorage`, `WebServiceDataBaseStorage` и `WebServiceMemoryStorage`. В большинстве случаев вы будете использовать только один на выбор, но в случае более сложной логики их можно комбинировать и повторять с разными настройками, разделяя их классификацией данных (подробнее об этом ниже). 
 
 Не каждый запрос сохраняется в хранилище, а только те которые соотвествуют либо общему протоколу хранения (рекомендуется), либо протоколу конкретного типа храннилища. 
 Данные могут храниться как правило в двух вариантах:
@@ -654,9 +655,11 @@ extension SiteWebServiceRequests.GetList: WebServiceRequestValueGeneralStoring {
 ```
 
 To separate the storage method, requests can be classified by a specific type of storage - which you decide. By default, all data is classified as `WebServiceDefaultDataClassification = "default"`. 
+
 For example, this case can be popular: ordinary caches, user caches (deleted when leaving the account) and temporary caches stored only in RAM while the application is running. Each data class has its own storage.
 
-Для удобства разделения способа хранения, запросы можно класификовать по определенному типу хранения - какоему именно решаете вы. По умолчанию все данные классифицируются как `WebServiceDefaultDataClassification = "default"`. 
+Для удобства разделения способа хранения, запросы можно классификовать по определенному типу хранения - какому именно решаете вы. По умолчанию все данные классифицируются как `WebServiceDefaultDataClassification = "default"`. 
+
 К примеру, может быть популярен такой случай: обычные кеши, кеши пользователя (удаляются при выходе из аккаунта) и временные кеши хранящийся только в оперативной памяти пока приложение запущено. На каждый класс данных есть свое хранилище. 
 
 #### Example data classification:
@@ -696,30 +699,30 @@ extension WebService {
 }
 
 extension UserWebServiceRequests.GetInformation: WebServiceRequestRawGeneralStoring {
-    var identificatorForStorage: String? {
-        return "UserInformation"
-    }
-    
     var dataClassificationForStorage: AnyHashable { 
         return WebServiceDataClass.user
+    }
+
+    var identificatorForStorage: String? {
+        return "UserInformation"
     }
 }
 ```
 
 Data from storage should always be requested explicitly. This request can be linked to the request to the server in two versions:
-- `ReadStorageDependencyType.dependSuccessResult`: The request to storage will be canceled if the data from the server comes before without an error;
-- `ReadStorageDependencyType.dependFull`: The request to storage will be canceled if the data from the server comes earlier without error or the request to the server itself will be canceled or it will be a duplicate.
+- `WebService.ReadStorageDependencyType.dependSuccessResult`: The request to storage will be canceled if the data from the server comes before without an error;
+- `WebService.ReadStorageDependencyType.dependFull`: The request to storage will be canceled if the data from the server comes earlier without error or the request to the server itself will be canceled or it will be a duplicate.
 
 The request to the server to which the request to storage is attached should be called immediately after the request to storage - this request will be bound regardless of its type. 
-It is possible to cancel explicit requests in storage only through the main request to the server associated with it as `ReadStorageDependencyType.dependFull`.
+It is possible to cancel explicit requests in storage only through the main request to the server associated with it as `.dependFull`.
 
 
 Данные из хранилища всегда нужно запрашивать явно. Это запрос можно привязать к запросу на сервер в двух вариантах:
-- `ReadStorageDependencyType.dependSuccessResult`: Запрос к хранилищу будет отменен если данные с сервера придут раньше без ошибки;
-- `ReadStorageDependencyType.dependFull`: Запрос к хранилищу будет отменен если данные с сервера придут раньше без ошибки или сам запрос на сервер будет отменен или окажется дублирующим.
+- `WebService.ReadStorageDependencyType.dependSuccessResult`: Запрос к хранилищу будет отменен если данные с сервера придут раньше без ошибки;
+- `WebService.ReadStorageDependencyType.dependFull`: Запрос к хранилищу будет отменен если данные с сервера придут раньше без ошибки или сам запрос на сервер будет отменен или окажется дублирующим.
 
 Запрос к серверу, к которому привязывается запрос к хранилищу должен быть вызван сразу после запроса к хранилищу - именно этот запрос будет привязан в независимости от его типа. 
-Отменять явно запросы в хранилище можно только через связанный как `ReadStorageDependencyType.dependFull` основной запрос на сервер. 
+Отменять явно запросы в хранилище можно только через связанный как `.dependFull` основной запрос на сервер. 
 
 
 #### Example read data in storages:
@@ -763,7 +766,7 @@ webService.readStorage(ExampleRequest(param1: val1, param2: val2), dependencyNex
 
 If part of the API is not available or you just need to generate temporary test data, you can use the `WebServiceMockEndpoint`. The mock endpoint emulates receiving and processing data from a real server and returns exactly the data that you specify. To maintain its request, you need to extend the request to the protocol `WebServiceMockRequesting`.
 
-Если часть API недоступна или вам просто нужно предоставить временные тестовые данные, вы можете использовать `WebServiceMockEndpoint`. Mock endpoint эмулирует получение и обработку данных с реального сервера и возвращает те данные, которые вы указали. Для поддержания его запросом, нужно запрос расширить до протокола `WebServiceMockRequesting`. 
+Если часть API недоступна или вам просто нужно предоставить временные тестовые данные, вы можете использовать `WebServiceMockEndpoint`. Mock endpoint эмулирует получение и обработку данных с реального сервера и возвращает те данные, которые вы указали. Для поддержки его запросом, нужно запрос расширить до протокола `WebServiceMockRequesting`. 
 
 #### Example of request support mock engine:
 
@@ -787,12 +790,12 @@ extension ExampleRequest: WebServiceMockRequesting {
 }
 ```
 
-To support your request types instead of `WebServiceMockRequesting`, you can create your mock class by inheriting from `WebServiceMockEndpoint` and overriding the functions `isSupportedRequest()` and `convertToMockRequest`. The latter function converts your request into a suitable type with the implementation of the protocol `WebServiceMockRequesting`. Its class for processing mocks can be prised in the first place for a unit tests - so as not to add the implementation of mocks to the main code.
+To support your request types instead of `WebServiceMockRequesting`, you can create your mock class by inheriting from `WebServiceMockEndpoint` and overriding the functions `isSupportedRequest()` and `convertToMockRequest`. The latter function converts your request into a suitable type with the implementation of the protocol `WebServiceMockRequesting`. Its class for processing mocks can be useful in the first place for a unit tests - so as not to add the implementation of mocks to the main code.
 
 The other endpoint is well suited for a unit tests - `WebServiceMockRequestEndpoint`. Each instance is intended only for one type of request, all processing is indicated in the place of configuration of the service. Such endpoints can be any number.
 
 
-Для поддержки своих типов запросов взамен `WebServiceMockRequesting` вы можете создать свой mock класс наследовавшись от `WebServiceMockEndpoint` и переопределив функции `isSupportedRequest()` и `convertToMockRequest`. Последняя функция конвертирует ваш запрос в подходящий ему тип с реализацией протокола `WebServiceMockRequesting`.  Свой класс для обработки моков может быть поедезен в первую очередь для юнит тестов - чтобы не добавлять реализации моков в основной код.
+Для поддержки своих типов запросов взамен `WebServiceMockRequesting` вы можете создать свой mock класс наследовавшись от `WebServiceMockEndpoint` и переопределив функции `isSupportedRequest()` и `convertToMockRequest`. Последняя функция конвертирует ваш запрос в подходящий ему тип с реализацией протокола `WebServiceMockRequesting`.  Свой класс для обработки моков может быть полезен в первую очередь для юнит тестов - чтобы не добавлять реализации моков в основной код.
 
 Другой вариант, хорошо подходит для юнит тестов - `WebServiceMockRequestEndpoint`. Каждый экземпляр предназначен только для одного типа запроса, вся обработка указывается в месте настройки сервиса. Таких обработчиков может быть сколько угодно. 
 
