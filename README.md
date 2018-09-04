@@ -279,7 +279,40 @@ class WebServiceHtmlV2Endpoint: WebServiceAlamofireBaseEndpoint {
 }
 ```
 
+Important - the data passed to `completionWithRawData` can not always be of the `Data` type, in this case it is recommended that this type implement the `WebServiceRawDataSource` protocol. Binary data is needed to be able to save them as Raw in the storage. It is worth noting that from theStorage to the handler, the read data comes in the form of `Data` and it should be taken into account.
 
+Важный момент - данные передаваемые в `completionWithRawData` не всегда могут иметь тип `Data`, в этом случае рекомендуется чтобы этот тип реализовывал протокол `WebServiceRawDataSource`. Бинарные данные нужны для возможности сохранять их как Raw в кеше. Стоит обратить внимание на то, что из хранилища в обработчик прочитанные данные поступают как `Data` и следует это предусмотреть.
+
+#### Example:
+
+```swift
+/// Data from server as raw, used only as example
+struct ServerData: WebServiceRawDataSource {
+    let statusCode: Int
+    let binary: Data
+
+    var binaryRawData: Data? { return binary }
+}
+
+func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any {
+    guard request is WebServiceHtmlRequesting else {
+        throw WebServiceRequestError.notSupportDataProcessing
+    }
+
+    let binary: Data
+    if let data = rawData as? Data {
+        //Data from Storage
+        binary = data
+    } else if let data = rawData as? ServerData {
+        //Data from server
+        binary = data.binary
+    } else {
+        throw WebServiceRequestError.notSupportDataProcessing
+    }
+
+    return String(data: binary, encoding: .utf8) ?? String(data: binary, encoding: .windowsCP1251) ?? ""
+}
+```
 
 Working with the network is not a prerequisite for the endpoint. Behind this layer, you can hide the work with the database or at least temporarily put a stub. On the interface service side, this is not important and during the development of the endpoint can be unnoticeably replaced, without changing the code of the requests themselves.
 
@@ -551,12 +584,35 @@ func performRequests() {
 
 ### Storages
 
+In order for the application to work without the Internet, it is very useful to save the received data in permanent storage, because data stored on the user's device is read as a rule much faster than through the network and does not depend on the state of connection to the Internet.  In most cases, this is enough to save the last received response from the server and provide it on demand. It is for this case that the storage in the service is provided.
+
+You can create your own storage class by implementing the `WebServiceStorage` protocol. But in most cases this is not required, since there are already ready classes for use that cover all the necessary cases of use - `WebServiceFileStorage`, `WebServiceDataBaseStorage` and `WebServiceMemoryStorage`. In most cases, you will only use one to choose from, but in the case of more complex logic, you can combine and repeat them with different settings, separating them by the classification of the data (more on this below).
+
+Not every request is stored in the storage, but only those that meet either the general storage protocol (recommended) or the protocol of a particular storage type.
+Data can be stored as a rule in two versions:
+- Raw: raw data from the server (usually binary). This type of data after reading is sent for processing to a suitable endpoint;
+- Value: processed data. This type of data is immediately sent as a result after reading.
+
+Raw is convenient because you do not need to write the converter to binaries, since the incoming data from the server is usually already in this form.
+Value is more optimized, since the data is already processed and does not require re-processing, but it is required to provide converters to binary type and vice versa (Codable is usually used).
+If the complexity of processing from the server and in the value converter is the same, then it is much better to use Raw, otherwise, if possible Value - depends on the data and processing request.
+
+Usually storages can provide along with the data (timeStamp) when the data has been saved - this allows you to evaluate whether the data is outdated for use.
+
+The data in storages can be deleted according to one of the following characteristics:
+- For concrete request: `WebService.deleteInStorage(request:)`;
+- All data in certain storages, intended only for a specific classification data: `WebService.deleteAllInStorages(withDataClassification:)`;
+- All data in certain storages intended for any classification, storages with a specific list of data classifications will be omitted: `WebService.deleteAllInStoragesWithAnyDataClassification()`;
+- All data in all storages: `WebService.deleteAllInStorages()`;
+
+#
+
 Для того чтобы приложение могло работать без интернета, очень полезно сохранять полученные данные в постоянном хранилище, т.к. данные сохраненные на устройстве пользователя читаются как правило куда быстрее чем через сеть и не зависят от состояния подключения к сети интернет.  В большинстве случаев для этого хватает сохранять последний полученный ответ с сервера и предоставлять его по требованию. Именно для этого случая предосмотрено хранилище в сервисе.
 
 Вы можете сделать свой класс хранилища - нужно реализовать протокол `WebServiceStorage`. Но как правило этого не требуется, т.к. уже есть готовые классы для использования, которые покрывают все необходимые случаи использования - `WebServiceFileStorage`, `WebServiceDataBaseStorage` и `WebServiceMemoryStorage`. В большинстве случаев вы будете использовать только один на выбор, но в случае более сложной логики их можно комбинировать и повторять с разными настройками, разделяя их класификацией данных (подробнее об этом ниже). 
 
 Не каждый запрос сохраняется в хранилище, а только те которые соотвествуют либо общему протоколу хранения (рекомендуется), либо протоколу конкретного типа храннилища. 
-Данные могут храниться как правило в двух варианта:
+Данные могут храниться как правило в двух вариантах:
 - Raw: необработанные данные с сервера (как правило бинарные). Такой тип данных после чтения отправляется на обработку в подходящий обработчик (endpoint);
 - Value: обработанные данные. Такой тип данных после чтения сразу отправляется как результирующий. 
 
@@ -568,9 +624,9 @@ Value более оптимизирован, т.к. данные уже обра
 
 Данные в хранилищах можно удалять по одному из признаков:
 - Для конкретного запроса: `WebService.deleteInStorage(request:)`;
-- Все данные в хранилищах предназначенные только для данных определенной классификации: `WebService.deleteAllInStorages(withDataClassification:)`;
-- Все данные в хранилищах предназначенные для любой классификации, хранилища с конкретным списком классификаций будут пропущены: `WebService.deleteAllInStoragesWithAnyDataClassification()`;
-- Все хранилища: `WebService.deleteAllInStorages()`;
+- Все данные в определенных хранилищах, предназначенные только для данных определенной классификации: `WebService.deleteAllInStorages(withDataClassification:)`;
+- Все данные в определенных хранилищах, предназначенные для любой классификации, хранилища с конкретным списком классификаций будут пропущены: `WebService.deleteAllInStoragesWithAnyDataClassification()`;
+- Все данные во всех хранилищах: `WebService.deleteAllInStorages()`;
 
 
 #### Example support request storing:
@@ -597,8 +653,11 @@ extension SiteWebServiceRequests.GetList: WebServiceRequestValueGeneralStoring {
 }
 ```
 
-Для удобства разделения способа хранения запросы можно класификовать по определенному типу хранения - какоему именно решаете вы. По умолчанию все данные классифицируются как `WebServiceDefaultDataClassification = "default"`. 
-К примеру может быть популярен такой случай: обычные кеши, кеши пользователя (удаляются при выходе из аккаунта) и временные кеши хранящийся только в оперативной памяти пока приложение запущено. На каждый класс данных есть свое хранилище. 
+To separate the storage method, requests can be classified by a specific type of storage - which you decide. By default, all data is classified as `WebServiceDefaultDataClassification = "default"`. 
+For example, this case can be popular: ordinary caches, user caches (deleted when leaving the account) and temporary caches stored only in RAM while the application is running. Each data class has its own storage.
+
+Для удобства разделения способа хранения, запросы можно класификовать по определенному типу хранения - какоему именно решаете вы. По умолчанию все данные классифицируются как `WebServiceDefaultDataClassification = "default"`. 
+К примеру, может быть популярен такой случай: обычные кеши, кеши пользователя (удаляются при выходе из аккаунта) и временные кеши хранящийся только в оперативной памяти пока приложение запущено. На каждый класс данных есть свое хранилище. 
 
 #### Example data classification:
 
@@ -647,9 +706,17 @@ extension UserWebServiceRequests.GetInformation: WebServiceRequestRawGeneralStor
 }
 ```
 
-Данные их хранилища всегда нужно запрашивать явно. Это запрос можно привязать к запросу на сервер в двух вариантах:
-- `ReadStorageDependencyType.dependSuccessResult`: Запрос к хранилищу будет отменен если данные с сервера прийдут раньше без ошибки;
-- `ReadStorageDependencyType.dependFull`: Запрос к хранилищу будет отменен если данные с сервера прийдут раньше без ошибки или сам запрос на сервер будет отменен или окажется дублирующим;
+Data from storage should always be requested explicitly. This request can be linked to the request to the server in two versions:
+- `ReadStorageDependencyType.dependSuccessResult`: The request to storage will be canceled if the data from the server comes before without an error;
+- `ReadStorageDependencyType.dependFull`: The request to storage will be canceled if the data from the server comes earlier without error or the request to the server itself will be canceled or it will be a duplicate.
+
+The request to the server to which the request to storage is attached should be called immediately after the request to storage - this request will be bound regardless of its type. 
+It is possible to cancel explicit requests in storage only through the main request to the server associated with it as `ReadStorageDependencyType.dependFull`.
+
+
+Данные из хранилища всегда нужно запрашивать явно. Это запрос можно привязать к запросу на сервер в двух вариантах:
+- `ReadStorageDependencyType.dependSuccessResult`: Запрос к хранилищу будет отменен если данные с сервера придут раньше без ошибки;
+- `ReadStorageDependencyType.dependFull`: Запрос к хранилищу будет отменен если данные с сервера придут раньше без ошибки или сам запрос на сервер будет отменен или окажется дублирующим.
 
 Запрос к серверу, к которому привязывается запрос к хранилищу должен быть вызван сразу после запроса к хранилищу - именно этот запрос будет привязан в независимости от его типа. 
 Отменять явно запросы в хранилище можно только через связанный как `ReadStorageDependencyType.dependFull` основной запрос на сервер. 
@@ -686,31 +753,31 @@ webService.readStorageData(TestRequest(), dependencyNextRequest: .notDepend) { [
         self?.testData = data
     }
 }
-```
 
+/// responseOnlyData - ignore errors and canceled read
+webService.readStorage(ExampleRequest(param1: val1, param2: val2), dependencyNextRequest: .dependSuccessResult, responseOnlyData: true, responseDelegate: self)
+```
 
 
 ### Mock Endpoints
 
-If part of the API is not available or you just need to generate temporary test data, you can use the `WebServiceMockEngine`. The mock engine emulates receiving and processing data from a real server and returns exactly the data that you specify.
+If part of the API is not available or you just need to generate temporary test data, you can use the `WebServiceMockEndpoint`. The mock endpoint emulates receiving and processing data from a real server and returns exactly the data that you specify. To maintain its request, you need to extend the request to the protocol `WebServiceMockRequesting`.
 
-Если часть API недоступна или вам просто нужно предоставить временные тестовые данные, вы можете использовать `WebServiceMockEngine`. Mock engine эмулирует получение и обработку данных с реального сервера и возвращает те данные, которые вы указали.
-
+Если часть API недоступна или вам просто нужно предоставить временные тестовые данные, вы можете использовать `WebServiceMockEndpoint`. Mock endpoint эмулирует получение и обработку данных с реального сервера и возвращает те данные, которые вы указали. Для поддержания его запросом, нужно запрос расширить до протокола `WebServiceMockRequesting`. 
 
 #### Example of request support mock engine:
 
 ```swift
 extension ExampleRequest: WebServiceMockRequesting {
-    var isSupportedRequest: Bool { return true }
+    var isSupportedRequestForMock: Bool { return true }
+    var mockTimeDelay: TimeInterval? { return 3 }
 
-    var timeWait: TimeInterval? { return 3 }
-
-    var helperIdentifier: String? { return "template_html" }
-    func createHelper() -> Any? {
+    var mockHelperIdentifier: String? { return "template_html" }
+    func mockCreateHelper() -> Any? {
         return "<html><body>%[BODY]%</body></html>"
     }
 
-    func responseHandler(helper: Any?) throws -> String {
+    func mockResponseHandler(helper: Any?) throws -> String {
         if let template = helper as? String {
             return template.replacingOccurrences(of: "%[BODY]%", with: "<b>Hello world!</b>")
         } else {
@@ -720,7 +787,25 @@ extension ExampleRequest: WebServiceMockRequesting {
 }
 ```
 
+To support your request types instead of `WebServiceMockRequesting`, you can create your mock class by inheriting from `WebServiceMockEndpoint` and overriding the functions `isSupportedRequest()` and `convertToMockRequest`. The latter function converts your request into a suitable type with the implementation of the protocol `WebServiceMockRequesting`. Its class for processing mocks can be prised in the first place for a unit tests - so as not to add the implementation of mocks to the main code.
 
+The other endpoint is well suited for a unit tests - `WebServiceMockRequestEndpoint`. Each instance is intended only for one type of request, all processing is indicated in the place of configuration of the service. Such endpoints can be any number.
+
+
+Для поддержки своих типов запросов взамен `WebServiceMockRequesting` вы можете создать свой mock класс наследовавшись от `WebServiceMockEndpoint` и переопределив функции `isSupportedRequest()` и `convertToMockRequest`. Последняя функция конвертирует ваш запрос в подходящий ему тип с реализацией протокола `WebServiceMockRequesting`.  Свой класс для обработки моков может быть поедезен в первую очередь для юнит тестов - чтобы не добавлять реализации моков в основной код.
+
+Другой вариант, хорошо подходит для юнит тестов - `WebServiceMockRequestEndpoint`. Каждый экземпляр предназначен только для одного типа запроса, вся обработка указывается в месте настройки сервиса. Таких обработчиков может быть сколько угодно. 
+
+#### Example used WebServiceMockRequestEndpoint:
+
+```swift
+let template = "<html><body>%[BODY]%</body></html>"
+let mockRequest = WebServiceMockRequestEndpoint.init(timeDelay: 3) { (request: ExampleRequest) -> String in
+    return template.replacingOccurrences(of: "%[BODY]%", with: "<b>Hello world from MockRequestEndpoint!</b>")
+}
+
+let webService = WebService(endpoints: [mockRequest, mockRequest2, mockRequest3], storages: [])
+```
 
 
 ## Author
