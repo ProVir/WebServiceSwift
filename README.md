@@ -22,7 +22,7 @@ Network layer as Service. Service as an interface for interacting with your web 
 - [License](#license)
 
 
-## General scheme use WebServiceSwift in project (SOA).
+## General scheme use WebServiceSwift in project.
 
  ![Scheme](https://raw.githubusercontent.com/ProVir/WebServiceSwift/dev/WebServiceScheme.png) 
 
