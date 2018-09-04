@@ -24,7 +24,7 @@ Network layer as Service. Service as an interface for interacting with your web 
 
 ## General scheme use WebServiceSwift in project.
 
- ![Scheme](https://raw.githubusercontent.com/ProVir/WebServiceSwift/dev/WebServiceScheme_v3.png) 
+ ![Scheme](https://raw.githubusercontent.com/ProVir/WebServiceSwift/master/WebServiceScheme_v3.png) 
 
 
 ## Features
