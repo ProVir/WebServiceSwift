@@ -199,7 +199,7 @@ protocol WebServiceHtmlRequesting: WebServiceBaseRequesting {
     var url: URL { get }
 }
 
-class WebServiceHtmlEngine: WebServiceEndpoint {
+class WebServiceHtmlEndpoint: WebServiceEndpoint {
     let queueForRequest: DispatchQueue? = DispatchQueue.global(qos: .background)
     let queueForDataProcessing: DispatchQueue? = nil
     let queueForDataProcessingFromStorage: DispatchQueue? = DispatchQueue.global(qos: .background)
@@ -343,7 +343,7 @@ Each request must implement the support protocols for each endpoint that can han
 ```swift
 extension WebService {
     convenience init() {
-        let endpoint = WebServiceEndpoint()
+        let endpoint = WebServiceHtmlV2Endpoint()
         
         var storages: [WebServiceStoraging] = []
         if let storage = WebServiceDataBaseStorage() {
