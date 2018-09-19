@@ -334,12 +334,12 @@
 				TargetAttributes = {
 					501D2ABC1F4E8DD0000E3FA3 = {
 						CreatedOnToolsVersion = 8.3.3;
-						LastSwiftMigration = 0920;
+						LastSwiftMigration = 1000;
 						ProvisioningStyle = Manual;
 					};
 					501D2AD61F4E8DF5000E3FA3 = {
 						CreatedOnToolsVersion = 8.3.3;
-						LastSwiftMigration = 0920;
+						LastSwiftMigration = 1000;
 						ProvisioningStyle = Manual;
 					};
 				};
@@ -638,6 +638,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = ru.provir.WebServiceExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_VERSION = 4.2;
 			};
 			name = Debug;
 		};
@@ -653,6 +654,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = ru.provir.WebServiceExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_VERSION = 4.2;
 			};
 			name = Release;
 		};
@@ -677,6 +679,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 4.2;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -702,6 +705,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 4.2;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
