@@ -6,7 +6,7 @@
 [![Platform](https://cocoapod-badges.herokuapp.com/p/WebServiceSwift/badge.png)](http://cocoapods.org/pods/WebServiceSwift)
 [![License](https://cocoapod-badges.herokuapp.com/l/WebServiceSwift/badge.png)](https://github.com/ProVir/WebServiceSwift/blob/master/LICENSE)
 
-Network layer as Service. Service as an interface for interacting with your web server. Support Swift 4. 
+Network layer as Service. Service as an interface for interacting with your web server. Support Swift 5. 
 
 - [Features](#features)
 - [Requirements](#requirements)
@@ -47,8 +47,8 @@ Network layer as Service. Service as an interface for interacting with your web 
 ## Requirements
 
 - iOS 8.0+ / macOS 10.10+ / tvOS 9.0+ / watchOS 2.0+
-- Xcode 9.0 and above
-- Swift 4.0 and above
+- Xcode 10.2 and above
+- Swift 5.0 and above
 
 
 ## Communication
@@ -70,14 +70,13 @@ Network layer as Service. Service as an interface for interacting with your web 
 $ gem install cocoapods
 ```
 
-> CocoaPods 1.1.0+ is required to build WebServiceSwift 3.0.0+.
+> CocoaPods 1.6.0+ is required to build WebServiceSwift 3.0.0+.
 
 To integrate WebServiceSwift into your Xcode project using CocoaPods, specify it in your `Podfile`:
 
 ```ruby
 source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
-use_frameworks!
 
 target '<Your Target Name>' do
     pod 'WebServiceSwift', '~> 3.0'

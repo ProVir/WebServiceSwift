@@ -37,7 +37,7 @@ public protocol WebServiceMockRequesting: WebServiceRequesting, WebServiceMockBa
 }
 
 public extension WebServiceMockRequesting {
-    public func mockResponseBaseHandler(helper: Any?) throws -> Any {
+    func mockResponseBaseHandler(helper: Any?) throws -> Any {
         return try mockResponseHandler(helper: helper)
     }
 }

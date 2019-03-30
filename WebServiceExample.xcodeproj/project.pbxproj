@@ -94,6 +94,7 @@
 		506CAFCD2084D707008AB016 /* WebServiceTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceTypes.swift; sourceTree = "<group>"; };
 		507529A421032E61008A167A /* WebServiceDataBaseStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceDataBaseStorage.swift; sourceTree = "<group>"; };
 		507529A72103321A008A167A /* WebServiceDataBaseStorage.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = WebServiceDataBaseStorage.xcdatamodel; sourceTree = "<group>"; };
+		50A1C664224D7365003A8554 /* Cartfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Cartfile; sourceTree = "<group>"; };
 		50A9162420B09C4C00EA2E9D /* WebServiceSwift.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; fileEncoding = 4; path = WebServiceSwift.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		50AB6AAF20883C2F00C1E093 /* SiteWebProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteWebProvider.swift; sourceTree = "<group>"; };
 		50AB6AB120883F3100C1E093 /* WebService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebService.swift; sourceTree = "<group>"; };
@@ -149,8 +150,9 @@
 		501D2AB41F4E8DD0000E3FA3 = {
 			isa = PBXGroup;
 			children = (
-				50F0804F20AC843B00994710 /* README.md */,
 				50A9162420B09C4C00EA2E9D /* WebServiceSwift.podspec */,
+				50A1C664224D7365003A8554 /* Cartfile */,
+				50F0804F20AC843B00994710 /* README.md */,
 				501D2ABF1F4E8DD0000E3FA3 /* Example */,
 				501D2AD81F4E8DF5000E3FA3 /* Source */,
 				501D2ABE1F4E8DD0000E3FA3 /* Products */,
@@ -329,24 +331,24 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0830;
-				LastUpgradeCheck = 0930;
+				LastUpgradeCheck = 1020;
 				ORGANIZATIONNAME = ProVir;
 				TargetAttributes = {
 					501D2ABC1F4E8DD0000E3FA3 = {
 						CreatedOnToolsVersion = 8.3.3;
-						LastSwiftMigration = 1000;
+						LastSwiftMigration = 1020;
 						ProvisioningStyle = Manual;
 					};
 					501D2AD61F4E8DF5000E3FA3 = {
 						CreatedOnToolsVersion = 8.3.3;
-						LastSwiftMigration = 1000;
+						LastSwiftMigration = 1020;
 						ProvisioningStyle = Manual;
 					};
 				};
 			};
 			buildConfigurationList = 501D2AB81F4E8DD0000E3FA3 /* Build configuration list for PBXProject "WebServiceExample" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
@@ -638,7 +640,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = ru.provir.WebServiceExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -654,7 +656,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = ru.provir.WebServiceExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
@@ -679,7 +681,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -705,7 +707,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
