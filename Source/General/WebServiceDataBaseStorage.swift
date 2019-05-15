@@ -76,7 +76,7 @@ public extension WebServiceRequestValueDataBaseStoring {
 
 /// Simple store in sqlite data base (CoreData) for WebService.
 public class WebServiceDataBaseStorage: WebServiceStorage {
-    typealias Item = WebServiceDataBaseStorage_Item
+    typealias Item = WebServiceDataBaseStorageItem
     
     public let supportDataClassification: Set<AnyHashable>
     private let managedObjectContext: NSManagedObjectContext
@@ -264,3 +264,14 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
 
 }
 
+@objc(WebServiceDataBaseStorageItem)
+public class WebServiceDataBaseStorageItem: NSManagedObject {
+    @nonobjc public class func fetchRequest() -> NSFetchRequest<WebServiceDataBaseStorageItem> {
+        return NSFetchRequest<WebServiceDataBaseStorageItem>(entityName: "Item")
+    }
+
+    @NSManaged public var binary: Data?
+    @NSManaged public var idItem: String?
+    @NSManaged public var isRaw: Bool
+    @NSManaged public var timeStamp: Date?
+}

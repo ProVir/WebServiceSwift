@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="14135" systemVersion="17G65" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
-    <entity name="Item" representedClassName="WebServiceDataBaseStorage_Item" syncable="YES" codeGenerationType="class">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="14460.32" systemVersion="18E226" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="Item" representedClassName="WebServiceDataBaseStorageItem" syncable="YES">
         <attribute name="binary" attributeType="Binary" syncable="YES"/>
         <attribute name="idItem" attributeType="String" syncable="YES"/>
         <attribute name="isRaw" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES" syncable="YES"/>
