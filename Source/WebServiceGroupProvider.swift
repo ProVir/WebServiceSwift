@@ -9,14 +9,15 @@
 import Foundation
 
 /// Provider for group requests
+@available(*, deprecated, message: "Can be removed in next versions")
 public class WebServiceGroupProvider<GroupType: WebServiceGroupRequests>: WebServiceRestrictedProvider, WebServiceProvider {
     public required init(webService: WebService) {
         super.init(webService: webService, requestTypes: GroupType.requestTypes)
     }
 }
 
-
 /// Equal WebService functional, but support only concrete request types (assert if don't support)
+@available(*, deprecated, message: "Can be removed in next versions")
 public class WebServiceRestrictedProvider {
     private let service: WebService
     private let requestTypes: [WebServiceBaseRequesting.Type]

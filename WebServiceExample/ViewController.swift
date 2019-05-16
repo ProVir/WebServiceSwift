@@ -17,7 +17,6 @@ class ViewController: UIViewController {
     
     let siteWebProvider: SiteWebProvider = WebService.createDefault().createProvider()
     let siteYouTubeProvider: WebServiceRequestProvider<SiteWebServiceRequests.SiteYouTube> = WebService.default.createProvider()
-    let siteWebGroupProvider = WebServiceGroupProvider<SiteWebServiceRequests>(webService: WebService.default.clone())
     
 
     override func viewDidLoad() {
