@@ -38,17 +38,18 @@ Network layer as Service. Service as an interface for interacting with your web 
 - [x] Support NetworkActivityIndicator on iOS.
 - [x] Thread safe.
 - [x] Responses with concrete type in completion handler closures. 
-- [x] Providers for requests (have RequestProvider and GroupProvider) for work with only concrete requests. Used to indicate more explicit dependencies (DIP). 
+- [x] RequestProvider for work with only concrete request. Used to indicate more explicit dependencies (DIP). 
 - [x] Mock endpoints for temporary or test response data without use real api endpoint. 
 - [x] Full support Alamofire (include base endpoint).
 - [x] Simple HTTP Endpoints (NSURLSession or Alamofire).  
+- [x] Support as static framework
 
 
 ## Requirements
 
 - iOS 8.0+ / macOS 10.10+ / tvOS 9.0+ / watchOS 2.0+
-- Xcode 10.2 and above
-- Swift 5.0 and above
+- Xcode 9.0 and above
+- Swift 4.0 and above
 
 
 ## Communication
@@ -70,7 +71,7 @@ Network layer as Service. Service as an interface for interacting with your web 
 $ gem install cocoapods
 ```
 
-> CocoaPods 1.6.0+ is required to build WebServiceSwift 3.0.0+.
+> CocoaPods 1.1.0+ is required to build WebServiceSwift 3.1.0+.
 
 To integrate WebServiceSwift into your Xcode project using CocoaPods, specify it in your `Podfile`:
 
@@ -79,18 +80,18 @@ source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
 
 target '<Your Target Name>' do
-    pod 'WebServiceSwift', '~> 3.0'
+    pod 'WebServiceSwift', '~> 3.1'
 end
 ```
 
 Also you can use Alamofire endpoints:
 ```ruby
-pod 'WebServiceSwift/Alamofire', '~> 3.0'
+pod 'WebServiceSwift/Alamofire', '~> 3.1'
 ```
 
 Or only core without simple endpoints and storages:
 ```ruby
-pod 'WebServiceSwift/Core', '~> 3.0'
+pod 'WebServiceSwift/Core', '~> 3.1'
 ```
 
 
@@ -114,7 +115,7 @@ $ brew install carthage
 To integrate WebServiceSwift into your Xcode project using Carthage, specify it in your `Cartfile`:
 
 ```ogdl
-github "ProVir/WebServiceSwift" ~> 3.0
+github "ProVir/WebServiceSwift" ~> 3.1
 ```
 
 Run `carthage update` to build the framework and drag the built `WebServiceSwift.framework` into your Xcode project.
@@ -127,7 +128,7 @@ Once you have your Swift package set up, adding WebServiceSwift as a dependency 
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/ProVir/WebServiceSwift.git", from: "3.0.0")
+    .package(url: "https://github.com/ProVir/WebServiceSwift.git", from: "3.1.0")
 ]
 ```
 
@@ -153,7 +154,7 @@ To use the library, you need:
 
 The project has a less abstract example of using the library, which can be downloaded separately. Study the classes `WebServiceSimpleEndpoint` и `WebServiceAlamofireSimpleEndpoint` - they are a good example of its endpoint.
 
-To create non-compliant copies of a service with the same set of endpoints and storages, you can call `WebService.clone ()`. Each copy independently manages its requests and cancels them automatically when an instance of the service is deinited.
+To create non-compliant copies of a service with the same set of endpoints and storages, you can call `WebService.clone()`. Each copy independently manages its requests and cancels them automatically when an instance of the service is deinited.
 
 #
 
@@ -506,10 +507,7 @@ To add more explicit dependencies to your project, as well as to protect against
 #### Example own provider:
 
 ```swift
-struct SiteWebServiceRequests: WebServiceGroupRequests {
-    static let requestTypes: [WebServiceBaseRequesting.Type] 
-        = [ExampleRequest.self, GetList.self]
-    
+enum SiteWebServiceRequests {
     struct Example: WebServiceRequesting, Hashable {
         let site: String  
         let domainRu: Bool
@@ -541,21 +539,19 @@ class SiteWebProvider: WebServiceProvider {
 }
 ```
 
-You can use two ready-made generic provider classes - `WebServiceRequestProvider` (for one type of request) and `WebServiceGroupProvider` (for a group of requests). To support your set of valid requests, you can use `WebServiceRestrictedProvider` instead of `WebServiceGroupProvider`.
+You can use ready-made generic provider class - `WebServiceRequestProvider` for one type of request.
 
-Вы можете использовать два готовых шаблоных класса провайдера - `WebServiceRequestProvider` (для одного типа запроса) и `WebServiceGroupProvider` (для группы запросов). Для поддержки своего набора допустимых запросов вместо `WebServiceGroupProvider` доступен `WebServiceRestrictedProvider`.
+Вы можете использовать готовый шаблоны класса провайдера - `WebServiceRequestProvider` для одного типа запроса. 
 
 #### Example providers:
 
 ```swift
 let getListSiteWebProvider: WebServiceRequestProvider<SiteWebServiceRequests.GetList>
 let exampleSiteWebProvider: WebServiceRequestProvider<SiteWebServiceRequests.Example>
-let siteWebProvider:        WebServiceGroupProvider<SiteWebServiceRequests>
 
 init(webService: WebService) {
     getListSiteWebProvider = webService.createProvider()
     exampleSiteWebProvider = webService.createProvider()
-    siteWebProvider = webService.createProvider()
 }
 
 func performRequests() {
@@ -575,9 +571,6 @@ func performRequests() {
     
     // RequestProvider for request with params
     exampleSiteWebProvider.performRequest(.init(site: "google", domainRu: false)) { _ in }
-    
-    // GroupProvider, if request don't contains in group - assert (crash in debug, .canceledRequests in release usually).
-    siteWebProvider.performRequest(SiteWebServiceRequests.Example(site: "yandex", domainRu: true)) { _ in }
 }
 ```
 

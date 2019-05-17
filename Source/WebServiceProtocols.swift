@@ -26,6 +26,7 @@ public protocol WebServiceEmptyRequesting: WebServiceRequesting {
 }
 
 /// Groups requests, protocol use for `WebServiceGroupProvider`.
+@available(*, deprecated, message: "Can be removed in next versions")
 public protocol WebServiceGroupRequests {
     /// List all type requests in group
     static var requestTypes: [WebServiceBaseRequesting.Type] { get }

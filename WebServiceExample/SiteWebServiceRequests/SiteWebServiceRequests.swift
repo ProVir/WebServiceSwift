@@ -11,10 +11,7 @@ import WebServiceSwift
 import Alamofire
 
 //MARK: Request
-struct SiteWebServiceRequests: WebServiceGroupRequests {
-    static let requestTypes: [WebServiceBaseRequesting.Type]
-        = [SiteSearch.self, SiteMail.self, SiteYouTube.self]
-    
+enum SiteWebServiceRequests {
     struct SiteSearch: WebServiceRequesting, Hashable {
         let site: Site
         let domain: String
