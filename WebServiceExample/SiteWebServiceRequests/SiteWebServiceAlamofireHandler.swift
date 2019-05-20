@@ -29,7 +29,7 @@ extension SiteWebServiceRequests.SiteSearch: AlamofireSimpleRequesting {
     
     var afResponseType: AlamofireSimpleResponseType { return .binary }
     func afDecodeResponse(_ data: AlamofireSimpleResponseData) throws -> String {
-        return try SiteWebServiceAlamofireHandler.decodeResponse(data: data.binary)
+        return try SiteWebServiceAlamofireHandler.decodeResponse(data: try data.binary())
     }
 }
 
@@ -40,7 +40,7 @@ extension SiteWebServiceRequests.SiteMail: AlamofireSimpleRequesting {
     
     var afResponseType: AlamofireSimpleResponseType { return .binary }
     func afDecodeResponse(_ data: AlamofireSimpleResponseData) throws -> String {
-        return try SiteWebServiceAlamofireHandler.decodeResponse(data: data.binary)
+        return try SiteWebServiceAlamofireHandler.decodeResponse(data: try data.binary())
     }
 }
 
@@ -51,6 +51,6 @@ extension SiteWebServiceRequests.SiteYouTube: AlamofireSimpleRequesting {
     
     var afResponseType: AlamofireSimpleResponseType { return .binary }
     func afDecodeResponse(_ data: AlamofireSimpleResponseData) throws -> String {
-        return try SiteWebServiceAlamofireHandler.decodeResponse(data: data.binary)
+        return try SiteWebServiceAlamofireHandler.decodeResponse(data: try data.binary())
     }
 }

@@ -46,15 +46,21 @@ public enum WebServiceSimpleResponseData {
     case json(Any)
     
     /// Get binary data for decoder
-    public var binary: Data {
-        if case let .binary(value) = self { return value }
-        else { fatalError("Not binary data") }
+    public func binary() throws -> Data {
+        if case let .binary(value) = self {
+            return value
+        } else {
+            throw WebServiceRequestError.gatewayInternal
+        }
     }
     
     /// Get json data for decoder
-    public var json: Any {
-        if case let .json(value) = self { return value }
-        else { fatalError("Not json data") }
+    public func json() throws -> Any {
+        if case let .json(value) = self {
+            return value
+        } else {
+            throw WebServiceRequestError.gatewayInternal
+        }
     }
 }
 
@@ -75,7 +81,7 @@ extension WebServiceSimpleAutoDecoder where ResultType == Void {
 extension WebServiceSimpleAutoDecoder where ResultType == Data {
     var simpleResponseType: WebServiceSimpleResponseType { return .binary }
     func simpleDecodeResponse(_ data: WebServiceSimpleResponseData) throws -> Data {
-        return data.binary
+        return try data.binary()
     }
 }
 
@@ -85,7 +91,7 @@ extension WebServiceSimpleAutoDecoder where ResultType == Data {
 public class WebServiceSimpleGateway: WebServiceGateway {
     public let queueForRequest: DispatchQueue?
     public let queueForDataProcessing: DispatchQueue? = nil
-    public let queueForDataProcessingFromStorage: DispatchQueue? = DispatchQueue.global(qos: .background)
+    public let queueForDataProcessingFromStorage: DispatchQueue? = DispatchQueue.global(qos: .utility)
     public let useNetworkActivityIndicator: Bool
     
     /**

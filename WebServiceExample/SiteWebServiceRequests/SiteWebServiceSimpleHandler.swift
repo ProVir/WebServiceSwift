@@ -27,7 +27,7 @@ extension SiteWebServiceRequests.SiteSearch: WebServiceSimpleRequesting {
     
     var simpleResponseType: WebServiceSimpleResponseType { return .binary }
     func simpleDecodeResponse(_ data: WebServiceSimpleResponseData) throws -> String {
-        return try SiteWebServiceSimpleHandler.decodeResponse(data: data.binary)
+        return try SiteWebServiceSimpleHandler.decodeResponse(data: try data.binary())
     }
 }
 
@@ -38,7 +38,7 @@ extension SiteWebServiceRequests.SiteMail: WebServiceSimpleRequesting {
     
     var simpleResponseType: WebServiceSimpleResponseType { return .binary }
     func simpleDecodeResponse(_ data: WebServiceSimpleResponseData) throws -> String {
-        return try SiteWebServiceSimpleHandler.decodeResponse(data: data.binary)
+        return try SiteWebServiceSimpleHandler.decodeResponse(data: try data.binary())
     }
 }
 
@@ -49,7 +49,7 @@ extension SiteWebServiceRequests.SiteYouTube: WebServiceSimpleRequesting {
     
     var simpleResponseType: WebServiceSimpleResponseType { return .binary }
     func simpleDecodeResponse(_ data: WebServiceSimpleResponseData) throws -> String {
-        return try SiteWebServiceSimpleHandler.decodeResponse(data: data.binary)
+        return try SiteWebServiceSimpleHandler.decodeResponse(data: try data.binary())
     }
 }
 

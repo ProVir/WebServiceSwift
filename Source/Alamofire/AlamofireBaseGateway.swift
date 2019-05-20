@@ -13,7 +13,7 @@ import Alamofire
 open class AlamofireBaseGateway: WebServiceGateway {
     public let queueForRequest: DispatchQueue?
     public let queueForDataProcessing: DispatchQueue? = nil
-    public let queueForDataProcessingFromStorage: DispatchQueue? = DispatchQueue.global(qos: .background)
+    public let queueForDataProcessingFromStorage: DispatchQueue? = DispatchQueue.global(qos: .utility)
     
     public let useNetworkActivityIndicator: Bool
     
