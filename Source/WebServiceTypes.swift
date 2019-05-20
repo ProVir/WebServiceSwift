@@ -33,13 +33,13 @@ public enum WebServiceRequestError: Error {
 
 /// WebService general error enum for response
 public enum WebServiceResponseError: Error {
-    ///Data from server invalid. Use also for `WebServiceResponse.convert()`
-    case invalidData
-    
+    /// Data from server invalid. Usually error value is `WebServiceResponse.ConvertError` or `DecoderError`
+    case invalidData(Error)
+
     /// Data not found in storage
     case notFoundData
     
-    ///General error http status code (usually when != 200)
+    /// General error http status code (usually when != 200)
     case httpStatusCode(Int)
 }
 
@@ -95,6 +95,10 @@ public typealias WebServiceAnyResponse = WebServiceResponse<Any>
 
 ///Response from other type
 public extension WebServiceResponse {
+    public struct ConvertError: Error {
+        let from: Any.Type
+        let to: Any.Type
+    }
     
     ///Convert to response with other type data automatic.
     func convert<T>() -> WebServiceResponse<T> {
@@ -113,7 +117,7 @@ public extension WebServiceResponse {
             if let data = data as? T {
                 return .data(data)
             } else {
-                return .error(WebServiceResponseError.invalidData)
+                return .error(WebServiceResponseError.invalidData(ConvertError(from: type(of: data), to: T.self)))
             }
             
         case .error(let error):

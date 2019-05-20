@@ -14,7 +14,7 @@ struct SiteWebServiceSimpleHandler {
         if let text = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .windowsCP1251) {
             return text
         } else {
-            throw WebServiceResponseError.invalidData
+            throw WebServiceResponseError.invalidData(ParseResponseError.unknownTextEncoding)
         }
     }
 }

@@ -37,7 +37,7 @@ class WebServiceHtmlV2Gateway: AlamofireBaseGateway {
         if let result = String(data: binary, encoding: .utf8) ?? String(data: binary, encoding: .windowsCP1251) {
             return result
         } else {
-            throw WebServiceResponseError.invalidData
+            throw WebServiceResponseError.invalidData(ParseResponseError.unknownTextEncoding)
         }
     }
 }

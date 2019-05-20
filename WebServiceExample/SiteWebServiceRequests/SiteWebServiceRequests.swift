@@ -10,6 +10,10 @@ import Foundation
 import WebServiceSwift
 import Alamofire
 
+enum ParseResponseError: Error {
+    case unknownTextEncoding
+}
+
 //MARK: Request
 enum SiteWebServiceRequests {
     struct SiteSearch: WebServiceRequesting, Hashable {
