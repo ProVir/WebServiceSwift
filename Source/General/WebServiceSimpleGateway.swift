@@ -1,6 +1,6 @@
 //
-//  WebServiceSimpleEndpoint.swift
-//  WebServiceSwift 3.0.0
+//  WebServiceSimpleGateway.swift
+//  WebServiceSwift 4.0.0
 //
 //  Created by Короткий Виталий (ViR) on 01.06.2018.
 //  Copyright © 2018 ProVir. All rights reserved.
@@ -8,9 +8,9 @@
 
 import Foundation
 
-//MARK: Request
+// MARK: Request
 
-/// Base protocol for request use WebServiceSimpleEndpoint
+/// Base protocol for request use WebServiceSimpleGateway
 public protocol WebServiceSimpleBaseRequesting {
     /// Create real request to server
     func simpleRequest() throws -> URLRequest
@@ -33,7 +33,7 @@ public extension WebServiceSimpleRequesting {
     }
 }
 
-//MARK: Response
+// MARK: Response
 /// Response type to require for decoder
 public enum WebServiceSimpleResponseType {
     case binary
@@ -59,7 +59,7 @@ public enum WebServiceSimpleResponseData {
 }
 
 
-//MARK: Auto decoders
+// MARK: Auto decoders
 /// Protocol for enable auto implementation response decoder (simpleResponseType and simpleDecodeResponse) for certain result types.
 protocol WebServiceSimpleAutoDecoder: WebServiceRequesting { }
 
@@ -80,16 +80,16 @@ extension WebServiceSimpleAutoDecoder where ResultType == Data {
 }
 
 
-//MARK: Endpoint
-/// Simple HTTP Endpoint (use URLSession)
-public class WebServiceSimpleEndpoint: WebServiceEndpoint {
+// MARK: Gateway
+/// Simple HTTP Gateway (use URLSession)
+public class WebServiceSimpleGateway: WebServiceGateway {
     public let queueForRequest: DispatchQueue?
     public let queueForDataProcessing: DispatchQueue? = nil
     public let queueForDataProcessingFromStorage: DispatchQueue? = DispatchQueue.global(qos: .background)
     public let useNetworkActivityIndicator: Bool
     
     /**
-     Simple HTTP Endpoint used URLSession constructor.
+     Simple HTTP Gateway used URLSession constructor.
      
      - Parameters:
          - session: URLSession for use, default use shared.
@@ -103,7 +103,7 @@ public class WebServiceSimpleEndpoint: WebServiceEndpoint {
     }
     
     
-    //MARK: Endpoint implementation
+    // MARK: Gateway implementation
     public func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
         return request is WebServiceSimpleBaseRequesting
     }
@@ -120,7 +120,7 @@ public class WebServiceSimpleEndpoint: WebServiceEndpoint {
             
             let task = session.dataTask(with: urlRequest) { [weak self] (data, response, error) in
                 guard let sSelf = self else {
-                    completionWithError(WebServiceRequestError.endpointInternal)
+                    completionWithError(WebServiceRequestError.gatewayInternal)
                     return
                 }
                 
@@ -142,7 +142,7 @@ public class WebServiceSimpleEndpoint: WebServiceEndpoint {
                 } else if let error = error {
                     completionWithError(error)
                 } else {
-                    completionWithError(WebServiceRequestError.endpointInternal)
+                    completionWithError(WebServiceRequestError.gatewayInternal)
                 }
             }
             
@@ -180,7 +180,7 @@ public class WebServiceSimpleEndpoint: WebServiceEndpoint {
         }
     }
     
-    //MARK: - Private
+    // MARK: - Private
     private struct TaskData {
         var requestId: UInt64
         var task: URLSessionDataTask

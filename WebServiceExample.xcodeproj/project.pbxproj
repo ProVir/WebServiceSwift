@@ -18,24 +18,23 @@
 		501D2ADF1F4E8DF5000E3FA3 /* WebServiceSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 501D2AD71F4E8DF5000E3FA3 /* WebServiceSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		501D2AEC1F4E92A1000E3FA3 /* WebServiceFileStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AEB1F4E92A1000E3FA3 /* WebServiceFileStorage.swift */; };
 		501D2AF11F518762000E3FA3 /* SiteWebServiceRequests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AED1F4E9BE5000E3FA3 /* SiteWebServiceRequests.swift */; };
-		501D2AF21F5188CC000E3FA3 /* WebServiceHtmlEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AEF1F4EA1EC000E3FA3 /* WebServiceHtmlEndpoint.swift */; };
+		501D2AF21F5188CC000E3FA3 /* WebServiceHtmlGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AEF1F4EA1EC000E3FA3 /* WebServiceHtmlGateway.swift */; };
 		501D2AFA1F527D03000E3FA3 /* WebServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AE91F4E917A000E3FA3 /* WebServiceProtocols.swift */; };
 		501D2AFB1F527D05000E3FA3 /* WebService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AE41F4E8FA2000E3FA3 /* WebService.swift */; };
-		5054625520C0665000595948 /* WebServiceAlamofireBaseEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625320C065DE00595948 /* WebServiceAlamofireBaseEndpoint.swift */; };
+		5054625520C0665000595948 /* AlamofireBaseGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625320C065DE00595948 /* AlamofireBaseGateway.swift */; };
 		5054625820C066FD00595948 /* PThreadMutexLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625620C066B500595948 /* PThreadMutexLock.swift */; };
-		5054625A20C1026800595948 /* WebServiceAlamofireSimpleEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625920C1026800595948 /* WebServiceAlamofireSimpleEndpoint.swift */; };
-		5054625C20C1884200595948 /* WebServiceSimpleEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625B20C1884200595948 /* WebServiceSimpleEndpoint.swift */; };
-		505528A82107925800D57FC4 /* WebServiceHtmlV2Endpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 505528A72107925800D57FC4 /* WebServiceHtmlV2Endpoint.swift */; };
+		5054625A20C1026800595948 /* AlamofireSimpleGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625920C1026800595948 /* AlamofireSimpleGateway.swift */; };
+		5054625C20C1884200595948 /* WebServiceSimpleGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625B20C1884200595948 /* WebServiceSimpleGateway.swift */; };
+		505528A82107925800D57FC4 /* WebServiceHtmlV2Gateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 505528A72107925800D57FC4 /* WebServiceHtmlV2Gateway.swift */; };
 		506CAFCF2084D729008AB016 /* WebServiceTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 506CAFCD2084D707008AB016 /* WebServiceTypes.swift */; };
 		507529A521032E61008A167A /* WebServiceDataBaseStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 507529A421032E61008A167A /* WebServiceDataBaseStorage.swift */; };
 		507529A82103321A008A167A /* WebServiceDataBaseStorage.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 507529A62103321A008A167A /* WebServiceDataBaseStorage.xcdatamodeld */; };
-		50844338207D244900C757C7 /* WebServiceMockEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50F4943120565FD1004F1E08 /* WebServiceMockEndpoint.swift */; };
+		50844338207D244900C757C7 /* WebServiceMockGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50F4943120565FD1004F1E08 /* WebServiceMockGateway.swift */; };
 		50AB6AB020883C2F00C1E093 /* SiteWebProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50AB6AAF20883C2F00C1E093 /* SiteWebProvider.swift */; };
 		50AB6AB220883F3100C1E093 /* WebService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50AB6AB120883F3100C1E093 /* WebService.swift */; };
 		50BFAFF9208F4C8E007E8FBD /* WebServiceRequestProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50BFAFF7208F4C8A007E8FBD /* WebServiceRequestProvider.swift */; };
 		50D22B0B20D7F91800C44198 /* WebServiceMemoryStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D22B0A20D7F91800C44198 /* WebServiceMemoryStorage.swift */; };
-		50D22B0D20D8AE8600C44198 /* WebServiceMockRequestEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D22B0C20D8AE8600C44198 /* WebServiceMockRequestEndpoint.swift */; };
-		50D22B1D20DCAB2A00C44198 /* WebServiceGroupProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D22B1C20DCAB2A00C44198 /* WebServiceGroupProvider.swift */; };
+		50D22B0D20D8AE8600C44198 /* WebServiceMockRequestGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D22B0C20D8AE8600C44198 /* WebServiceMockRequestGateway.swift */; };
 		50E9C1B22106CDDE003E6D4E /* WebServiceRequestGeneralStoring.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E9C1B12106CDDE003E6D4E /* WebServiceRequestGeneralStoring.swift */; };
 		50E9C1BF21077598003E6D4E /* SiteWebServiceHTMLHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E9C1BE21077598003E6D4E /* SiteWebServiceHTMLHandler.swift */; };
 		50E9C1C12107765A003E6D4E /* SiteWebServiceSimpleHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E9C1C02107765A003E6D4E /* SiteWebServiceSimpleHandler.swift */; };
@@ -85,12 +84,12 @@
 		501D2AE91F4E917A000E3FA3 /* WebServiceProtocols.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceProtocols.swift; sourceTree = "<group>"; };
 		501D2AEB1F4E92A1000E3FA3 /* WebServiceFileStorage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceFileStorage.swift; sourceTree = "<group>"; };
 		501D2AED1F4E9BE5000E3FA3 /* SiteWebServiceRequests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SiteWebServiceRequests.swift; sourceTree = "<group>"; };
-		501D2AEF1F4EA1EC000E3FA3 /* WebServiceHtmlEndpoint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceHtmlEndpoint.swift; sourceTree = "<group>"; };
-		5054625320C065DE00595948 /* WebServiceAlamofireBaseEndpoint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceAlamofireBaseEndpoint.swift; sourceTree = "<group>"; };
+		501D2AEF1F4EA1EC000E3FA3 /* WebServiceHtmlGateway.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceHtmlGateway.swift; sourceTree = "<group>"; };
+		5054625320C065DE00595948 /* AlamofireBaseGateway.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AlamofireBaseGateway.swift; sourceTree = "<group>"; };
 		5054625620C066B500595948 /* PThreadMutexLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PThreadMutexLock.swift; sourceTree = "<group>"; };
-		5054625920C1026800595948 /* WebServiceAlamofireSimpleEndpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceAlamofireSimpleEndpoint.swift; sourceTree = "<group>"; };
-		5054625B20C1884200595948 /* WebServiceSimpleEndpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceSimpleEndpoint.swift; sourceTree = "<group>"; };
-		505528A72107925800D57FC4 /* WebServiceHtmlV2Endpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceHtmlV2Endpoint.swift; sourceTree = "<group>"; };
+		5054625920C1026800595948 /* AlamofireSimpleGateway.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlamofireSimpleGateway.swift; sourceTree = "<group>"; };
+		5054625B20C1884200595948 /* WebServiceSimpleGateway.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceSimpleGateway.swift; sourceTree = "<group>"; };
+		505528A72107925800D57FC4 /* WebServiceHtmlV2Gateway.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceHtmlV2Gateway.swift; sourceTree = "<group>"; };
 		506CAFCD2084D707008AB016 /* WebServiceTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceTypes.swift; sourceTree = "<group>"; };
 		507529A421032E61008A167A /* WebServiceDataBaseStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceDataBaseStorage.swift; sourceTree = "<group>"; };
 		507529A72103321A008A167A /* WebServiceDataBaseStorage.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = WebServiceDataBaseStorage.xcdatamodel; sourceTree = "<group>"; };
@@ -100,8 +99,7 @@
 		50AB6AB120883F3100C1E093 /* WebService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebService.swift; sourceTree = "<group>"; };
 		50BFAFF7208F4C8A007E8FBD /* WebServiceRequestProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceRequestProvider.swift; sourceTree = "<group>"; };
 		50D22B0A20D7F91800C44198 /* WebServiceMemoryStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceMemoryStorage.swift; sourceTree = "<group>"; };
-		50D22B0C20D8AE8600C44198 /* WebServiceMockRequestEndpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceMockRequestEndpoint.swift; sourceTree = "<group>"; };
-		50D22B1C20DCAB2A00C44198 /* WebServiceGroupProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceGroupProvider.swift; sourceTree = "<group>"; };
+		50D22B0C20D8AE8600C44198 /* WebServiceMockRequestGateway.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceMockRequestGateway.swift; sourceTree = "<group>"; };
 		50E9C1B12106CDDE003E6D4E /* WebServiceRequestGeneralStoring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceRequestGeneralStoring.swift; sourceTree = "<group>"; };
 		50E9C1BE21077598003E6D4E /* SiteWebServiceHTMLHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteWebServiceHTMLHandler.swift; sourceTree = "<group>"; };
 		50E9C1C02107765A003E6D4E /* SiteWebServiceSimpleHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteWebServiceSimpleHandler.swift; sourceTree = "<group>"; };
@@ -109,7 +107,7 @@
 		50E9C1C4210777A7003E6D4E /* SiteWebServiceMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteWebServiceMock.swift; sourceTree = "<group>"; };
 		50E9C1C621077979003E6D4E /* SiteWebServiceStoring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteWebServiceStoring.swift; sourceTree = "<group>"; };
 		50F0804F20AC843B00994710 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		50F4943120565FD1004F1E08 /* WebServiceMockEndpoint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceMockEndpoint.swift; sourceTree = "<group>"; };
+		50F4943120565FD1004F1E08 /* WebServiceMockGateway.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceMockGateway.swift; sourceTree = "<group>"; };
 		83873141EF5334067DE0C2D6 /* Pods-WebServiceSwift.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WebServiceSwift.release.xcconfig"; path = "Pods/Target Support Files/Pods-WebServiceSwift/Pods-WebServiceSwift.release.xcconfig"; sourceTree = "<group>"; };
 		85924404FE98C539DF31A8DB /* Pods-WebServiceExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WebServiceExample.debug.xcconfig"; path = "Pods/Target Support Files/Pods-WebServiceExample/Pods-WebServiceExample.debug.xcconfig"; sourceTree = "<group>"; };
 		918173D2DBEB2D8E5D5A88E4 /* Pods-WebServiceSwift.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WebServiceSwift.debug.xcconfig"; path = "Pods/Target Support Files/Pods-WebServiceSwift/Pods-WebServiceSwift.debug.xcconfig"; sourceTree = "<group>"; };
@@ -194,7 +192,6 @@
 				506CAFCD2084D707008AB016 /* WebServiceTypes.swift */,
 				501D2AE91F4E917A000E3FA3 /* WebServiceProtocols.swift */,
 				50BFAFF7208F4C8A007E8FBD /* WebServiceRequestProvider.swift */,
-				50D22B1C20DCAB2A00C44198 /* WebServiceGroupProvider.swift */,
 				5054625620C066B500595948 /* PThreadMutexLock.swift */,
 				50D22B0E20DA9FA000C44198 /* General */,
 				5054625220C065B200595948 /* Alamofire */,
@@ -205,8 +202,8 @@
 		5054625220C065B200595948 /* Alamofire */ = {
 			isa = PBXGroup;
 			children = (
-				5054625320C065DE00595948 /* WebServiceAlamofireBaseEndpoint.swift */,
-				5054625920C1026800595948 /* WebServiceAlamofireSimpleEndpoint.swift */,
+				5054625320C065DE00595948 /* AlamofireBaseGateway.swift */,
+				5054625920C1026800595948 /* AlamofireSimpleGateway.swift */,
 			);
 			path = Alamofire;
 			sourceTree = "<group>";
@@ -225,8 +222,8 @@
 			isa = PBXGroup;
 			children = (
 				50AB6AB120883F3100C1E093 /* WebService.swift */,
-				501D2AEF1F4EA1EC000E3FA3 /* WebServiceHtmlEndpoint.swift */,
-				505528A72107925800D57FC4 /* WebServiceHtmlV2Endpoint.swift */,
+				501D2AEF1F4EA1EC000E3FA3 /* WebServiceHtmlGateway.swift */,
+				505528A72107925800D57FC4 /* WebServiceHtmlV2Gateway.swift */,
 			);
 			path = WebService;
 			sourceTree = "<group>";
@@ -251,9 +248,9 @@
 				501D2AEB1F4E92A1000E3FA3 /* WebServiceFileStorage.swift */,
 				507529A421032E61008A167A /* WebServiceDataBaseStorage.swift */,
 				50D22B0A20D7F91800C44198 /* WebServiceMemoryStorage.swift */,
-				50F4943120565FD1004F1E08 /* WebServiceMockEndpoint.swift */,
-				50D22B0C20D8AE8600C44198 /* WebServiceMockRequestEndpoint.swift */,
-				5054625B20C1884200595948 /* WebServiceSimpleEndpoint.swift */,
+				50F4943120565FD1004F1E08 /* WebServiceMockGateway.swift */,
+				50D22B0C20D8AE8600C44198 /* WebServiceMockRequestGateway.swift */,
+				5054625B20C1884200595948 /* WebServiceSimpleGateway.swift */,
 				507529A62103321A008A167A /* WebServiceDataBaseStorage.xcdatamodeld */,
 			);
 			path = General;
@@ -449,7 +446,7 @@
 			files = (
 				50E9C1C721077979003E6D4E /* SiteWebServiceStoring.swift in Sources */,
 				50E9C1C321077730003E6D4E /* SiteWebServiceAlamofireHandler.swift in Sources */,
-				505528A82107925800D57FC4 /* WebServiceHtmlV2Endpoint.swift in Sources */,
+				505528A82107925800D57FC4 /* WebServiceHtmlV2Gateway.swift in Sources */,
 				50E9C1C12107765A003E6D4E /* SiteWebServiceSimpleHandler.swift in Sources */,
 				50E9C1BF21077598003E6D4E /* SiteWebServiceHTMLHandler.swift in Sources */,
 				50AB6AB220883F3100C1E093 /* WebService.swift in Sources */,
@@ -457,7 +454,7 @@
 				50AB6AB020883C2F00C1E093 /* SiteWebProvider.swift in Sources */,
 				501D2AC31F4E8DD0000E3FA3 /* ViewController.swift in Sources */,
 				50E9C1C5210777A7003E6D4E /* SiteWebServiceMock.swift in Sources */,
-				501D2AF21F5188CC000E3FA3 /* WebServiceHtmlEndpoint.swift in Sources */,
+				501D2AF21F5188CC000E3FA3 /* WebServiceHtmlGateway.swift in Sources */,
 				501D2AC11F4E8DD0000E3FA3 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -466,21 +463,20 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				50D22B1D20DCAB2A00C44198 /* WebServiceGroupProvider.swift in Sources */,
-				5054625520C0665000595948 /* WebServiceAlamofireBaseEndpoint.swift in Sources */,
-				50D22B0D20D8AE8600C44198 /* WebServiceMockRequestEndpoint.swift in Sources */,
+				5054625520C0665000595948 /* AlamofireBaseGateway.swift in Sources */,
+				50D22B0D20D8AE8600C44198 /* WebServiceMockRequestGateway.swift in Sources */,
 				506CAFCF2084D729008AB016 /* WebServiceTypes.swift in Sources */,
 				507529A521032E61008A167A /* WebServiceDataBaseStorage.swift in Sources */,
-				50844338207D244900C757C7 /* WebServiceMockEndpoint.swift in Sources */,
+				50844338207D244900C757C7 /* WebServiceMockGateway.swift in Sources */,
 				50BFAFF9208F4C8E007E8FBD /* WebServiceRequestProvider.swift in Sources */,
 				501D2AFB1F527D05000E3FA3 /* WebService.swift in Sources */,
 				5054625820C066FD00595948 /* PThreadMutexLock.swift in Sources */,
-				5054625A20C1026800595948 /* WebServiceAlamofireSimpleEndpoint.swift in Sources */,
+				5054625A20C1026800595948 /* AlamofireSimpleGateway.swift in Sources */,
 				507529A82103321A008A167A /* WebServiceDataBaseStorage.xcdatamodeld in Sources */,
 				50D22B0B20D7F91800C44198 /* WebServiceMemoryStorage.swift in Sources */,
 				50E9C1B22106CDDE003E6D4E /* WebServiceRequestGeneralStoring.swift in Sources */,
 				501D2AFA1F527D03000E3FA3 /* WebServiceProtocols.swift in Sources */,
-				5054625C20C1884200595948 /* WebServiceSimpleEndpoint.swift in Sources */,
+				5054625C20C1884200595948 /* WebServiceSimpleGateway.swift in Sources */,
 				501D2AEC1F4E92A1000E3FA3 /* WebServiceFileStorage.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -570,7 +566,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -622,7 +618,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
@@ -640,7 +636,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = ru.provir.WebServiceExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -656,7 +651,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = ru.provir.WebServiceExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
@@ -681,7 +675,6 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -707,7 +700,6 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};

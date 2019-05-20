@@ -22,35 +22,35 @@ struct SiteWebServiceAlamofireHandler {
 }
 
 
-extension SiteWebServiceRequests.SiteSearch: WebServiceAlamofireRequesting {
+extension SiteWebServiceRequests.SiteSearch: AlamofireSimpleRequesting {
     func afRequest(sessionManager: SessionManager) throws -> DataRequest {
         return sessionManager.request(urlSite)
     }
     
-    var afResponseType: WebServiceAlamofireResponseType { return .binary }
-    func afDecodeResponse(_ data: WebServiceAlamofireResponseData) throws -> String {
+    var afResponseType: AlamofireSimpleResponseType { return .binary }
+    func afDecodeResponse(_ data: AlamofireSimpleResponseData) throws -> String {
         return try SiteWebServiceAlamofireHandler.decodeResponse(data: data.binary)
     }
 }
 
-extension SiteWebServiceRequests.SiteMail: WebServiceAlamofireRequesting {
+extension SiteWebServiceRequests.SiteMail: AlamofireSimpleRequesting {
     func afRequest(sessionManager: SessionManager) throws -> DataRequest {
         return sessionManager.request(urlSite)
     }
     
-    var afResponseType: WebServiceAlamofireResponseType { return .binary }
-    func afDecodeResponse(_ data: WebServiceAlamofireResponseData) throws -> String {
+    var afResponseType: AlamofireSimpleResponseType { return .binary }
+    func afDecodeResponse(_ data: AlamofireSimpleResponseData) throws -> String {
         return try SiteWebServiceAlamofireHandler.decodeResponse(data: data.binary)
     }
 }
 
-extension SiteWebServiceRequests.SiteYouTube: WebServiceAlamofireRequesting {
+extension SiteWebServiceRequests.SiteYouTube: AlamofireSimpleRequesting {
     func afRequest(sessionManager: SessionManager) throws -> DataRequest {
         return sessionManager.request(urlSite)
     }
     
-    var afResponseType: WebServiceAlamofireResponseType { return .binary }
-    func afDecodeResponse(_ data: WebServiceAlamofireResponseData) throws -> String {
+    var afResponseType: AlamofireSimpleResponseType { return .binary }
+    func afDecodeResponse(_ data: AlamofireSimpleResponseData) throws -> String {
         return try SiteWebServiceAlamofireHandler.decodeResponse(data: data.binary)
     }
 }

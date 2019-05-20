@@ -1,6 +1,6 @@
 //
-//  WebServiceAlamofireBaseEndpoint.swift
-//  WebServiceSwift 3.0.0
+//  AlamofireBaseGateway.swift
+//  WebServiceSwift 4.0.0
 //
 //  Created by Короткий Виталий (ViR) on 31.05.2018.
 //  Copyright © 2018 ProVir. All rights reserved.
@@ -9,8 +9,8 @@
 import Foundation
 import Alamofire
 
-/// Base Endpoint with support Alamofire.
-open class WebServiceAlamofireBaseEndpoint: WebServiceEndpoint {
+/// Base Gateway with support Alamofire.
+open class AlamofireBaseGateway: WebServiceGateway {
     public let queueForRequest: DispatchQueue?
     public let queueForDataProcessing: DispatchQueue? = nil
     public let queueForDataProcessingFromStorage: DispatchQueue? = DispatchQueue.global(qos: .background)
@@ -19,7 +19,7 @@ open class WebServiceAlamofireBaseEndpoint: WebServiceEndpoint {
     
     
     /**
-     Constructor for base endpoint.
+     Constructor for base gateway.
  
      - Parameters:
         - queueForRequest: Thread Dispatch Queue for `perofrmRequest()` and `cancelRequests()` methods.
@@ -55,17 +55,17 @@ open class WebServiceAlamofireBaseEndpoint: WebServiceEndpoint {
     //MARK: - Need Override
     
     /**
-     Asks whether the request supports this endpoint. Need override.
+     Asks whether the request supports this gateway. Need override.
      
      If `rawDataForRestoreFromStorage != nil`, after this method called `processRawDataFromStorage()` method.
      
      - Parameters:
          - request: Request for test.
          - rawDataTypeForRestoreFromStorage: If no nil - request restore raw data from storage with data.
-         - Returns: If request support this endpoint - return true.
+         - Returns: If request support this gateway - return true.
      */
     open func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
-        fatalError("WebServiceAlamofireBaseEndpoint: require override isSupportedRequest(request:rawDataForRestoreFromStorage:) function.")
+        fatalError("WebServiceSwift.AlamofireBaseGateway: require override isSupportedRequest(request:rawDataForRestoreFromStorage:) function.")
     }
     
     /**
@@ -80,14 +80,14 @@ open class WebServiceAlamofireBaseEndpoint: WebServiceEndpoint {
      4. Perform data.completionWithError() and return nil. Usually used in async closures.
      
      - Parameters:
-        - requestId: Unique id for request. ID generated always unique for all Endpoints and WebServices. Use for `canceledRequest()`.
+        - requestId: Unique id for request. ID generated always unique for all Gateways and WebServices. Use for `canceledRequest()`.
         - data: Request data with completion closures (used this when return nil).
      
      - Throws: Error peroform request.
      - Returns: Alamofire request for `startAlamofireRequest()`. When nil - need manually perofrm `startAlamofireRequest()` or `data.completionWithError()`.
      */
     open func performRequest(requestId: UInt64, data: RequestData) throws -> Alamofire.DataRequest? {
-        fatalError("WebServiceAlamofireBaseEndpoint: require override request(data:) function. You need use function startAlamofireRequest(:data:) when returned nil.")
+        fatalError("WebServiceSwift.AlamofireBaseGateway: require override request(data:) function. You need use function startAlamofireRequest(:data:) when returned nil.")
     }
     
     /**
@@ -102,7 +102,7 @@ open class WebServiceAlamofireBaseEndpoint: WebServiceEndpoint {
      - Returns: Result data for response.
      */
     open func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any {
-        fatalError("WebServiceAlamofireBaseEndpoint: require override dataProcessing(request:rawData:fromStorage:) function.")
+        fatalError("WebServiceSwift.AlamofireBaseGateway: require override dataProcessing(request:rawData:fromStorage:) function.")
     }
     
     
@@ -174,7 +174,7 @@ open class WebServiceAlamofireBaseEndpoint: WebServiceEndpoint {
                     data.completionWithError(error)
                 }
             } else {
-                data.completionWithError(WebServiceRequestError.endpointInternal)
+                data.completionWithError(WebServiceRequestError.gatewayInternal)
             }
         }
     }

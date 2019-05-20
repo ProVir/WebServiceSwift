@@ -1,12 +1,12 @@
 Pod::Spec.new do |s|
   s.name         = "WebServiceSwift"
-  s.version      = "3.1.0"
+  s.version      = "4.0.0-alpha"
   s.summary      = "Network layer as Service."
   s.description  = <<-DESC
 			Written in Swift.
 			Network layer as Service. 
 			Contained simple cache storages (on disk as files, used CoreData or in memory).
-			Contained mock endpoints for test response without API.
+			Contained mock gateways for test response without API.
                    DESC
 
   s.homepage     = "https://github.com/ProVir/WebServiceSwift"

@@ -1,6 +1,6 @@
 //
-//  WebServiceMockEndpoint.swift
-//  WebServiceSwift 3.0.0
+//  WebServiceMockGateway.swift
+//  WebServiceSwift 4.0.0
 //
 //  Created by Короткий Виталий (ViR) on 12.03.2018.
 //  Updated to 3.0.0 by Короткий Виталий (ViR) on 04.09.2018.
@@ -10,17 +10,17 @@
 import Foundation
 
 
-//MARK: Mock Request
+// MARK: Mock Request
 
 /// Base protocol for request with support mock data
 public protocol WebServiceMockBaseRequesting {
-    /// Fast switch enable/disable mock data (if `WebServiceMockEndpoint` as first in array `WebService.endpoints`).
+    /// Fast switch enable/disable mock data (if `WebServiceMockGateway` as first in array `WebService.gateways`).
     var isSupportedRequestForMock: Bool { get }
     
     /// After timeout mock data send as response. `nil` - without pause.
     var mockTimeDelay: TimeInterval? { get }
     
-    /// Identifier for dictionary helpers, `nil` - don't use helper. Helpers are created once and when used within one instance of the endpoint.
+    /// Identifier for dictionary helpers, `nil` - don't use helper. Helpers are created once and when used within one instance of the gateway.
     var mockHelperIdentifier: String? { get }
     
     /// Create a helper if it was not created earlier. `nil` - don't use helper
@@ -42,11 +42,9 @@ public extension WebServiceMockRequesting {
     }
 }
 
-
-
-//MARK: Mock Endpoint
-/// Simple endpoint for temporary mock requests.
-open class WebServiceMockEndpoint: WebServiceEndpoint {
+// MARK: Mock Gateway
+/// Simple gateway for temporary mock requests.
+open class WebServiceMockGateway: WebServiceGateway {
     public let queueForRequest: DispatchQueue? = nil
     public let queueForDataProcessing: DispatchQueue? = nil
     public let queueForDataProcessingFromStorage: DispatchQueue? = nil
@@ -70,7 +68,7 @@ open class WebServiceMockEndpoint: WebServiceEndpoint {
     }
     
     /**
-     Mock endpoint constructor.
+     Mock gateway constructor.
  
      - Parameters:
         - rawDataFromStoreAlwaysNil: If `true` - all read raw data from storage return as nil for supporteds requests. Default: true.
@@ -81,7 +79,7 @@ open class WebServiceMockEndpoint: WebServiceEndpoint {
         self.alwaysSupported = alwaysSupported
     }
     
-    //MARK: Endpoint implementation
+    // MARK: Gateway implementation
     private var helpersArray: [String: Any] = [:]
     private var requests: [UInt64: DispatchWorkItem] = [:]
     

@@ -17,11 +17,11 @@ enum WebServiceDataClass: Hashable {
 extension WebService {
     
     static func createDefault() -> WebService {
-        let endpoint = WebServiceHtmlV2Endpoint()
-//        let endpoint = WebServiceSimpleEndpoint()
-//        let endpoint = WebServiceAlamofireSimpleEndpoint()
+        let gateway = WebServiceHtmlV2Gateway()
+//        let gateway = WebServiceSimpleGateway()
+//        let gateway = AlamofireSimpleGateway()
         
-        let mock = WebServiceMockEndpoint(rawDataFromStoreAlwaysNil: true)
+        let mock = WebServiceMockGateway(rawDataFromStoreAlwaysNil: true)
         
         var storages: [WebServiceStorage] = []
         storages.append(WebServiceMemoryStorage(supportDataClassification: [WebServiceDataClass.temporary]))
@@ -36,12 +36,12 @@ extension WebService {
         
         /*
         let template = "<html><body>%[BODY]%</body></html>"
-        let mockRequest = WebServiceMockRequestEndpoint.init(timeDelay: 3) { (request: SiteWebServiceRequests.SiteSearch) -> String in
-            return template.replacingOccurrences(of: "%[BODY]%", with: "<b>Hello world from MockRequestEndpoint!</b>")
+        let mockRequest = WebServiceMockRequestGateway(timeDelay: 3) { (request: SiteWebServiceRequests.SiteSearch) -> String in
+            return template.replacingOccurrences(of: "%[BODY]%", with: "<b>Hello world from MockRequestGateway!</b>")
         }
         */
         
-        return .init(endpoints: [/*mockRequest, */mock, endpoint], storages: storages)
+        return .init(gateways: [/*mockRequest, */mock, gateway], storages: storages)
     }
     
     static var `default`: WebService {

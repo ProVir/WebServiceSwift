@@ -1,5 +1,5 @@
 //
-//  WebServiceHtmlV2Endpoint.swift
+//  WebServiceHtmlV2Gateway.swift
 //  WebServiceExample
 //
 //  Created by Короткий Виталий on 25.07.2018.
@@ -10,9 +10,8 @@ import Foundation
 import WebServiceSwift
 import Alamofire
 
-
-///Endpoint for get html data for URL.
-class WebServiceHtmlV2Endpoint: WebServiceAlamofireBaseEndpoint {
+///Gateway for get html data for URL.
+class WebServiceHtmlV2Gateway: AlamofireBaseGateway {
 
     init() {
         super.init(queueForRequest: DispatchQueue.global(qos: .background), useNetworkActivityIndicator: true)

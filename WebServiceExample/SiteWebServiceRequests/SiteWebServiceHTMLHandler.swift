@@ -9,7 +9,7 @@
 import Foundation
 
 
-/// As HTML Request - Support WebServiceHTMLEndpoint with concrete URL query.
+/// As HTML Request - Support WebServiceHTMLGateway with concrete URL query.
 extension SiteWebServiceRequests.SiteSearch: WebServiceHtmlRequesting {
     var url: URL { return urlSite }
 }

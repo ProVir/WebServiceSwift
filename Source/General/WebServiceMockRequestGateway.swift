@@ -1,6 +1,6 @@
 //
-//  WebServiceMockRequestEndpoint.swift
-//  WebServiceSwift 3.0.0
+//  WebServiceMockRequestGateway.swift
+//  WebServiceSwift 4.0.0
 //
 //  Created by Короткий Виталий (ViR) on 19.06.2018.
 //  Copyright © 2018 ProVir. All rights reserved.
@@ -8,8 +8,8 @@
 
 import Foundation
 
-/// Simple endpoint for unit mock requests with responseHandler in endpoint.
-public class WebServiceMockRequestEndpoint<RequestType: WebServiceRequesting>: WebServiceEndpoint {
+/// Simple gateway for unit mock requests with responseHandler in gateway.
+public class WebServiceMockRequestGateway<RequestType: WebServiceRequesting>: WebServiceGateway {
     public let queueForRequest: DispatchQueue? = nil
     public let queueForDataProcessing: DispatchQueue? = nil
     public let queueForDataProcessingFromStorage: DispatchQueue? = nil
@@ -25,7 +25,7 @@ public class WebServiceMockRequestEndpoint<RequestType: WebServiceRequesting>: W
     
 
     /**
-     Mock endpoint constructor.
+     Mock gateway constructor.
      
      - Parameters:
         - timeDelay: After timeout mock data send as response. `nil` - without pause.
@@ -37,7 +37,7 @@ public class WebServiceMockRequestEndpoint<RequestType: WebServiceRequesting>: W
     }
     
     
-    //MARK: Endpoint implementation
+    // MARK: Gateway implementation
     private var requests: [UInt64: DispatchWorkItem] = [:]
     
     public func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {

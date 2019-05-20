@@ -1,6 +1,6 @@
 //
 //  WebServiceProtocols.swift
-//  WebServiceSwift 3.0.0
+//  WebServiceSwift 4.0.0
 //
 //  Created by Короткий Виталий (ViR) on 14.06.2017.
 //  Updated to 3.0.0 by Короткий Виталий (ViR) on 04.09.2018.
@@ -9,7 +9,7 @@
 
 import Foundation
 
-//MARK: Requests
+// MARK: Requests
 
 /// Base protocol for all types request.
 public protocol WebServiceBaseRequesting { }
@@ -25,16 +25,8 @@ public protocol WebServiceEmptyRequesting: WebServiceRequesting {
     init()
 }
 
-/// Groups requests, protocol use for `WebServiceGroupProvider`.
-@available(*, deprecated, message: "Can be removed in next versions")
-public protocol WebServiceGroupRequests {
-    /// List all type requests in group
-    static var requestTypes: [WebServiceBaseRequesting.Type] { get }
-}
 
-
-
-//MARK: Support storages
+// MARK: Support storages
 
 /// Base protocol for all requests with support storages
 public protocol WebServiceRequestBaseStoring: WebServiceBaseRequesting {
@@ -53,7 +45,7 @@ public protocol WebServiceRawDataSource {
     var binaryRawData: Data? { get }
 }
 
-//MARK: Delegates
+// MARK: Delegates
 
 /// WebService Delegate for responses
 public protocol WebServiceDelegate: class {
@@ -71,7 +63,7 @@ public protocol WebServiceDelegate: class {
 }
 
 
-//MARK: Provider
+// MARK: Provider
 
 /// Base protocol for providers
 public protocol WebServiceProvider {
@@ -86,10 +78,10 @@ public extension WebService {
 }
 
 
-//MARK: Public Internal - endpoints and storages
+// MARK: Gateways and storages
 
-/// Protocol for endpoint in WebService.
-public protocol WebServiceEndpoint: class {
+/// Protocol for gateway in WebService.
+public protocol WebServiceGateway: class {
     
     /// Thread Dispatch Queue for `perofrmRequest()` and `cancelRequests()` methods.
     var queueForRequest: DispatchQueue? { get }
@@ -107,14 +99,14 @@ public protocol WebServiceEndpoint: class {
     
     
     /**
-     Asks whether the request supports this endpoint.
+     Asks whether the request supports this gateway.
      
      If `rawDataForRestoreFromStorage != nil`, after this method called `processRawDataFromStorage()` method.
      
      - Parameters:
         - request: Request for test.
         - rawDataTypeForRestoreFromStorage: If no nil - request restore raw data from storage with data.
-     - Returns: If request support this endpoint - return true.
+     - Returns: If request support this gateway - return true.
      */
     func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool
     
@@ -124,7 +116,7 @@ public protocol WebServiceEndpoint: class {
      If `queueForRequest != nil`, thread use from `queueForRequest`, else default thread (usually main).
      
      - Parameters:
-        - requestId: Unique id for request. ID generated always unique for all Endpoints and WebServices. Use for `canceledRequest()`.
+        - requestId: Unique id for request. ID generated always unique for all Gateways and WebServices. Use for `canceledRequest()`.
         - request: Original request with data.
         - completionWithRawData: After success get data from server - call this closure with raw data from server.
         - data: Usually binary data and this data saved as rawData in storage.
@@ -133,8 +125,8 @@ public protocol WebServiceEndpoint: class {
      */
     func performRequest(requestId: UInt64,
                         request: WebServiceBaseRequesting,
-                        completionWithRawData: @escaping (_ data:Any) -> Void,
-                        completionWithError: @escaping (_ error:Error) -> Void)
+                        completionWithRawData: @escaping (_ data: Any) -> Void,
+                        completionWithError: @escaping (_ error: Error) -> Void)
     
     /**
      Preformed after canceled request.
@@ -190,7 +182,7 @@ public protocol WebServiceStorage: class {
         - request: Original request.
         - completionHandler: After readed data need call with result data. This closure need call and only one. Be sure to call in the main thread.
         - isRawData: If data readed as raw type.
-        - timeStamp: TimeStamp when saved from server (endpoint).
+        - timeStamp: TimeStamp when saved from server (gateway).
         - response: Result response enum with data. Can only be .data or .error. If not data - use .error(WebServiceResponseError.notFoundData)
      
      - Throws: Error request equivalent call `completionResponse(.error())` and not need call `completionResponse()`. The performance is higher with this error call.
@@ -198,7 +190,7 @@ public protocol WebServiceStorage: class {
     func readData(request: WebServiceBaseRequesting, completionHandler: @escaping (_ isRawData: Bool, _ timeStamp: Date?, _ response: WebServiceAnyResponse) -> Void) throws
     
     /**
-     Save data from server (endpoint). Usually call two - for raw and value (after processing) data.
+     Save data from server (gateway). Usually call two - for raw and value (after processing) data.
      Warning: Usually used not in main thread.
      
      - Parameters: 

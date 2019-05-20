@@ -1,6 +1,6 @@
 //
 //  WebServiceTypes.swift
-//  WebServiceSwift 3.0.0
+//  WebServiceSwift 4.0.0
 //
 //  Created by Короткий Виталий (ViR) on 16.04.2018.
 //  Updated to 3.0.0 by Короткий Виталий (ViR) on 04.09.2018.
@@ -12,22 +12,22 @@ import Foundation
 /**
  WebService general error enum for requests
  
- - `noFoundEndpoint`: If endpoint not found in `[endpoints]` for request
+ - `noFoundGateway`: If gateway not found in `[gateways]` for request
  - `noFoundStorage`: If storage not found in `[storages]` for request
- - `notSupportRequest`: If request after test fot endpoint contains invalid query or etc.
+ - `notSupportRequest`: If request after test fot gateway contains invalid query or etc.
  - `notSupportDataHandler`: If request don't support data handler
  - `invalidRequest`: Validation request and create request to server failed.
- - `endpointInternal`: Internal error in endpoint.
+ - `gatewayInternal`: Internal error in gateway.
  */
 public enum WebServiceRequestError: Error {
-    case notFoundEndpoint
+    case notFoundGateway
     case notFoundStorage
     
     case notSupportRequest
     case notSupportDataProcessing
     
     case invalidRequest(Error)
-    case endpointInternal
+    case gatewayInternal
 }
 
 
@@ -44,7 +44,7 @@ public enum WebServiceResponseError: Error {
 }
 
 /**
- WebService result response for concrete type from endpoint
+ WebService result response for concrete type from gateway
  
  - `data(T)`: Success response with data with require type
  - `error(Error)`: Error response
@@ -89,7 +89,7 @@ public enum WebServiceResponse<T> {
     }
 }
 
-/// WebService result response from endpoint without information for type
+/// WebService result response from gateway without information for type
 public typealias WebServiceAnyResponse = WebServiceResponse<Any>
 
 

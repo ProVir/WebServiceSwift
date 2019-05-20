@@ -1,5 +1,5 @@
 //
-//  WebServiceHtmlEndpoint.swift
+//  WebServiceHtmlGateway.swift
 //  WebServiceExample
 //
 //  Created by Короткий Виталий on 24.08.17.
@@ -15,9 +15,8 @@ protocol WebServiceHtmlRequesting: WebServiceBaseRequesting {
     var url: URL { get }
 }
 
-
-///Endpoint for get html data for URL.
-class WebServiceHtmlEndpoint: WebServiceEndpoint {
+///Gateway for get html data for URL.
+class WebServiceHtmlGateway: WebServiceGateway {
     let queueForRequest: DispatchQueue? = DispatchQueue.global(qos: .background)
     let queueForDataProcessing: DispatchQueue? = nil
     let queueForDataProcessingFromStorage: DispatchQueue? = DispatchQueue.global(qos: .background)

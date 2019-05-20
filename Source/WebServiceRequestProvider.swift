@@ -30,7 +30,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
     // MARK: Perform requests and read from storage
     
     /**
-     Request to server (endpoint). Response result in closure.
+     Request to server (gateway). Response result in closure.
      
      - Parameters:
         - request: The request with data and result type.
@@ -41,7 +41,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
     }
     
     /**
-     Request to server (endpoint). Response result in closure.
+     Request to server (gateway). Response result in closure.
      
      - Parameters:
          - request: The request with data and result type.
@@ -60,7 +60,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
          - request: The request with data.
          - dependencyNextRequest: Type dependency from next performRequest.
          - completionHandler: Closure for read data from storage.
-         - timeStamp: TimeStamp when saved from server (endpoint).
+         - timeStamp: TimeStamp when saved from server (gateway).
          - response: Result read from storage.
      */
     public func readStorage(_ request: RequestType, dependencyNextRequest: WebService.ReadStorageDependencyType = .notDepend, completionHandler: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
@@ -71,7 +71,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
     // MARK: Perform requests use delegate for response
     
     /**
-     Request to server (endpoint). Response result send to `WebServiceRequestProvider.delegate`.
+     Request to server (gateway). Response result send to `WebServiceRequestProvider.delegate`.
      
      - Parameters:
         - request: The request with data.
@@ -81,7 +81,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
     }
     
     /**
-     Request to server (endpoint). Response result send to `WebServiceRequestProvider.delegate`.
+     Request to server (gateway). Response result send to `WebServiceRequestProvider.delegate`.
      
      - Parameters:
          - request: The request with data.
@@ -192,7 +192,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
 extension WebServiceRequestProvider where RequestType: Hashable {
     
     /**
-     Request to server (endpoint). Response result in closure.
+     Request to server (gateway). Response result in closure.
      
      - Parameters:
          - request: The hashable (also equatable) request with data and result type.
@@ -204,7 +204,7 @@ extension WebServiceRequestProvider where RequestType: Hashable {
     }
     
     /**
-     Request to server (endpoint). Response result send to `WebServiceRequestProvider.delegate`.
+     Request to server (gateway). Response result send to `WebServiceRequestProvider.delegate`.
      
      - Parameters:
          - request: The hashable (also equatable) request with data.
@@ -239,7 +239,7 @@ extension WebServiceRequestProvider where RequestType: Hashable {
 extension WebServiceRequestProvider where RequestType: WebServiceEmptyRequesting {
     
     /**
-     Request to server (endpoint). Response result in closure.
+     Request to server (gateway). Response result in closure.
      
      - Parameters:
         - completionHandler: Closure for response result from server.
@@ -249,7 +249,7 @@ extension WebServiceRequestProvider where RequestType: WebServiceEmptyRequesting
     }
     
     /**
-     Request to server (endpoint). Response result send to `WebServiceRequestProvider.delegate`.
+     Request to server (gateway). Response result send to `WebServiceRequestProvider.delegate`.
      */
     public func performRequest() {
         internalPerformRequest(RequestType.init(), key: nil, excludeDuplicate: excludeDuplicateDefault, responseDelegate: delegate)
@@ -262,7 +262,7 @@ extension WebServiceRequestProvider where RequestType: WebServiceEmptyRequesting
      - Parameters:
          - dependencyNextRequest: Type dependency from next performRequest.
          - completionHandler: Closure for read data from storage.
-         - timeStamp: TimeStamp when saved from server (endpoint).
+         - timeStamp: TimeStamp when saved from server (gateway).
          - response: Result read from storage.
      */
     public func readStorage(dependencyNextRequest: WebService.ReadStorageDependencyType = .notDepend, completionHandler: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<RequestType.ResultType>) -> Void) {

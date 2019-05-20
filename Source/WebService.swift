@@ -1,6 +1,6 @@
 //
 //  WebService.swift
-//  WebServiceSwift 3.0.0
+//  WebServiceSwift 4.0.0
 //
 //  Created by Короткий Виталий (ViR) on 14.06.2017.
 //  Updated to 3.0.0 by Короткий Виталий (ViR) on 04.09.2018.
@@ -32,7 +32,7 @@ public class WebService {
     /// Perform response closures and delegates in dispath queue. Default: main thread.
     public let queueForResponse: DispatchQueue
     
-    /// Ignore endpoint parameter ans always don't use networkActivityIndicator in statusBar when requests in process.
+    /// Ignore gateway parameter ans always don't use networkActivityIndicator in statusBar when requests in process.
     public var disableNetworkActivityIndicator = false
     
     
@@ -40,30 +40,28 @@ public class WebService {
      Constructor for WebService.
      
      - Parameters:
-        - endpoints: All sorted endpoints that support all requests.
+        - gateways: All sorted gateways that support all requests.
         - storages: All sorted storages that support all requests.
         - queueForResponse: Dispatch Queue for results response. Thread for public method call and queueForResponse recommended be equal. Default: main thread.
      */
-    public init(endpoints: [WebServiceEndpoint],
+    public init(gateways: [WebServiceGateway],
                 storages: [WebServiceStorage],
                 queueForResponse: DispatchQueue = DispatchQueue.main) {
-        
-        self.endpoints = endpoints
+        self.gateways = gateways
         self.storages = storages
-        
         self.queueForResponse = queueForResponse
     }
     
     deinit {
-        let requestList = mutex.synchronized({ self.requestList })
+        let requestList = mutex.synchronized { self.requestList }
         let requestListIds = Set(requestList.keys)
         
-        //End networkActivityIndicator for all requests
+        // End networkActivityIndicator for all requests
         WebService.staticMutex.synchronized {
             WebService.networkActivityIndicatorRequestIds.subtract(requestListIds)
         }
         
-        //Cancel all requests for endpoint
+        //Cancel all requests for gateway
         let queue = queueForResponse
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             for (_, requestData) in requestList {
@@ -72,13 +70,12 @@ public class WebService {
         }
     }
     
-    /// Clone WebService with only list endpoints, storages and queueForResponse.
+    /// Clone WebService with only list gateways, storages and queueForResponse.
     public func clone() -> WebService {
-        return WebService(endpoints: endpoints, storages: storages, queueForResponse: queueForResponse)
+        return WebService(gateways: gateways, storages: storages, queueForResponse: queueForResponse)
     }
-    
-    
-    //MARK: Private data
+
+    // MARK: Private data
     private static var staticMutex = PThreadMutexLock()
     private var mutex = PThreadMutexLock()
     
@@ -91,7 +88,7 @@ public class WebService {
         }
     }
     
-    private let endpoints: [WebServiceEndpoint]
+    private let gateways: [WebServiceGateway]
     private let storages: [WebServiceStorage]
     
     private var requestList: [UInt64: RequestData] = [:] //All requests
@@ -106,7 +103,7 @@ public class WebService {
     // MARK: Perform requests
     
     /**
-     Request to server (endpoint). Response result in closure.
+     Request to server (gateway). Response result in closure.
      
      - Parameters:
         - request: The request with data and result type.
@@ -117,7 +114,7 @@ public class WebService {
     }
     
     /**
-     Request to server (endpoint). Response result in closure.
+     Request to server (gateway). Response result in closure.
      
      - Parameters:
         - request: The request with data and result type.
@@ -130,7 +127,7 @@ public class WebService {
     }
     
     /**
-     Request to server (endpoint). Response result in closure.
+     Request to server (gateway). Response result in closure.
      
      - Parameters:
         - request: The hashable (also equatable) request with data and result type.
@@ -142,7 +139,7 @@ public class WebService {
     }
     
     /**
-     Request without support generic for server (endpoint). Response result in closure.
+     Request without support generic for server (gateway). Response result in closure.
      
      - Parameters:
         - request: The request with data.
@@ -176,10 +173,10 @@ public class WebService {
             }
         }
         
-        //3. Find Endpoint and Storage
-        guard let endpoint = internalFindEndpoint(request: request) else {
+        //3. Find Gateway and Storage
+        guard let gateway = internalFindGateway(request: request) else {
             readStorageRequestInfo?.setState(.error)
-            completionHandler(.error(WebServiceRequestError.notFoundEndpoint))
+            completionHandler(.error(WebServiceRequestError.notFoundGateway))
             return
         }
         
@@ -219,18 +216,17 @@ public class WebService {
         }
         
         //Step #0: Add request to memory database
-        internalAddRequest(requestId: requestId, key: key, requestHashable: requestHashable, requestType: requestType, endpoint: endpoint, cancelHandler: {
+        internalAddRequest(requestId: requestId, key: key, requestHashable: requestHashable, requestType: requestType, gateway: gateway, cancelHandler: {
             //Canceled request
             completeHandlerResponse(.canceledRequest(duplicate: false))
         })
         
-        
         //Step #3: Data handler closure for raw data from server
-        let dataHandler: (Any) -> Void = { (data) in
+        let dataHandler: (Any) -> Void = { data in
             do {
-                let resultData = try endpoint.dataProcessing(request: request,
-                                                             rawData: data,
-                                                             fromStorage: false)
+                let resultData = try gateway.dataProcessing(request: request,
+                                                            rawData: data,
+                                                            fromStorage: false)
                 
                 storage?.writeData(request: request, data: data, isRaw: true)
                 storage?.writeData(request: request, data: resultData, isRaw: false)
@@ -244,28 +240,28 @@ public class WebService {
         
         //Step #2: Beginer request closure
         let requestHandler = {
-            endpoint.performRequest(requestId: requestId,
-                                    request: request,
-                                    completionWithRawData: { data in
-                                    
-                                    //Raw data from server
-                                    guard requestState == .inWork else { return }
-                                    
-                                    if let queue = endpoint.queueForDataProcessing {
-                                        queue.async { dataHandler(data) }
-                                    } else {
-                                        dataHandler(data)
-                                    }
-                                    
-            },
-                                  completionWithError: { error in
-                                    //Error request
-                                    completeHandlerResponse(.error(error))
-            })
+            gateway.performRequest(
+                requestId: requestId,
+                request: request,
+                completionWithRawData: { data in
+                    //Raw data from server
+                    guard requestState == .inWork else { return }
+
+                    if let queue = gateway.queueForDataProcessing {
+                        queue.async { dataHandler(data) }
+                    } else {
+                        dataHandler(data)
+                    }
+                },
+                completionWithError: { error in
+                    //Error request
+                    completeHandlerResponse(.error(error))
+                }
+            )
         }
         
         //Step #1: Call request in queue
-        if let queue = endpoint.queueForRequest {
+        if let queue = gateway.queueForRequest {
             queue.async(execute: requestHandler)
         } else {
             requestHandler()
@@ -273,7 +269,7 @@ public class WebService {
     }
     
     
-    //MARK: Read from storage
+    // MARK: Read from storage
     
     /**
      Read last success data from storage. Response result in closure.
@@ -282,7 +278,7 @@ public class WebService {
          - request: The request with data.
          - dependencyNextRequest: Type dependency from next performRequest.
          - completionHandler: Closure for read data from storage.
-         - timeStamp: TimeStamp when saved from server (endpoint).
+         - timeStamp: TimeStamp when saved from server (gateway).
          - response: Result read from storage.
      */
     public func readStorage<RequestType: WebServiceRequesting>(_ request: RequestType, dependencyNextRequest: ReadStorageDependencyType = .notDepend, completionHandler: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
@@ -305,7 +301,7 @@ public class WebService {
         - request: The request with data.
         - dependencyNextRequest: Type dependency from next performRequest.
         - completionHandler: Closure for read data from storage.
-        - timeStamp: TimeStamp when saved from server (endpoint).
+        - timeStamp: TimeStamp when saved from server (gateway).
         - response: Result read from storage.
      */
     public func readStorageAnyData(_ request: WebServiceBaseRequesting,
@@ -322,7 +318,7 @@ public class WebService {
     // MARK: Perform requests use delegate for response
     
     /**
-     Request to server (endpoint). Response result send to delegate.
+     Request to server (gateway). Response result send to delegate.
      
      - Parameters:
         - request: The request with data.
@@ -333,7 +329,7 @@ public class WebService {
     }
     
     /**
-     Request to server (endpoint). Response result send to delegate.
+     Request to server (gateway). Response result send to delegate.
      
      - Parameters:
          - request: The request with data.
@@ -346,7 +342,7 @@ public class WebService {
     }
     
     /**
-     Request to server (endpoint). Response result send to delegate.
+     Request to server (gateway). Response result send to delegate.
      
      - Parameters:
          - request: The hashable (also equatable) request with data.
@@ -578,12 +574,11 @@ public class WebService {
                     }
                     
                 } else if isRawData, let rawData = response.dataResponse() {
-                    if let endpoint = self?.internalFindEndpoint(request: request, rawDataTypeForRestoreFromStorage: type(of: rawData)) {
-                        //Handler closure with fined endpoint for use next
+                    if let gateway = self?.internalFindGateway(request: request, rawDataTypeForRestoreFromStorage: type(of: rawData)) {
+                        //Handler closure with fined gateway for use next
                         let handler = {
                             do {
-                                let data = try endpoint.dataProcessing(request: request, rawData: rawData, fromStorage: true)
-                                
+                                let data = try gateway.dataProcessing(request: request, rawData: rawData, fromStorage: true)
                                 queueForResponse.async {
                                     completionHandler(timeStamp, .data(data))
                                 }
@@ -594,17 +589,17 @@ public class WebService {
                             }
                         }
                         
-                        //Call handler
-                        if let queue = endpoint.queueForDataProcessingFromStorage {
+                        //Perform handler
+                        if let queue = gateway.queueForDataProcessingFromStorage {
                             queue.async(execute: handler)
                         } else {
                             handler()
                         }
                         
                     } else {
-                        //Not found endpoint
+                        //Not found gateway
                         queueForResponse.async {
-                            completionHandler(nil, .error(WebServiceRequestError.notFoundEndpoint))
+                            completionHandler(nil, .error(WebServiceRequestError.notFoundGateway))
                         }
                     }
                     
@@ -623,11 +618,11 @@ public class WebService {
     }
     
     
-    // MARK: Find endpoints and storages
-    private func internalFindEndpoint(request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type? = nil) -> WebServiceEndpoint? {
-        for endpoint in self.endpoints {
-            if endpoint.isSupportedRequest(request, rawDataTypeForRestoreFromStorage: rawDataTypeForRestoreFromStorage) {
-                return endpoint
+    // MARK: Find gateways and storages
+    private func internalFindGateway(request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type? = nil) -> WebServiceGateway? {
+        for gateway in self.gateways {
+            if gateway.isSupportedRequest(request, rawDataTypeForRestoreFromStorage: rawDataTypeForRestoreFromStorage) {
+                return gateway
             }
         }
         
@@ -665,10 +660,10 @@ public class WebService {
         return WebService.lastRequestId
     }
     
-    private func internalAddRequest(requestId: UInt64, key: AnyHashable?, requestHashable: AnyHashable?, requestType: WebServiceBaseRequesting.Type, endpoint: WebServiceEndpoint, cancelHandler: @escaping ()->Void) {
+    private func internalAddRequest(requestId: UInt64, key: AnyHashable?, requestHashable: AnyHashable?, requestType: WebServiceBaseRequesting.Type, gateway: WebServiceGateway, cancelHandler: @escaping ()->Void) {
         //Increment counts for visible NetworkActivityIndicator in StatusBar if need only for iOS
         #if os(iOS)
-        if !disableNetworkActivityIndicator && endpoint.useNetworkActivityIndicator {
+        if !disableNetworkActivityIndicator && gateway.useNetworkActivityIndicator {
             WebService.staticMutex.lock()
             WebService.networkActivityIndicatorRequestIds.insert(requestId)
             WebService.staticMutex.unlock()
@@ -679,7 +674,7 @@ public class WebService {
         mutex.lock()
         defer { mutex.unlock() }
         
-        requestList[requestId] = RequestData(requestId: requestId, endpoint: endpoint, cancelHandler: cancelHandler)
+        requestList[requestId] = RequestData(requestId: requestId, gateway: gateway, cancelHandler: cancelHandler)
         requestsForTypes["\(requestType)", default: Set<UInt64>()].insert(requestId)
         
         if let key = key {
@@ -748,15 +743,15 @@ public class WebService {
     //MARK: Private types
     private struct RequestData {
         let requestId: UInt64
-        let endpoint: WebServiceEndpoint
+        let gateway: WebServiceGateway
         let cancelHandler: ()->Void
         
         func cancel(queueForResponse: DispatchQueue) {
             cancelHandler()
             
-            let queue = endpoint.queueForRequest ?? queueForResponse
+            let queue = gateway.queueForRequest ?? queueForResponse
             queue.async {
-                self.endpoint.canceledRequest(requestId: self.requestId)
+                self.gateway.canceledRequest(requestId: self.requestId)
             }
         }
     }
@@ -772,11 +767,11 @@ public class WebService {
         private let mutex = PThreadMutexLock()
         let dependencyType: ReadStorageDependencyType
         
-        private var _state: RequestState = .inWork
-        private var _isDuplicate: Bool = false
+        private var unsafeState: RequestState = .inWork
+        private var unsafeIsDuplicate: Bool = false
         
-        var state: RequestState { return mutex.synchronized { self._state } }
-        var isDuplicate: Bool { return mutex.synchronized { self._isDuplicate } }
+        var state: RequestState { return mutex.synchronized { self.unsafeState } }
+        var isDuplicate: Bool { return mutex.synchronized { self.unsafeIsDuplicate } }
         
         init(dependencyType: ReadStorageDependencyType) {
             self.dependencyType = dependencyType
@@ -784,15 +779,15 @@ public class WebService {
         
         func setDuplicate() {
             mutex.synchronized {
-                self._isDuplicate = true
-                self._state = .canceled
+                self.unsafeIsDuplicate = true
+                self.unsafeState = .canceled
             }
         }
         
         func setState(_ state: RequestState) {
             mutex.synchronized {
-                self._isDuplicate = false
-                self._state = state
+                self.unsafeIsDuplicate = false
+                self.unsafeState = state
             }
         }
         
