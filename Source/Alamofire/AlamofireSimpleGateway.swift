@@ -15,7 +15,7 @@ import Alamofire
 /// Base protocol for request use AlamofireSimpleGateway
 public protocol AlamofireSimpleBaseRequesting {
     /// Create alamofire request with use session manager.
-    func afRequest(sessionManager: Alamofire.SessionManager) throws -> Alamofire.DataRequest
+    func afRequest(sessionManager: Alamofire.Session) throws -> Alamofire.DataRequest
 
     /// Response type (binary or json) for decode response.
     var afResponseType: AlamofireSimpleResponseType { get }
@@ -89,64 +89,72 @@ extension AlamofireSimpleAutoDecoder where ResultType == Data {
 
 // MARK: Gateway
 /// Simple HTTP Gateway (use Alamofire)
-public class AlamofireSimpleGateway: AlamofireBaseGateway {
-    private let sessionManager: Alamofire.SessionManager
-    
+public class AlamofireSimpleGateway: AlamofireGateway {
     /**
      Simple HTTP Gateway used Alamofire constructor.
-     
+
      - Parameters:
-         - sessionManager: Alamofire.SessionManager for use, default Alamofire.SessionManager.default.
-         - queueForRequest: Thread Dispatch Queue for `perofrmRequest()` and `cancelRequests()` methods.
-         - useNetworkActivityIndicator: When `true`, showed networkActivityIndicator in statusBar when requests in process.
+        - sessionManager: Alamofire.SessionManager for use, default Alamofire.SessionManager.default.
+        - queueForRequest: Thread Dispatch Queue for `perofrmRequest()` and `cancelRequests()` methods.
+        - useNetworkActivityIndicator: When `true`, showed networkActivityIndicator in statusBar when requests in process.
      */
-    public init(sessionManager: Alamofire.SessionManager = Alamofire.SessionManager.default, queueForRequest: DispatchQueue? = nil, useNetworkActivityIndicator: Bool = true) {
-        self.sessionManager = sessionManager
-        super.init(queueForRequest: queueForRequest, useNetworkActivityIndicator: useNetworkActivityIndicator)
+    public init(sessionManager: Alamofire.Session = .default, queueForRequest: DispatchQueue? = nil, useNetworkActivityIndicator: Bool = true) {
+        let handler = AlamofireSimpleGatewayHandler(sessionManager: sessionManager)
+        super.init(queueForRequest: queueForRequest, useNetworkActivityIndicator: useNetworkActivityIndicator, handler: handler)
     }
-    
-    
-    //MARK: Gateway implementation
-    public override func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
+}
+
+open class AlamofireSimpleGatewayHandler: AlamofireGatewayHandler {
+    private let sessionManager: Alamofire.Session
+
+    public init(sessionManager: Alamofire.Session = .default) {
+        self.sessionManager = sessionManager
+    }
+
+    public func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
         return request is AlamofireSimpleBaseRequesting
     }
-    
-    public override func performRequest(requestId: UInt64, data: RequestData) throws -> DataRequest? {
-        guard let request = data.request as? AlamofireSimpleBaseRequesting else {
-            throw WebServiceRequestError.notSupportRequest
+
+    public func makeAlamofireRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (AlamofireGateway.RequestResult) -> Void) {
+        do {
+            guard let request = request as? AlamofireSimpleBaseRequesting else {
+                throw WebServiceRequestError.notSupportRequest
+            }
+
+            let afRequest = try request.afRequest(sessionManager: sessionManager)
+            completion(.success(afRequest, innerData: nil))
+        } catch {
+            completion(.failure(error))
         }
-        
-        return try request.afRequest(sessionManager: sessionManager)
     }
-    
-    public override func responseAlamofire(_ response: DataResponse<Data>, requestId: UInt64, requestData: RequestData) throws -> Any {
+
+    public func responseAlamofire(_ response: DataResponse<Data>, requestId: UInt64, request: WebServiceBaseRequesting, innerData: Any?) throws -> Any {
         switch response.result {
         case .success(let data):
             //Validation data for http status code
             if let statusCode = response.response?.statusCode, statusCode >= 300 {
                 throw WebServiceResponseError.httpStatusCode(statusCode)
             }
-            
+
             return data
-            
+
         case .failure(let error):
             throw error
         }
     }
-    
-    public override func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any {
+
+    public func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any {
         guard let binary = rawData as? Data, let request = request as? AlamofireSimpleBaseRequesting else {
             throw WebServiceRequestError.notSupportDataProcessing
         }
-        
+
         switch request.afResponseType {
         case .binary:
             return try request.afBaseDecodeResponse(AlamofireSimpleResponseData.binary(binary))
-            
+
         case .json:
             let jsonData = try JSONSerialization.jsonObject(with: binary, options: [])
             return try request.afBaseDecodeResponse(AlamofireSimpleResponseData.json(jsonData))
         }
     }
-    
 }

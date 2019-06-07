@@ -17,10 +17,10 @@ enum WebServiceDataClass: Hashable {
 extension WebService {
     
     static func createDefault() -> WebService {
-        let gateway = WebServiceHtmlV2Gateway()
+        let gateway = WebServiceHtmlV2GatewayHandler.makeGateway()
 //        let gateway = WebServiceSimpleGateway()
 //        let gateway = AlamofireSimpleGateway()
-        
+
         let mock = WebServiceMockGateway(rawDataFromStoreAlwaysNil: true)
         
         var storages: [WebServiceStorage] = []

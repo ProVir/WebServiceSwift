@@ -23,7 +23,7 @@ struct SiteWebServiceAlamofireHandler {
 
 
 extension SiteWebServiceRequests.SiteSearch: AlamofireSimpleRequesting {
-    func afRequest(sessionManager: SessionManager) throws -> DataRequest {
+    func afRequest(sessionManager: Session) throws -> DataRequest {
         return sessionManager.request(urlSite)
     }
     
@@ -34,7 +34,7 @@ extension SiteWebServiceRequests.SiteSearch: AlamofireSimpleRequesting {
 }
 
 extension SiteWebServiceRequests.SiteMail: AlamofireSimpleRequesting {
-    func afRequest(sessionManager: SessionManager) throws -> DataRequest {
+    func afRequest(sessionManager: Session) throws -> DataRequest {
         return sessionManager.request(urlSite)
     }
     
@@ -45,7 +45,7 @@ extension SiteWebServiceRequests.SiteMail: AlamofireSimpleRequesting {
 }
 
 extension SiteWebServiceRequests.SiteYouTube: AlamofireSimpleRequesting {
-    func afRequest(sessionManager: SessionManager) throws -> DataRequest {
+    func afRequest(sessionManager: Session) throws -> DataRequest {
         return sessionManager.request(urlSite)
     }
     

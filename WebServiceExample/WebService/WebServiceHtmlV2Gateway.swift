@@ -10,30 +10,37 @@ import Foundation
 import WebServiceSwift
 import Alamofire
 
-///Gateway for get html data for URL.
-class WebServiceHtmlV2Gateway: AlamofireBaseGateway {
-
-    init() {
-        super.init(queueForRequest: DispatchQueue.global(qos: .background), useNetworkActivityIndicator: true)
+/// Gateway handler for get html data for URL.
+class WebServiceHtmlV2GatewayHandler: AlamofireGatewayHandler {
+    static func makeGateway() -> AlamofireGateway {
+        return .init(queueForRequest: DispatchQueue.global(qos: .utility), useNetworkActivityIndicator: true, handler: WebServiceHtmlV2GatewayHandler())
     }
-    
-    override func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
+
+    func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
         return request is WebServiceHtmlRequesting
     }
-    
-    override func performRequest(requestId: UInt64, data: RequestData) throws -> Alamofire.DataRequest? {
-        guard let url = (data.request as? WebServiceHtmlRequesting)?.url else {
+
+    func makeAlamofireRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (AlamofireGateway.RequestResult) -> Void) {
+        do {
+            completion(.success(try makeAlamofireRequest(requestId: requestId, request: request), innerData: nil))
+        } catch {
+            completion(.failure(error))
+        }
+    }
+
+    private func makeAlamofireRequest(requestId: UInt64, request: WebServiceBaseRequesting) throws -> Alamofire.DataRequest {
+        guard let url = (request as? WebServiceHtmlRequesting)?.url else {
             throw WebServiceRequestError.notSupportRequest
         }
-        
-        return Alamofire.request(url)
+
+        return AF.request(url)
     }
-    
-    override func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any {
+
+    func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any {
         guard request is WebServiceHtmlRequesting, let binary = rawData as? Data else {
             throw WebServiceRequestError.notSupportDataProcessing
         }
-        
+
         if let result = String(data: binary, encoding: .utf8) ?? String(data: binary, encoding: .windowsCP1251) {
             return result
         } else {

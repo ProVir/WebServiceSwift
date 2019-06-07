@@ -101,7 +101,7 @@ public protocol WebServiceGateway: class {
     /**
      Asks whether the request supports this gateway.
      
-     If `rawDataForRestoreFromStorage != nil`, after this method called `processRawDataFromStorage()` method.
+     If `rawDataForRestoreFromStorage != nil`, after this method called `dataProcessing(request:rawData:fromStorage:)` method with `fromStorage = true`.
      
      - Parameters:
         - request: Request for test.

@@ -95,7 +95,7 @@ public typealias WebServiceAnyResponse = WebServiceResponse<Any>
 
 ///Response from other type
 public extension WebServiceResponse {
-    public struct ConvertError: Error {
+    struct ConvertError: Error {
         let from: Any.Type
         let to: Any.Type
     }

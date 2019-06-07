@@ -43,7 +43,7 @@ class WebServiceHtmlGateway: WebServiceGateway {
             return
         }
 
-        Alamofire.request(url).responseData { response in
+        AF.request(url).responseData { response in
             switch response.result {
             case .success(let data):
                 completionWithRawData(ServerData(statusCode: response.response?.statusCode ?? 0,

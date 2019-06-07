@@ -1,12 +1,11 @@
 project 'WebServiceExample.xcodeproj'
-use_frameworks!
-platform :ios, '8.0'
+platform :ios, '10.0'
 
 target 'WebServiceExample' do
-  pod 'Alamofire'
+  pod 'Alamofire', '~> 5.0.0-beta.6'
 end
 
 target 'WebServiceSwift' do
-  pod 'Alamofire'
+  pod 'Alamofire', '~> 5.0.0-beta.6'
 end
 
