@@ -48,9 +48,9 @@ public class WebServiceMockRequestGateway<RequestType: WebServiceRequesting>: We
         return request is RequestType
     }
     
-    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completionWithRawData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void) {
+    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<Any, Error>) -> Void) {
         guard let request = request as? RequestType else {
-            completionWithError(WebServiceRequestError.notSupportRequest)
+            completion(.failure(WebServiceRequestError.notSupportRequest))
             return
         }
         
@@ -59,13 +59,7 @@ public class WebServiceMockRequestGateway<RequestType: WebServiceRequesting>: We
         
         let workItem = DispatchWorkItem { [weak self] in
             self?.requests.removeValue(forKey: requestId)
-            
-            do {
-                let data = try handler(request)
-                completionWithRawData(data)
-            } catch {
-                completionWithError(error)
-            }
+            completion(Result { try handler(request) })
         }
         
         //Run request with pause time

@@ -111,22 +111,16 @@ public protocol WebServiceGateway: class {
     func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool
     
     /**
-     Perform request to server. Need call `completionWithRawData` or `completionWithError` and only one. After performed `completionWithRawData`, `completionWithError` or canceled ignored other this closure.
+     Perform request to server. Need call `completionWithRawData` and only one.
      
      If `queueForRequest != nil`, thread use from `queueForRequest`, else default thread (usually main).
      
      - Parameters:
         - requestId: Unique id for request. ID generated always unique for all Gateways and WebServices. Use for `canceledRequest()`.
         - request: Original request with data.
-        - completionWithRawData: After success get data from server - call this closure with raw data from server.
-        - data: Usually binary data and this data saved as rawData in storage.
-        - completionWithError: Call if error get data from server or other error. 
-        - error: Response as error.
+        - completionWithRawData: Result with raw data from server or error. RawData usually binary data and this data saved as rawData in storage.
      */
-    func performRequest(requestId: UInt64,
-                        request: WebServiceBaseRequesting,
-                        completionWithRawData: @escaping (_ data: Any) -> Void,
-                        completionWithError: @escaping (_ error: Error) -> Void)
+    func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<Any, Error>) -> Void)
     
     /**
      Preformed after canceled request.
@@ -146,8 +140,8 @@ public protocol WebServiceGateway: class {
      
      - Parameters:
         - request: Original request.
-        - rawData: Type data from closure request.completionWithData(). Usually binary Data.
-        - fromStorage: If `true`: data from storage, else data from closure `request.completionWithData()`.
+        - rawData: Type data from closure performRequest.completionWithRawData(). Usually binary Data.
+        - fromStorage: If `true`: data from storage, else data from closure `performRequest.completionWithRawData()`.
      
      - Throws: Error validation or proccess data from server to end data. Data from server (also rawData) don't save to storage.
      - Returns: Result data for response.

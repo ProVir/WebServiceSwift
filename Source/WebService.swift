@@ -243,7 +243,15 @@ public class WebService {
             gateway.performRequest(
                 requestId: requestId,
                 request: request,
-                completionWithRawData: { data in
+                completion: { result in
+                    let data: Any
+                    switch result {
+                    case .success(let rawData): data = rawData
+                    case .failure(let error):
+                        completeHandlerResponse(.error(error))
+                        return
+                    }
+
                     //Raw data from server
                     guard requestState == .inWork else { return }
 
@@ -252,10 +260,6 @@ public class WebService {
                     } else {
                         dataHandler(data)
                     }
-                },
-                completionWithError: { error in
-                    //Error request
-                    completeHandlerResponse(.error(error))
                 }
             )
         }

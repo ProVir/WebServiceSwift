@@ -34,23 +34,19 @@ class WebServiceHtmlGateway: WebServiceGateway {
         return request is WebServiceHtmlRequesting
     }
     
-    func performRequest(requestId: UInt64, request: WebServiceBaseRequesting,
-                        completionWithRawData: @escaping (_ data: Any) -> Void,
-                        completionWithError: @escaping (_ error: Error) -> Void) {
-        
+    func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<Any, Error>) -> Void) {
         guard let url = (request as? WebServiceHtmlRequesting)?.url else {
-            completionWithError(WebServiceRequestError.notSupportRequest)
+            completion(.failure(WebServiceRequestError.notSupportRequest))
             return
         }
 
         AF.request(url).responseData { response in
             switch response.result {
             case .success(let data):
-                completionWithRawData(ServerData(statusCode: response.response?.statusCode ?? 0,
-                                                 binary: data))
+                completion(.success(ServerData(statusCode: response.response?.statusCode ?? 0, binary: data)))
                 
             case .failure(let error):
-                completionWithError(error)
+                completion(.failure(error))
             }
         }
     }

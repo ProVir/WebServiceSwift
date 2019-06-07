@@ -152,22 +152,22 @@ open class AlamofireGateway: WebServiceGateway {
         return handler.isSupportedRequest(request, rawDataTypeForRestoreFromStorage: rawDataTypeForRestoreFromStorage)
     }
 
-    open func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completionWithRawData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void) {
+    open func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<Any, Error>) -> Void) {
         handler.makeAlamofireRequest(requestId: requestId, request: request) { [weak self] result in
             guard let self = self else {
-                completionWithError(WebServiceRequestError.gatewayInternal)
+                completion(.failure(WebServiceRequestError.gatewayInternal))
                 return
             }
 
             switch result {
             case let .success(af_request, innerData):
-                self.startAlamofireRequest(af_request, requestId: requestId, request: request, innerData: innerData, completionWithRawData: completionWithRawData, completionWithError: completionWithError)
+                self.startAlamofireRequest(af_request, requestId: requestId, request: request, innerData: innerData, completion: completion)
 
             case .failure(let error):
                 if let error = error as? WebServiceRequestError {
-                    completionWithError(error)
+                    completion(.failure(error))
                 } else {
-                    completionWithError(WebServiceRequestError.invalidRequest(error))
+                    completion(.failure(WebServiceRequestError.invalidRequest(error)))
                 }
             }
         }
@@ -215,7 +215,7 @@ open class AlamofireGateway: WebServiceGateway {
     private let lock = PThreadMutexLock()
     private var tasks = [UInt64: TaskData]()
 
-    private func startAlamofireRequest(_ afRequest: Alamofire.DataRequest, requestId: UInt64, request: WebServiceBaseRequesting, innerData: Any?, completionWithRawData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void) {
+    private func startAlamofireRequest(_ afRequest: Alamofire.DataRequest, requestId: UInt64, request: WebServiceBaseRequesting, innerData: Any?, completion: @escaping (Result<Any, Error>) -> Void) {
         let task = TaskData(requestId: requestId, request: request, afRequest: afRequest, innerData: innerData)
 
         lock.synchronized {
@@ -228,14 +228,10 @@ open class AlamofireGateway: WebServiceGateway {
                     self.tasks.removeValue(forKey: requestId)
                 }
 
-                do {
-                    let result = try self.handler.responseAlamofire(response, requestId: requestId, request: request, innerData: innerData)
-                    completionWithRawData(result)
-                } catch {
-                    completionWithError(error)
-                }
+                let result = Result<Any, Error> { try self.handler.responseAlamofire(response, requestId: requestId, request: request, innerData: innerData) }
+                completion(result)
             } else {
-                completionWithError(WebServiceRequestError.gatewayInternal)
+                completion(.failure(WebServiceRequestError.gatewayInternal))
             }
         }
     }

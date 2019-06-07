@@ -114,9 +114,9 @@ public class WebServiceSimpleGateway: WebServiceGateway {
         return request is WebServiceSimpleBaseRequesting
     }
     
-    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completionWithRawData: @escaping (Any) -> Void, completionWithError: @escaping (Error) -> Void) {
+    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<Any, Error>) -> Void) {
         guard let request = request as? WebServiceSimpleBaseRequesting else {
-            completionWithError(WebServiceRequestError.notSupportRequest)
+            completion(.failure(WebServiceRequestError.notSupportRequest))
             return
         }
         
@@ -126,7 +126,7 @@ public class WebServiceSimpleGateway: WebServiceGateway {
             
             let task = session.dataTask(with: urlRequest) { [weak self] (data, response, error) in
                 guard let sSelf = self else {
-                    completionWithError(WebServiceRequestError.gatewayInternal)
+                    completion(.failure(WebServiceRequestError.gatewayInternal))
                     return
                 }
                 
@@ -140,15 +140,15 @@ public class WebServiceSimpleGateway: WebServiceGateway {
                 if let data = data {
                     //Validation data for http status code
                     if let response = response as? HTTPURLResponse, response.statusCode >= 300 {
-                        completionWithError(WebServiceResponseError.httpStatusCode(response.statusCode))
+                        completion(.failure(WebServiceResponseError.httpStatusCode(response.statusCode)))
                     } else {
-                        completionWithRawData(data)
+                        completion(.success(data))
                     }
                     
                 } else if let error = error {
-                    completionWithError(error)
+                    completion(.failure(error))
                 } else {
-                    completionWithError(WebServiceRequestError.gatewayInternal)
+                    completion(.failure(WebServiceRequestError.gatewayInternal))
                 }
             }
             
@@ -161,7 +161,7 @@ public class WebServiceSimpleGateway: WebServiceGateway {
             task.resume()
             
         } catch {
-            completionWithError(WebServiceRequestError.invalidRequest(error))
+            completion(.failure(WebServiceRequestError.invalidRequest(error)))
         }
     }
     

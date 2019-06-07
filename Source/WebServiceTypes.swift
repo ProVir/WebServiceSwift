@@ -92,7 +92,6 @@ public enum WebServiceResponse<T> {
 /// WebService result response from gateway without information for type
 public typealias WebServiceAnyResponse = WebServiceResponse<Any>
 
-
 ///Response from other type
 public extension WebServiceResponse {
     struct ConvertError: Error {
