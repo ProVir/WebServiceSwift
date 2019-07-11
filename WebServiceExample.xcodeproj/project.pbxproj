@@ -15,7 +15,6 @@
 		501D2ADB1F4E8DF5000E3FA3 /* WebService.h in Headers */ = {isa = PBXBuildFile; fileRef = 501D2AD91F4E8DF5000E3FA3 /* WebService.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		501D2ADE1F4E8DF5000E3FA3 /* WebServiceSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 501D2AD71F4E8DF5000E3FA3 /* WebServiceSwift.framework */; };
 		501D2ADF1F4E8DF5000E3FA3 /* WebServiceSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 501D2AD71F4E8DF5000E3FA3 /* WebServiceSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		501D2AEC1F4E92A1000E3FA3 /* WebServiceFileStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AEB1F4E92A1000E3FA3 /* WebServiceFileStorage.swift */; };
 		501D2AF11F518762000E3FA3 /* SiteWebServiceRequests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AED1F4E9BE5000E3FA3 /* SiteWebServiceRequests.swift */; };
 		501D2AF21F5188CC000E3FA3 /* WebServiceHtmlGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AEF1F4EA1EC000E3FA3 /* WebServiceHtmlGateway.swift */; };
 		501D2AFA1F527D03000E3FA3 /* WebServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AE91F4E917A000E3FA3 /* WebServiceProtocols.swift */; };
@@ -25,15 +24,12 @@
 		5054625C20C1884200595948 /* WebServiceSimpleGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625B20C1884200595948 /* WebServiceSimpleGateway.swift */; };
 		505528A82107925800D57FC4 /* WebServiceHtmlV2Gateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 505528A72107925800D57FC4 /* WebServiceHtmlV2Gateway.swift */; };
 		506CAFCF2084D729008AB016 /* WebServiceTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 506CAFCD2084D707008AB016 /* WebServiceTypes.swift */; };
-		507529A521032E61008A167A /* WebServiceDataBaseStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 507529A421032E61008A167A /* WebServiceDataBaseStorage.swift */; };
 		507529A82103321A008A167A /* WebServiceDataBaseStorage.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 507529A62103321A008A167A /* WebServiceDataBaseStorage.xcdatamodeld */; };
 		50844338207D244900C757C7 /* WebServiceMockGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50F4943120565FD1004F1E08 /* WebServiceMockGateway.swift */; };
 		50AB6AB020883C2F00C1E093 /* SiteWebProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50AB6AAF20883C2F00C1E093 /* SiteWebProvider.swift */; };
 		50AB6AB220883F3100C1E093 /* WebService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50AB6AB120883F3100C1E093 /* WebService.swift */; };
 		50BFAFF9208F4C8E007E8FBD /* WebServiceRequestProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50BFAFF7208F4C8A007E8FBD /* WebServiceRequestProvider.swift */; };
-		50D22B0B20D7F91800C44198 /* WebServiceMemoryStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D22B0A20D7F91800C44198 /* WebServiceMemoryStorage.swift */; };
 		50D22B0D20D8AE8600C44198 /* WebServiceMockRequestGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D22B0C20D8AE8600C44198 /* WebServiceMockRequestGateway.swift */; };
-		50E9C1B22106CDDE003E6D4E /* WebServiceRequestGeneralStoring.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E9C1B12106CDDE003E6D4E /* WebServiceRequestGeneralStoring.swift */; };
 		50E9C1BF21077598003E6D4E /* SiteWebServiceHTMLHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E9C1BE21077598003E6D4E /* SiteWebServiceHTMLHandler.swift */; };
 		50E9C1C12107765A003E6D4E /* SiteWebServiceSimpleHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E9C1C02107765A003E6D4E /* SiteWebServiceSimpleHandler.swift */; };
 		50E9C1C321077730003E6D4E /* SiteWebServiceAlamofireHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E9C1C221077730003E6D4E /* SiteWebServiceAlamofireHandler.swift */; };
@@ -41,6 +37,10 @@
 		50E9C1C721077979003E6D4E /* SiteWebServiceStoring.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E9C1C621077979003E6D4E /* SiteWebServiceStoring.swift */; };
 		61461D4A3EF74DD8EA170CF1 /* libPods-WebServiceExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 097DC5181F8BC28E4BC049B9 /* libPods-WebServiceExample.a */; };
 		88318B0422AAB5C400631B12 /* AlamofireSimpleGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625920C1026800595948 /* AlamofireSimpleGateway.swift */; };
+		8862B6C022D5C722008E3E44 /* WebServiceRequestGeneralStoring.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E9C1B12106CDDE003E6D4E /* WebServiceRequestGeneralStoring.swift */; };
+		8862B6C122D5C726008E3E44 /* WebServiceFileStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AEB1F4E92A1000E3FA3 /* WebServiceFileStorage.swift */; };
+		8862B6C222D5C72B008E3E44 /* WebServiceDataBaseStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 507529A421032E61008A167A /* WebServiceDataBaseStorage.swift */; };
+		8862B6C322D5C72E008E3E44 /* WebServiceMemoryStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D22B0A20D7F91800C44198 /* WebServiceMemoryStorage.swift */; };
 		F7FE9D6708B7621E6DEBF692 /* libPods-WebServiceSwift.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 24A0CD2C446B67E36EF3409D /* libPods-WebServiceSwift.a */; };
 /* End PBXBuildFile section */
 
@@ -446,19 +446,19 @@
 			files = (
 				5054625520C0665000595948 /* AlamofireGateway.swift in Sources */,
 				50D22B0D20D8AE8600C44198 /* WebServiceMockRequestGateway.swift in Sources */,
+				8862B6C122D5C726008E3E44 /* WebServiceFileStorage.swift in Sources */,
 				506CAFCF2084D729008AB016 /* WebServiceTypes.swift in Sources */,
 				88318B0422AAB5C400631B12 /* AlamofireSimpleGateway.swift in Sources */,
-				507529A521032E61008A167A /* WebServiceDataBaseStorage.swift in Sources */,
 				50844338207D244900C757C7 /* WebServiceMockGateway.swift in Sources */,
+				8862B6C322D5C72E008E3E44 /* WebServiceMemoryStorage.swift in Sources */,
 				50BFAFF9208F4C8E007E8FBD /* WebServiceRequestProvider.swift in Sources */,
+				8862B6C222D5C72B008E3E44 /* WebServiceDataBaseStorage.swift in Sources */,
 				501D2AFB1F527D05000E3FA3 /* WebService.swift in Sources */,
 				5054625820C066FD00595948 /* PThreadMutexLock.swift in Sources */,
+				8862B6C022D5C722008E3E44 /* WebServiceRequestGeneralStoring.swift in Sources */,
 				507529A82103321A008A167A /* WebServiceDataBaseStorage.xcdatamodeld in Sources */,
-				50D22B0B20D7F91800C44198 /* WebServiceMemoryStorage.swift in Sources */,
-				50E9C1B22106CDDE003E6D4E /* WebServiceRequestGeneralStoring.swift in Sources */,
 				501D2AFA1F527D03000E3FA3 /* WebServiceProtocols.swift in Sources */,
 				5054625C20C1884200595948 /* WebServiceSimpleGateway.swift in Sources */,
-				501D2AEC1F4E92A1000E3FA3 /* WebServiceFileStorage.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

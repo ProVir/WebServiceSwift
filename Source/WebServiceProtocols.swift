@@ -40,9 +40,21 @@ public extension WebServiceRequestBaseStoring {
 /// Default data classification for storages.
 public let WebServiceDefaultDataClassification = "default"
 
-/// Data Source from custom types response with raw data from server. Used in storages when raw data as binary.
-public protocol WebServiceRawDataSource {
-    var binaryRawData: Data? { get }
+/// RawData for Gateway
+public protocol WebServiceRawData {
+    /// Used in storages for store as binary.
+    var storableRawBinary: Data? { get }
+}
+
+extension Data: WebServiceRawData {
+    public var storableRawBinary: Data? { return self }
+}
+
+/// Response from storages
+public enum WebServiceStorageResponse {
+    case rawData(WebServiceRawData)
+    case value(Any)
+    case error(Error)
 }
 
 // MARK: Delegates
@@ -108,7 +120,7 @@ public protocol WebServiceGateway: class {
         - rawDataTypeForRestoreFromStorage: If no nil - request restore raw data from storage with data.
      - Returns: If request support this gateway - return true.
      */
-    func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool
+    func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: WebServiceRawData.Type?) -> Bool
     
     /**
      Perform request to server. Need call `completionWithRawData` and only one.
@@ -120,7 +132,7 @@ public protocol WebServiceGateway: class {
         - request: Original request with data.
         - completionWithRawData: Result with raw data from server or error. RawData usually binary data and this data saved as rawData in storage.
      */
-    func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<Any, Error>) -> Void)
+    func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<WebServiceRawData, Error>) -> Void)
     
     /**
      Preformed after canceled request.
@@ -146,7 +158,7 @@ public protocol WebServiceGateway: class {
      - Throws: Error validation or proccess data from server to end data. Data from server (also rawData) don't save to storage.
      - Returns: Result data for response.
      */
-    func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any
+    func dataProcessing(request: WebServiceBaseRequesting, rawData: WebServiceRawData, fromStorage: Bool) throws -> Any
 }
 
 
@@ -175,34 +187,30 @@ public protocol WebServiceStorage: class {
      - Parameters:
         - request: Original request.
         - completionHandler: After readed data need call with result data. This closure need call and only one. Be sure to call in the main thread.
-        - isRawData: If data readed as raw type.
         - timeStamp: TimeStamp when saved from server (gateway).
-        - response: Result response enum with data. Can only be .data or .error. If not data - use .error(WebServiceResponseError.notFoundData)
-     
-     - Throws: Error request equivalent call `completionResponse(.error())` and not need call `completionResponse()`. The performance is higher with this error call.
+        - response: Result response enum with data. If not data - use .error(WebServiceResponseError.notFoundData)
      */
-    func readData(request: WebServiceBaseRequesting, completionHandler: @escaping (_ isRawData: Bool, _ timeStamp: Date?, _ response: WebServiceAnyResponse) -> Void) throws
+    func fetch(request: WebServiceBaseRequesting, completionHandler: @escaping (_ timeStamp: Date?, _ response: WebServiceStorageResponse) -> Void)
     
     /**
-     Save data from server (gateway). Usually call two - for raw and value (after processing) data.
+     Save data from server (gateway).
      Warning: Usually used not in main thread.
      
      - Parameters: 
         - request: Original request. 
-        - data: Data for save. Type may be raw or after processed.
-        - isRaw: Type data for save.
+        - rawData: Raw data (before processing) for save.
+        - value: Value (after processing) for save.
     */
-    func writeData(request: WebServiceBaseRequesting, data: Any, isRaw: Bool)
-    
+    func save(request: WebServiceBaseRequesting, rawData: WebServiceRawData, value: Any)
     
     /**
      Delete data in storage for concrete request.
      
      - Parameter request: Original request.
      */
-    func deleteData(request: WebServiceBaseRequesting)
+    func delete(request: WebServiceBaseRequesting)
     
     /// Delete all data in storage.
-    func deleteAllData()
+    func deleteAll()
 }
 

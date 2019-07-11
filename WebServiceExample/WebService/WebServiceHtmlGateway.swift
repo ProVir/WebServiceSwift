@@ -23,18 +23,18 @@ class WebServiceHtmlGateway: WebServiceGateway {
     let useNetworkActivityIndicator = true
     
     /// Data from server as raw, used only as example
-    struct ServerData: WebServiceRawDataSource {
+    struct ServerData: WebServiceRawData {
         let statusCode: Int
         let binary: Data
         
-        var binaryRawData: Data? { return binary }
+        var storableRawBinary: Data? { return binary }
     }
     
-    func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
+    func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: WebServiceRawData.Type?) -> Bool {
         return request is WebServiceHtmlRequesting
     }
     
-    func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<Any, Error>) -> Void) {
+    func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<WebServiceRawData, Error>) -> Void) {
         guard let url = (request as? WebServiceHtmlRequesting)?.url else {
             completion(.failure(WebServiceRequestError.notSupportRequest))
             return
@@ -53,7 +53,7 @@ class WebServiceHtmlGateway: WebServiceGateway {
     
     func canceledRequest(requestId: UInt64) { /* Don't support */ }
     
-    func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any {
+    func dataProcessing(request: WebServiceBaseRequesting, rawData: WebServiceRawData, fromStorage: Bool) throws -> Any {
         guard request is WebServiceHtmlRequesting else {
             throw WebServiceRequestError.notSupportDataProcessing
         }

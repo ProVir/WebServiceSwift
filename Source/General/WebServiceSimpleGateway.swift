@@ -110,11 +110,11 @@ public class WebServiceSimpleGateway: WebServiceGateway {
     
     
     // MARK: Gateway implementation
-    public func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
+    public func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: WebServiceRawData.Type?) -> Bool {
         return request is WebServiceSimpleBaseRequesting
     }
     
-    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<Any, Error>) -> Void) {
+    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<WebServiceRawData, Error>) -> Void) {
         guard let request = request as? WebServiceSimpleBaseRequesting else {
             completion(.failure(WebServiceRequestError.notSupportRequest))
             return
@@ -171,7 +171,7 @@ public class WebServiceSimpleGateway: WebServiceGateway {
         }
     }
     
-    public func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any {
+    public func dataProcessing(request: WebServiceBaseRequesting, rawData: WebServiceRawData, fromStorage: Bool) throws -> Any {
         guard let binary = rawData as? Data, let request = request as? WebServiceSimpleBaseRequesting else {
             throw WebServiceRequestError.notSupportDataProcessing
         }

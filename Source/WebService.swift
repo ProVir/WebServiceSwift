@@ -222,17 +222,16 @@ public class WebService {
         })
         
         //Step #3: Data handler closure for raw data from server
-        let dataHandler: (Any) -> Void = { data in
+        let dataHandler: (WebServiceRawData) -> Void = { rawData in
             do {
-                let resultData = try gateway.dataProcessing(request: request,
-                                                            rawData: data,
-                                                            fromStorage: false)
+                let value = try gateway.dataProcessing(
+                    request: request,
+                    rawData: rawData,
+                    fromStorage: false
+                )
                 
-                storage?.writeData(request: request, data: data, isRaw: true)
-                storage?.writeData(request: request, data: resultData, isRaw: false)
-                
-                completeHandlerResponse(.data(resultData))
-                
+                storage?.save(request: request, rawData: rawData, value: value)
+                completeHandlerResponse(.data(value))
             } catch {
                 completeHandlerResponse(.error(error))
             }
@@ -244,7 +243,7 @@ public class WebService {
                 requestId: requestId,
                 request: request,
                 completion: { result in
-                    let data: Any
+                    let data: WebServiceRawData
                     switch result {
                     case .success(let rawData): data = rawData
                     case .failure(let error):
@@ -490,7 +489,7 @@ public class WebService {
      */
     public func deleteInStorage(request: WebServiceBaseRequesting) {
         if let storage = internalFindStorage(request: request) {
-            storage.deleteData(request: request)
+            storage.delete(request: request)
         }
     }
     
@@ -504,7 +503,7 @@ public class WebService {
             let supportClasses = storage.supportDataClassification
             
             if supportClasses.contains(dataClassification) {
-                storage.deleteAllData()
+                storage.deleteAll()
             }
         }
     }
@@ -517,7 +516,7 @@ public class WebService {
             let supportClasses = storage.supportDataClassification
             
             if supportClasses.isEmpty {
-                storage.deleteAllData()
+                storage.deleteAll()
             }
         }
     }
@@ -527,7 +526,7 @@ public class WebService {
      */
     public func deleteAllInStorages() {
         for storage in self.storages {
-            storage.deleteAllData()
+            storage.deleteAll()
         }
     }
     
@@ -570,60 +569,61 @@ public class WebService {
         }
         
         //2. Perform read
-        do {
-            try storage.readData(request: request) { [weak self, queueForResponse = self.queueForResponse] isRawData, timeStamp, response in
-                if (nextRequestInfo?.canRead() ?? true) == false {
-                    self?.queueForResponse.async {
-                        completionHandler(nil, .canceledRequest(duplicate: false))
-                    }
-                    
-                } else if isRawData, let rawData = response.dataResponse() {
-                    if let gateway = self?.internalFindGateway(request: request, rawDataTypeForRestoreFromStorage: type(of: rawData)) {
-                        //Handler closure with fined gateway for use next
-                        let handler = {
-                            do {
-                                let data = try gateway.dataProcessing(request: request, rawData: rawData, fromStorage: true)
-                                queueForResponse.async {
-                                    completionHandler(timeStamp, .data(data))
-                                }
-                            } catch {
-                                queueForResponse.async {
-                                    completionHandler(nil, .error(error))
-                                }
+        storage.fetch(request: request) { [weak self, queueForResponse = self.queueForResponse] timeStamp, response in
+            if (nextRequestInfo?.canRead() ?? true) == false {
+                self?.queueForResponse.async {
+                    completionHandler(nil, .canceledRequest(duplicate: false))
+                }
+                return
+            }
+
+            switch response {
+            case .rawData(let rawData):
+                if let gateway = self?.internalFindGateway(request: request, rawDataTypeForRestoreFromStorage: type(of: rawData)) {
+                    //Handler closure with fined gateway for use next
+                    let handler = {
+                        do {
+                            let data = try gateway.dataProcessing(request: request, rawData: rawData, fromStorage: true)
+                            queueForResponse.async {
+                                completionHandler(timeStamp, .data(data))
+                            }
+                        } catch {
+                            queueForResponse.async {
+                                completionHandler(nil, .error(error))
                             }
                         }
-                        
-                        //Perform handler
-                        if let queue = gateway.queueForDataProcessingFromStorage {
-                            queue.async(execute: handler)
-                        } else {
-                            handler()
-                        }
-                        
-                    } else {
-                        //Not found gateway
-                        queueForResponse.async {
-                            completionHandler(nil, .error(WebServiceRequestError.notFoundGateway))
-                        }
                     }
-                    
+
+                    //Perform handler
+                    if let queue = gateway.queueForDataProcessingFromStorage {
+                        queue.async(execute: handler)
+                    } else {
+                        handler()
+                    }
+
                 } else {
-                    //No RAW data
-                    self?.queueForResponse.async {
-                        completionHandler(timeStamp, response)
+                    //Not found gateway
+                    queueForResponse.async {
+                        completionHandler(nil, .error(WebServiceRequestError.notFoundGateway))
                     }
                 }
-            }
-        } catch {
-            self.queueForResponse.async {
-                completionHandler(nil, .error(error))
+
+            case .value(let value):
+                queueForResponse.async {
+                    completionHandler(timeStamp, .data(value))
+                }
+
+            case .error(let error):
+                queueForResponse.async {
+                    completionHandler(nil, .error(error))
+                }
             }
         }
     }
     
     
     // MARK: Find gateways and storages
-    private func internalFindGateway(request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type? = nil) -> WebServiceGateway? {
+    private func internalFindGateway(request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: WebServiceRawData.Type? = nil) -> WebServiceGateway? {
         for gateway in self.gateways {
             if gateway.isSupportedRequest(request, rawDataTypeForRestoreFromStorage: rawDataTypeForRestoreFromStorage) {
                 return gateway

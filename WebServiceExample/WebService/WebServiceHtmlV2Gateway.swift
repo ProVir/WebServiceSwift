@@ -16,7 +16,7 @@ class WebServiceHtmlV2GatewayHandler: AlamofireGatewayHandler {
         return .init(queueForRequest: DispatchQueue.global(qos: .utility), useNetworkActivityIndicator: true, handler: WebServiceHtmlV2GatewayHandler())
     }
 
-    func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
+    func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: WebServiceRawData.Type?) -> Bool {
         return request is WebServiceHtmlRequesting
     }
 
@@ -36,7 +36,7 @@ class WebServiceHtmlV2GatewayHandler: AlamofireGatewayHandler {
         return AF.request(url)
     }
 
-    func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any {
+    func dataProcessing(request: WebServiceBaseRequesting, rawData: WebServiceRawData, fromStorage: Bool) throws -> Any {
         guard request is WebServiceHtmlRequesting, let binary = rawData as? Data else {
             throw WebServiceRequestError.notSupportDataProcessing
         }

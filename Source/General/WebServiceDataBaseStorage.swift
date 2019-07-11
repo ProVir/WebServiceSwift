@@ -125,14 +125,15 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
         }
     }
     
-    public func readData(request: WebServiceBaseRequesting, completionHandler: @escaping (Bool, Date?, WebServiceAnyResponse) -> Void) throws {
+    public func fetch(request: WebServiceBaseRequesting, completionHandler: @escaping (Date?, WebServiceStorageResponse) -> Void) {
         guard let request = request as? WebServiceRequestDataBaseStoring, let identificator = request.identificatorForDataBaseStorage else {
-            throw WebServiceResponseError.notFoundData
+            completionHandler(nil, .error(WebServiceResponseError.notFoundData))
+            return
         }
         
         managedObjectContext.perform {
             guard let item = self.findStoreData(identificator: identificator), let binary = item.binary else {
-                completionHandler(false, nil, .error(WebServiceResponseError.notFoundData))
+                completionHandler(nil, .error(WebServiceResponseError.notFoundData))
                 return
             }
             
@@ -145,60 +146,55 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
             if item.isRaw {
                 //Readed RAW data - use if supported request
                 if request is WebServiceRequestRawDataBaseStoring {
-                    completionHandler(true, timeStamp, .data(binary))
+                    completionHandler(timeStamp, .rawData(binary))
                 } else {
-                    completionHandler(true, nil, .error(WebServiceResponseError.notFoundData))
+                    completionHandler(nil, .error(WebServiceResponseError.notFoundData))
                 }
                 
             } else if let request = request as? WebServiceRequestAnyValueDataBaseStoring {
                 //Readed value and can decode
                 do {
                     if let data = try request.readAnyDataFromDataBaseStorage(data: binary) {
-                        completionHandler(false, timeStamp, .data(data))
+                        completionHandler(timeStamp, .value(data))
                     } else {
-                        completionHandler(false, nil, .error(WebServiceResponseError.notFoundData))
+                        completionHandler(nil, .error(WebServiceResponseError.notFoundData))
                     }
                 } catch {
-                    completionHandler(false, nil, .error(error))
+                    completionHandler(nil, .error(error))
                 }
                 
             } else {
                 //Value don't supported request
-                completionHandler(false, nil, .error(WebServiceResponseError.notFoundData))
+                completionHandler(nil, .error(WebServiceResponseError.notFoundData))
             }
         }
     }
-    
-    public func writeData(request: WebServiceBaseRequesting, data: Any, isRaw: Bool) {
+
+    public func save(request: WebServiceBaseRequesting, rawData: WebServiceRawData, value: Any) {
         guard let identificator = (request as? WebServiceRequestDataBaseStoring)?.identificatorForDataBaseStorage else {
             return
         }
-        
+
         let binary: Data
-        
-        //Custom
-        if let request = request as? WebServiceRequestAnyValueDataBaseStoring {
-            if !isRaw, let binaryData = request.writeAnyDataToDataBaseStorage(value: data) {
-                binary = binaryData
-            } else {
-                return
-            }
+        let isRaw: Bool
+
+        //Value
+        if let request = request as? WebServiceRequestAnyValueDataBaseStoring,
+           let binaryData = request.writeAnyDataToDataBaseStorage(value: value) {
+            binary = binaryData
+            isRaw = false
         }
-            
+
         //Raw
-        else if isRaw, request is WebServiceRequestRawDataBaseStoring {
-            if let data = data as? Data {
-                binary = data
-            } else if let binaryData = (data as? WebServiceRawDataSource)?.binaryRawData {
-                binary = binaryData
-            } else {
-                return
-            }
+        else if request is WebServiceRequestRawDataBaseStoring,
+           let binaryData = rawData.storableRawBinary {
+            binary = binaryData
+            isRaw = true
         }
-            
+
         //Unknow
         else { return }
-        
+
         //Save in CoreData
         managedObjectContext.perform {
             let item = self.findStoreData(identificator: identificator) ?? {
@@ -207,16 +203,16 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
                 item.idItem = identificator
                 return item
                 }()
-            
+
             item.isRaw = isRaw
             item.binary = binary
             item.timeStamp = Date()
-            
+
             self.saveContext()
         }
     }
     
-    public func deleteData(request: WebServiceBaseRequesting) {
+    public func delete(request: WebServiceBaseRequesting) {
         guard let identificator = (request as? WebServiceRequestDataBaseStoring)?.identificatorForDataBaseStorage else {
             return
         }
@@ -229,7 +225,7 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
         }
     }
     
-    public func deleteAllData() {
+    public func deleteAll() {
         managedObjectContext.perform {
             let fetchRequest: NSFetchRequest<Item> = Item.fetchRequest()
             if let results = try? self.managedObjectContext.fetch(fetchRequest) {

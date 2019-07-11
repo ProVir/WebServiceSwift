@@ -111,7 +111,7 @@ open class AlamofireSimpleGatewayHandler: AlamofireGatewayHandler {
         self.sessionManager = sessionManager
     }
 
-    public func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: Any.Type?) -> Bool {
+    public func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: WebServiceRawData.Type?) -> Bool {
         return request is AlamofireSimpleBaseRequesting
     }
 
@@ -143,7 +143,7 @@ open class AlamofireSimpleGatewayHandler: AlamofireGatewayHandler {
         }
     }
 
-    public func dataProcessing(request: WebServiceBaseRequesting, rawData: Any, fromStorage: Bool) throws -> Any {
+    public func dataProcessing(request: WebServiceBaseRequesting, rawData: WebServiceRawData, fromStorage: Bool) throws -> Any {
         guard let binary = rawData as? Data, let request = request as? AlamofireSimpleBaseRequesting else {
             throw WebServiceRequestError.notSupportDataProcessing
         }

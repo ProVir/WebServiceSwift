@@ -57,32 +57,39 @@ public class WebServiceMemoryStorage: WebServiceStorage {
         return request.keyForMemoryStorage != nil
     }
     
-    public func readData(request: WebServiceBaseRequesting, completionHandler: @escaping (Bool, Date?, WebServiceAnyResponse) -> Void) throws {
+    public func fetch(request: WebServiceBaseRequesting, completionHandler: @escaping (Date?, WebServiceStorageResponse) -> Void) {
         guard let request = request as? WebServiceRequestMemoryStoring, let key = request.keyForMemoryStorage else {
-            throw WebServiceResponseError.notFoundData
-        }
-        
-        if let storeData = mutex.synchronized({ memoryData[key] }) {
-            completionHandler(storeData.isRaw, storeData.timeStamp, .data(storeData.data))
-        } else {
-            throw WebServiceResponseError.notFoundData
-        }
-    }
-    
-    public func writeData(request: WebServiceBaseRequesting, data: Any, isRaw: Bool) {
-        guard let request = request as? WebServiceRequestMemoryStoring,
-            let key = request.keyForMemoryStorage,
-            request.useRawDataForMemoryStorage == isRaw else {
+            completionHandler(nil, .error(WebServiceResponseError.notFoundData))
             return
         }
         
-        let storeData = StoreData(data: data, isRaw: isRaw, timeStamp: Date())
+        if let storeData = mutex.synchronized({ memoryData[key] }) {
+            if storeData.isRaw, let raw = storeData.data as? WebServiceRawData {
+                completionHandler(storeData.timeStamp, .rawData(raw))
+            } else if storeData.isRaw == false {
+                completionHandler(storeData.timeStamp, .value(storeData.data))
+            } else {
+                completionHandler(nil, .error(WebServiceResponseError.notFoundData))
+            }
+        } else {
+            completionHandler(nil, .error(WebServiceResponseError.notFoundData))
+        }
+    }
+
+    public func save(request: WebServiceBaseRequesting, rawData: WebServiceRawData, value: Any) {
+        guard let request = request as? WebServiceRequestMemoryStoring,
+            let key = request.keyForMemoryStorage else {
+            return
+        }
+        let isRaw = request.useRawDataForMemoryStorage
+
+        let storeData = StoreData(data: isRaw ? rawData : value, isRaw: isRaw, timeStamp: Date())
         mutex.synchronized {
             memoryData[key] = storeData
         }
     }
     
-    public func deleteData(request: WebServiceBaseRequesting) {
+    public func delete(request: WebServiceBaseRequesting) {
         if let request = request as? WebServiceRequestMemoryStoring, let key = request.keyForMemoryStorage {
             mutex.synchronized {
                 memoryData.removeValue(forKey: key)
@@ -90,7 +97,7 @@ public class WebServiceMemoryStorage: WebServiceStorage {
         }
     }
     
-    public func deleteAllData() {
+    public func deleteAll() {
         mutex.synchronized {
             memoryData.removeAll()
         }
