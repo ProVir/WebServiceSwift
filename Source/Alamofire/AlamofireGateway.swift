@@ -10,7 +10,6 @@ import Foundation
 import Alamofire
 
 public protocol AlamofireGatewayHandler: class {
-
     /**
      Set callback closures from gateway. Default not save closures.
 
@@ -28,10 +27,10 @@ public protocol AlamofireGatewayHandler: class {
 
      - Parameters:
         - request: Request for test.
-        - rawDataTypeForRestoreFromStorage: If no nil - request restore raw data from storage with data.
+        - forDataProcessingFromStorage: If no nil - request restore raw data from storage with data.
      - Returns: If request support this gateway - return true.
      */
-    func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: WebServiceRawData.Type?) -> Bool
+    func isSupportedRequest(_ request: WebServiceBaseRequesting, forDataProcessingFromStorage rawDataType: WebServiceStorageRawData.Type?) -> Bool
 
     /**
      Make request to server. Result return in completion closure.
@@ -46,22 +45,7 @@ public protocol AlamofireGatewayHandler: class {
     func makeAlamofireRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (AlamofireGateway.RequestResult) -> Void)
 
     /**
-     Process data from server or store with rawData. Work in background thread.
-
-     - Parameters:
-        - request: Original request.
-        - rawData: Type data from method `responseAlamofire()`. Usually binary Data.
-        - fromStorage: If `true`: data from storage, else data from method `responseAlamofire()`.
-
-     - Throws: Error validation or proccess data from server to end data. Data from server (also rawData) don't save to storage.
-     - Returns: Result data for response.
-     */
-    func dataProcessing(request: WebServiceBaseRequesting, rawData: WebServiceRawData, fromStorage: Bool) throws -> Any
-
-    /**
-     Response pre processing and validation, return Raw data or throw error.
-
-     Default implementation: without validation, return binary data (Data).
+     Response processing and validation.
 
      - Parameters:
         - response: Alamofire response from server.
@@ -70,9 +54,9 @@ public protocol AlamofireGatewayHandler: class {
         - innerData: Optional custom handler data.
 
      - Throws: Error validation data from server.
-     - Returns: Return raw data from server.
+     - Returns: Return result from server.
      */
-    func responseAlamofire(_ response: Alamofire.DataResponse<Data>, requestId: UInt64, request: WebServiceBaseRequesting, innerData: Any?) throws -> WebServiceRawData
+    func responseAlamofire(_ response: Alamofire.DataResponse<Data>, requestId: UInt64, request: WebServiceBaseRequesting, innerData: Any?) throws -> WebServiceGatewayResponse
 
     /**
      Preformed after canceled request. Default empty implementation.
@@ -85,15 +69,23 @@ public protocol AlamofireGatewayHandler: class {
         - requestId: Unique id for request.
      */
     func canceledAlamofireRequest(_ request: Alamofire.DataRequest, requestId: UInt64, innerData: Any?)
+
+    /**
+     Process raw data from storage. Work in background thread.
+
+     - Parameters:
+     - request: Original request.
+     - rawData: Raw data from storage. Usually binary Data.
+
+     - Throws: Error validation or proccess data from storage to result.
+     - Returns: Result data for response.
+     */
+    func dataProcessingFromStorage(request: WebServiceBaseRequesting, rawData: WebServiceStorageRawData) throws -> Any
 }
 
 public extension AlamofireGatewayHandler {
     func setup(findRequestData: @escaping (URLSessionTask) -> (requestId: UInt64, request: WebServiceBaseRequesting, innerData: Any?)?,
                updateInnerData:  @escaping (_ requestId: UInt64, _ innerData: Any?) -> Void) { }
-
-    func responseAlamofire(_ response: Alamofire.DataResponse<Data>, requestId: UInt64, request: WebServiceBaseRequesting, innerData: Any?) throws -> WebServiceRawData {
-        return try response.result.get()
-    }
 
     func canceledAlamofireRequest(_ request: Alamofire.DataRequest, requestId: UInt64, innerData: Any?) { }
 }
@@ -101,7 +93,6 @@ public extension AlamofireGatewayHandler {
 /// Gateway with support Alamofire.
 open class AlamofireGateway: WebServiceGateway {
     public let queueForRequest: DispatchQueue?
-    public let queueForDataProcessing: DispatchQueue? = nil
     public let queueForDataProcessingFromStorage: DispatchQueue? = DispatchQueue.global(qos: .utility)
     public let useNetworkActivityIndicator: Bool
 
@@ -148,11 +139,11 @@ open class AlamofireGateway: WebServiceGateway {
     }
 
     // MARK: Gateway implementation
-    open func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: WebServiceRawData.Type?) -> Bool {
-        return handler.isSupportedRequest(request, rawDataTypeForRestoreFromStorage: rawDataTypeForRestoreFromStorage)
+    open func isSupportedRequest(_ request: WebServiceBaseRequesting, forDataProcessingFromStorage rawDataType: WebServiceStorageRawData.Type?) -> Bool {
+        return handler.isSupportedRequest(request, forDataProcessingFromStorage: rawDataType)
     }
 
-    open func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<WebServiceRawData, Error>) -> Void) {
+    open func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<WebServiceGatewayResponse, Error>) -> Void) {
         handler.makeAlamofireRequest(requestId: requestId, request: request) { [weak self] result in
             guard let self = self else {
                 completion(.failure(WebServiceRequestError.gatewayInternal))
@@ -180,8 +171,8 @@ open class AlamofireGateway: WebServiceGateway {
         }
     }
 
-    open func dataProcessing(request: WebServiceBaseRequesting, rawData: WebServiceRawData, fromStorage: Bool) throws -> Any {
-        return try handler.dataProcessing(request: request, rawData: rawData, fromStorage: fromStorage)
+    open func dataProcessingFromStorage(request: WebServiceBaseRequesting, rawData: WebServiceStorageRawData) throws -> Any {
+        return try handler.dataProcessingFromStorage(request: request, rawData: rawData)
     }
     
     // MARK: - Helpers
@@ -215,7 +206,7 @@ open class AlamofireGateway: WebServiceGateway {
     private let lock = PThreadMutexLock()
     private var tasks = [UInt64: TaskData]()
 
-    private func startAlamofireRequest(_ afRequest: Alamofire.DataRequest, requestId: UInt64, request: WebServiceBaseRequesting, innerData: Any?, completion: @escaping (Result<WebServiceRawData, Error>) -> Void) {
+    private func startAlamofireRequest(_ afRequest: Alamofire.DataRequest, requestId: UInt64, request: WebServiceBaseRequesting, innerData: Any?, completion: @escaping (Result<WebServiceGatewayResponse, Error>) -> Void) {
         let task = TaskData(requestId: requestId, request: request, afRequest: afRequest, innerData: innerData)
 
         lock.synchronized {
@@ -223,18 +214,19 @@ open class AlamofireGateway: WebServiceGateway {
         }
 
         task.afRequest.responseData(queue: queueForResponse) { [weak self] response in
-            if let self = self {
-                self.lock.synchronized {
-                    self.tasks.removeValue(forKey: requestId)
-                }
-
-                let result = Result<WebServiceRawData, Error> {
-                    try self.handler.responseAlamofire(response, requestId: requestId, request: request, innerData: innerData)
-                }
-                completion(result)
-            } else {
+            guard let self = self else {
                 completion(.failure(WebServiceRequestError.gatewayInternal))
+                return
             }
+
+            self.lock.synchronized {
+                self.tasks.removeValue(forKey: requestId)
+            }
+
+            let result = Result<WebServiceGatewayResponse, Error> {
+                try self.handler.responseAlamofire(response, requestId: requestId, request: request, innerData: innerData)
+            }
+            completion(result)
         }
     }
 }

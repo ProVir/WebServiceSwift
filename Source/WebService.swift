@@ -188,7 +188,7 @@ public class WebService {
  
         var requestState = RequestState.inWork
         
-        //Step #4: Call this closure with result response
+        //Step #3: Call this closure with result response
         let completeHandlerResponse: (WebServiceAnyResponse) -> Void = { [weak self, queueForResponse = self.queueForResponse] response in
             //Usually main thread
             queueForResponse.async {
@@ -221,43 +221,21 @@ public class WebService {
             completeHandlerResponse(.canceledRequest(duplicate: false))
         })
         
-        //Step #3: Data handler closure for raw data from server
-        let dataHandler: (WebServiceRawData) -> Void = { rawData in
-            do {
-                let value = try gateway.dataProcessing(
-                    request: request,
-                    rawData: rawData,
-                    fromStorage: false
-                )
-                
-                storage?.save(request: request, rawData: rawData, value: value)
-                completeHandlerResponse(.data(value))
-            } catch {
-                completeHandlerResponse(.error(error))
-            }
-        }
-        
         //Step #2: Beginer request closure
         let requestHandler = {
             gateway.performRequest(
                 requestId: requestId,
                 request: request,
                 completion: { result in
-                    let data: WebServiceRawData
-                    switch result {
-                    case .success(let rawData): data = rawData
-                    case .failure(let error):
-                        completeHandlerResponse(.error(error))
-                        return
-                    }
-
-                    //Raw data from server
                     guard requestState == .inWork else { return }
 
-                    if let queue = gateway.queueForDataProcessing {
-                        queue.async { dataHandler(data) }
-                    } else {
-                        dataHandler(data)
+                    switch result {
+                    case .success(let response):
+                        storage?.save(request: request, rawData: response.rawDataForStorage, value: response.result)
+                        completeHandlerResponse(.data(response.result))
+
+                    case .failure(let error):
+                        completeHandlerResponse(.error(error))
                     }
                 }
             )
@@ -531,7 +509,7 @@ public class WebService {
     }
     
     
-    //MARK: - Private functions
+    // MARK: - Private functions
     private func internalPerformRequest(_ request: WebServiceBaseRequesting, key: AnyHashable?, excludeDuplicate: Bool, responseDelegate delegate: WebServiceDelegate?) {
         performBaseRequest(request, key: key, excludeDuplicate: excludeDuplicate) { [weak delegate] response in
             if let delegate = delegate {
@@ -579,11 +557,11 @@ public class WebService {
 
             switch response {
             case .rawData(let rawData):
-                if let gateway = self?.internalFindGateway(request: request, rawDataTypeForRestoreFromStorage: type(of: rawData)) {
+                if let gateway = self?.internalFindGateway(request: request, forDataProcessingFromStorage: type(of: rawData)) {
                     //Handler closure with fined gateway for use next
                     let handler = {
                         do {
-                            let data = try gateway.dataProcessing(request: request, rawData: rawData, fromStorage: true)
+                            let data = try gateway.dataProcessingFromStorage(request: request, rawData: rawData)
                             queueForResponse.async {
                                 completionHandler(timeStamp, .data(data))
                             }
@@ -600,7 +578,6 @@ public class WebService {
                     } else {
                         handler()
                     }
-
                 } else {
                     //Not found gateway
                     queueForResponse.async {
@@ -623,9 +600,9 @@ public class WebService {
     
     
     // MARK: Find gateways and storages
-    private func internalFindGateway(request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: WebServiceRawData.Type? = nil) -> WebServiceGateway? {
+    private func internalFindGateway(request: WebServiceBaseRequesting, forDataProcessingFromStorage rawDataType: WebServiceStorageRawData.Type? = nil) -> WebServiceGateway? {
         for gateway in self.gateways {
-            if gateway.isSupportedRequest(request, rawDataTypeForRestoreFromStorage: rawDataTypeForRestoreFromStorage) {
+            if gateway.isSupportedRequest(request, forDataProcessingFromStorage: rawDataType) {
                 return gateway
             }
         }

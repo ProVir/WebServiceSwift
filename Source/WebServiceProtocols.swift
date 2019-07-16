@@ -41,18 +41,18 @@ public extension WebServiceRequestBaseStoring {
 public let WebServiceDefaultDataClassification = "default"
 
 /// RawData for Gateway
-public protocol WebServiceRawData {
-    /// Used in storages for store as binary.
-    var storableRawBinary: Data? { get }
+public protocol WebServiceStorageRawData { }
+extension Data: WebServiceStorageRawData { }
+
+/// Response from gateway when success
+public struct WebServiceGatewayResponse {
+    let result: Any
+    let rawDataForStorage: WebServiceStorageRawData?
 }
 
-extension Data: WebServiceRawData {
-    public var storableRawBinary: Data? { return self }
-}
-
-/// Response from storages
+/// Response from storage
 public enum WebServiceStorageResponse {
-    case rawData(WebServiceRawData)
+    case rawData(WebServiceStorageRawData)
     case value(Any)
     case error(Error)
 }
@@ -94,33 +94,28 @@ public extension WebService {
 
 /// Protocol for gateway in WebService.
 public protocol WebServiceGateway: class {
-    
     /// Thread Dispatch Queue for `perofrmRequest()` and `cancelRequests()` methods.
     var queueForRequest: DispatchQueue? { get }
     
-    /// Thread Dispatch Queue for `dataProcessing()` method with data from `performRequest()` method.
-    var queueForDataProcessing: DispatchQueue? { get }
-    
-    /// Thread Dispatch Queue for `dataProcessing()` method with raw data from store.
+    /// Thread Dispatch Queue for `dataProcessingFromStorage()` method with raw data from storage.
     var queueForDataProcessingFromStorage: DispatchQueue? { get }
     
     #if os(iOS)
     /// When `true`, showed networkActivityIndicator in statusBar when requests in process.
     var useNetworkActivityIndicator: Bool { get }
     #endif
-    
-    
+
     /**
      Asks whether the request supports this gateway.
      
-     If `rawDataForRestoreFromStorage != nil`, after this method called `dataProcessing(request:rawData:fromStorage:)` method with `fromStorage = true`.
+     If `rawDataTypeForRestoreFromStorage != nil`, after this method called `dataProcessingFromStorage(request:rawData:)` method.
      
      - Parameters:
         - request: Request for test.
-        - rawDataTypeForRestoreFromStorage: If no nil - request restore raw data from storage with data.
+        - forDataProcessingFromStorage: If no nil - request restore raw data from storage with data.
      - Returns: If request support this gateway - return true.
      */
-    func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: WebServiceRawData.Type?) -> Bool
+    func isSupportedRequest(_ request: WebServiceBaseRequesting, forDataProcessingFromStorage rawDataType: WebServiceStorageRawData.Type?) -> Bool
     
     /**
      Perform request to server. Need call `completionWithRawData` and only one.
@@ -132,7 +127,7 @@ public protocol WebServiceGateway: class {
         - request: Original request with data.
         - completionWithRawData: Result with raw data from server or error. RawData usually binary data and this data saved as rawData in storage.
      */
-    func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<WebServiceRawData, Error>) -> Void)
+    func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<WebServiceGatewayResponse, Error>) -> Void)
     
     /**
      Preformed after canceled request.
@@ -144,21 +139,17 @@ public protocol WebServiceGateway: class {
     func canceledRequest(requestId: UInt64)
     
     /**
-     Process data from server or store with rawData.
-     
-     For data from server (`fromStorage == false`): if `queueForDataHandler != nil`, thread use from `queueForDataHandler`, else default thread (usually main).
-     
-     For data from storage (`fromStorage == true`): use `queueForDataHandlerFromStorage` if != nil.
+     Process raw data from storage.
+     Used `queueForDataProcessingFromStorage` if != nil.
      
      - Parameters:
         - request: Original request.
-        - rawData: Type data from closure performRequest.completionWithRawData(). Usually binary Data.
-        - fromStorage: If `true`: data from storage, else data from closure `performRequest.completionWithRawData()`.
+        - rawData: Raw data from storage, usually binary Data.
      
-     - Throws: Error validation or proccess data from server to end data. Data from server (also rawData) don't save to storage.
-     - Returns: Result data for response.
+     - Throws: Error proccess data from storage to result.
+     - Returns: Result data.
      */
-    func dataProcessing(request: WebServiceBaseRequesting, rawData: WebServiceRawData, fromStorage: Bool) throws -> Any
+    func dataProcessingFromStorage(request: WebServiceBaseRequesting, rawData: WebServiceStorageRawData) throws -> Any
 }
 
 
@@ -198,10 +189,10 @@ public protocol WebServiceStorage: class {
      
      - Parameters: 
         - request: Original request. 
-        - rawData: Raw data (before processing) for save.
-        - value: Value (after processing) for save.
+        - rawData: Raw data for save - universal type, need process in gateway
+        - value: Value type for save, no need process in gateway
     */
-    func save(request: WebServiceBaseRequesting, rawData: WebServiceRawData, value: Any)
+    func save(request: WebServiceBaseRequesting, rawData: WebServiceStorageRawData?, value: Any)
     
     /**
      Delete data in storage for concrete request.

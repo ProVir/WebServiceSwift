@@ -247,7 +247,7 @@ public class WebServiceFileStorage: WebServiceStorage {
         }
     }
 
-    public func save(request: WebServiceBaseRequesting, rawData: WebServiceRawData, value: Any) {
+    public func save(request: WebServiceBaseRequesting, rawData: WebServiceStorageRawData?, value: Any) {
         guard let identificator = (request as? WebServiceRequestBaseFileStoring)?.identificatorForFileStorage else {
             return
         }
@@ -266,7 +266,7 @@ public class WebServiceFileStorage: WebServiceStorage {
 
         //Raw
         else if let request = request as? WebServiceRequestRawFileStoring {
-            if let binaryData = rawData.storableRawBinary {
+            if let binaryData = rawData as? Data {
                 if request.useWrapperWithMetaDataForFileStorage {
                     let storeData = StoreData(binary: binaryData, isRaw: true, timeStamp: Date())
                     privateWriteStoreData(identificator: identificator, data: storeData)

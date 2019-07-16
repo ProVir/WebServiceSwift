@@ -104,14 +104,14 @@ public class AlamofireSimpleGateway: AlamofireGateway {
     }
 }
 
-open class AlamofireSimpleGatewayHandler: AlamofireGatewayHandler {
+public class AlamofireSimpleGatewayHandler: AlamofireGatewayHandler {
     private let sessionManager: Alamofire.Session
 
     public init(sessionManager: Alamofire.Session = .default) {
         self.sessionManager = sessionManager
     }
 
-    public func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: WebServiceRawData.Type?) -> Bool {
+    public func isSupportedRequest(_ request: WebServiceBaseRequesting, forDataProcessingFromStorage rawDataType: WebServiceStorageRawData.Type?) -> Bool {
         return request is AlamofireSimpleBaseRequesting
     }
 
@@ -128,7 +128,11 @@ open class AlamofireSimpleGatewayHandler: AlamofireGatewayHandler {
         }
     }
 
-    public func responseAlamofire(_ response: DataResponse<Data>, requestId: UInt64, request: WebServiceBaseRequesting, innerData: Any?) throws -> Any {
+    public func responseAlamofire(_ response: DataResponse<Data>, requestId: UInt64, request: WebServiceBaseRequesting, innerData: Any?) throws -> WebServiceGatewayResponse {
+        guard let request = request as? AlamofireSimpleBaseRequesting else {
+            throw WebServiceRequestError.notSupportDataProcessing
+        }
+
         switch response.result {
         case .success(let data):
             //Validation data for http status code
@@ -136,18 +140,23 @@ open class AlamofireSimpleGatewayHandler: AlamofireGatewayHandler {
                 throw WebServiceResponseError.httpStatusCode(statusCode)
             }
 
-            return data
+            let result = try dataProcessing(request: request, binary: data)
+            return WebServiceGatewayResponse(result: result, rawDataForStorage: data)
 
         case .failure(let error):
             throw error
         }
     }
 
-    public func dataProcessing(request: WebServiceBaseRequesting, rawData: WebServiceRawData, fromStorage: Bool) throws -> Any {
+    public func dataProcessingFromStorage(request: WebServiceBaseRequesting, rawData: WebServiceStorageRawData) throws -> Any {
         guard let binary = rawData as? Data, let request = request as? AlamofireSimpleBaseRequesting else {
             throw WebServiceRequestError.notSupportDataProcessing
         }
 
+        return try dataProcessing(request: request, binary: binary)
+    }
+
+    private func dataProcessing(request: AlamofireSimpleBaseRequesting, binary: Data) throws -> Any {
         switch request.afResponseType {
         case .binary:
             return try request.afBaseDecodeResponse(AlamofireSimpleResponseData.binary(binary))

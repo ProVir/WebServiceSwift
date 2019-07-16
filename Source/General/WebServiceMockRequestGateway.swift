@@ -11,7 +11,6 @@ import Foundation
 /// Simple gateway for unit mock requests with responseHandler in gateway.
 public class WebServiceMockRequestGateway<RequestType: WebServiceRequesting>: WebServiceGateway {
     public let queueForRequest: DispatchQueue? = nil
-    public let queueForDataProcessing: DispatchQueue? = nil
     public let queueForDataProcessingFromStorage: DispatchQueue? = nil
     public let useNetworkActivityIndicator = false
     
@@ -22,7 +21,6 @@ public class WebServiceMockRequestGateway<RequestType: WebServiceRequesting>: We
     
     /// If `true` - all read raw data from storage return as nil for supporteds requests. Default: true.
     public var rawDataFromStoreAlwaysNil: Bool = true
-    
 
     /**
      Mock gateway constructor.
@@ -35,20 +33,19 @@ public class WebServiceMockRequestGateway<RequestType: WebServiceRequesting>: We
         self.mockHandler = mockHandler
         self.timeDelay = timeDelay
     }
-    
-    
+
     // MARK: Gateway implementation
     private var requests: [UInt64: DispatchWorkItem] = [:]
     
-    public func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: WebServiceRawData.Type?) -> Bool {
+    public func isSupportedRequest(_ request: WebServiceBaseRequesting, forDataProcessingFromStorage rawDataType: WebServiceStorageRawData.Type?) -> Bool {
         // Support raw data from storage if response from storage always nil.
-        if rawDataTypeForRestoreFromStorage != nil && !rawDataFromStoreAlwaysNil { return false }
+        if rawDataType != nil && !rawDataFromStoreAlwaysNil { return false }
         
         // Support only WebServiceMockRequesting with enable support.
         return request is RequestType
     }
     
-    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<WebServiceRawData, Error>) -> Void) {
+    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<WebServiceGatewayResponse, Error>) -> Void) {
         guard let request = request as? RequestType else {
             completion(.failure(WebServiceRequestError.notSupportRequest))
             return
@@ -59,7 +56,12 @@ public class WebServiceMockRequestGateway<RequestType: WebServiceRequesting>: We
         
         let workItem = DispatchWorkItem { [weak self] in
             self?.requests.removeValue(forKey: requestId)
-            completion(Result { RawData(result: try handler(request)) })
+            completion(Result {
+                .init(
+                    result: try handler(request),
+                    rawDataForStorage: nil
+                )
+            })
         }
         
         //Run request with pause time
@@ -73,16 +75,7 @@ public class WebServiceMockRequestGateway<RequestType: WebServiceRequesting>: We
         }
     }
     
-    public func dataProcessing(request: WebServiceBaseRequesting, rawData: WebServiceRawData, fromStorage: Bool) throws -> Any {
-        guard fromStorage == false, let result = (rawData as? RawData)?.result else {
-            throw WebServiceRequestError.notSupportDataProcessing
-        }
-
-        return result
-    }
-
-    private struct RawData: WebServiceRawData {
-        let result: Any
-        let storableRawBinary: Data? = nil
+    public func dataProcessingFromStorage(request: WebServiceBaseRequesting, rawData: WebServiceStorageRawData) throws -> Any {
+        throw WebServiceRequestError.notSupportDataProcessing
     }
 }

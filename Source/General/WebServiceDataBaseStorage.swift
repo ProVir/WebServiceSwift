@@ -170,7 +170,7 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
         }
     }
 
-    public func save(request: WebServiceBaseRequesting, rawData: WebServiceRawData, value: Any) {
+    public func save(request: WebServiceBaseRequesting, rawData: WebServiceStorageRawData?, value: Any) {
         guard let identificator = (request as? WebServiceRequestDataBaseStoring)?.identificatorForDataBaseStorage else {
             return
         }
@@ -187,7 +187,7 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
 
         //Raw
         else if request is WebServiceRequestRawDataBaseStoring,
-           let binaryData = rawData.storableRawBinary {
+           let binaryData = rawData as? Data {
             binary = binaryData
             isRaw = true
         }

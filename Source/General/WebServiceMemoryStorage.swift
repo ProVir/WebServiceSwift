@@ -64,7 +64,7 @@ public class WebServiceMemoryStorage: WebServiceStorage {
         }
         
         if let storeData = mutex.synchronized({ memoryData[key] }) {
-            if storeData.isRaw, let raw = storeData.data as? WebServiceRawData {
+            if storeData.isRaw, let raw = storeData.data as? WebServiceStorageRawData {
                 completionHandler(storeData.timeStamp, .rawData(raw))
             } else if storeData.isRaw == false {
                 completionHandler(storeData.timeStamp, .value(storeData.data))
@@ -76,14 +76,21 @@ public class WebServiceMemoryStorage: WebServiceStorage {
         }
     }
 
-    public func save(request: WebServiceBaseRequesting, rawData: WebServiceRawData, value: Any) {
+    public func save(request: WebServiceBaseRequesting, rawData: WebServiceStorageRawData?, value: Any) {
         guard let request = request as? WebServiceRequestMemoryStoring,
             let key = request.keyForMemoryStorage else {
             return
         }
         let isRaw = request.useRawDataForMemoryStorage
+        let storeData: StoreData
+        if isRaw, let rawData = rawData {
+            storeData = StoreData(data: rawData, isRaw: true, timeStamp: Date())
+        } else if isRaw == false {
+            storeData = StoreData(data: value, isRaw: false, timeStamp: Date())
+        } else {
+            return
+        }
 
-        let storeData = StoreData(data: isRaw ? rawData : value, isRaw: isRaw, timeStamp: Date())
         mutex.synchronized {
             memoryData[key] = storeData
         }

@@ -90,7 +90,6 @@ extension WebServiceSimpleAutoDecoder where ResultType == Data {
 /// Simple HTTP Gateway (use URLSession)
 public class WebServiceSimpleGateway: WebServiceGateway {
     public let queueForRequest: DispatchQueue?
-    public let queueForDataProcessing: DispatchQueue? = nil
     public let queueForDataProcessingFromStorage: DispatchQueue? = DispatchQueue.global(qos: .utility)
     public let useNetworkActivityIndicator: Bool
     
@@ -110,11 +109,11 @@ public class WebServiceSimpleGateway: WebServiceGateway {
     
     
     // MARK: Gateway implementation
-    public func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: WebServiceRawData.Type?) -> Bool {
+    public func isSupportedRequest(_ request: WebServiceBaseRequesting, forDataProcessingFromStorage rawDataType: WebServiceStorageRawData.Type?) -> Bool {
         return request is WebServiceSimpleBaseRequesting
     }
     
-    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<WebServiceRawData, Error>) -> Void) {
+    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<WebServiceGatewayResponse, Error>) -> Void) {
         guard let request = request as? WebServiceSimpleBaseRequesting else {
             completion(.failure(WebServiceRequestError.notSupportRequest))
             return
@@ -125,14 +124,14 @@ public class WebServiceSimpleGateway: WebServiceGateway {
             let urlRequest = try request.simpleRequest()
             
             let task = session.dataTask(with: urlRequest) { [weak self] (data, response, error) in
-                guard let sSelf = self else {
+                guard let self = self else {
                     completion(.failure(WebServiceRequestError.gatewayInternal))
                     return
                 }
                 
                 // Remove from queue
-                let contain = sSelf.lock.synchronized {
-                    sSelf.tasks.removeValue(forKey: requestId) != nil
+                let contain = self.lock.synchronized {
+                    self.tasks.removeValue(forKey: requestId) != nil
                 }
                 
                 if !contain { return }
@@ -142,9 +141,13 @@ public class WebServiceSimpleGateway: WebServiceGateway {
                     if let response = response as? HTTPURLResponse, response.statusCode >= 300 {
                         completion(.failure(WebServiceResponseError.httpStatusCode(response.statusCode)))
                     } else {
-                        completion(.success(data))
+                        do {
+                            let result = try self.dataProcessing(request: request, binary: data)
+                            completion(.success(.init(result: result, rawDataForStorage: data)))
+                        } catch {
+                            completion(.failure(error))
+                        }
                     }
-                    
                 } else if let error = error {
                     completion(.failure(error))
                 } else {
@@ -171,19 +174,12 @@ public class WebServiceSimpleGateway: WebServiceGateway {
         }
     }
     
-    public func dataProcessing(request: WebServiceBaseRequesting, rawData: WebServiceRawData, fromStorage: Bool) throws -> Any {
+    public func dataProcessingFromStorage(request: WebServiceBaseRequesting, rawData: WebServiceStorageRawData) throws -> Any {
         guard let binary = rawData as? Data, let request = request as? WebServiceSimpleBaseRequesting else {
             throw WebServiceRequestError.notSupportDataProcessing
         }
         
-        switch request.simpleResponseType {
-        case .binary:
-            return try request.simpleBaseDecodeResponse(WebServiceSimpleResponseData.binary(binary))
-            
-        case .json:
-            let jsonData = try JSONSerialization.jsonObject(with: binary, options: [])
-            return try request.simpleBaseDecodeResponse(WebServiceSimpleResponseData.json(jsonData))
-        }
+        return try dataProcessing(request: request, binary: binary)
     }
     
     // MARK: - Private
@@ -196,5 +192,15 @@ public class WebServiceSimpleGateway: WebServiceGateway {
     
     private let lock = PThreadMutexLock()
     private var tasks: [UInt64: TaskData] = [:]
-    
+
+    private func dataProcessing(request: WebServiceSimpleBaseRequesting, binary: Data) throws -> Any {
+        switch request.simpleResponseType {
+        case .binary:
+            return try request.simpleBaseDecodeResponse(WebServiceSimpleResponseData.binary(binary))
+
+        case .json:
+            let jsonData = try JSONSerialization.jsonObject(with: binary, options: [])
+            return try request.simpleBaseDecodeResponse(WebServiceSimpleResponseData.json(jsonData))
+        }
+    }
 }

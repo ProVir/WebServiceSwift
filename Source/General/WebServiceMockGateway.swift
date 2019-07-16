@@ -48,7 +48,6 @@ public extension WebServiceMockRequesting {
 /// Simple gateway for temporary mock requests.
 open class WebServiceMockGateway: WebServiceGateway {
     public let queueForRequest: DispatchQueue? = nil
-    public let queueForDataProcessing: DispatchQueue? = nil
     public let queueForDataProcessingFromStorage: DispatchQueue? = nil
     public let useNetworkActivityIndicator = false
     
@@ -85,15 +84,15 @@ open class WebServiceMockGateway: WebServiceGateway {
     private var helpersArray: [String: WebServiceMockHelper] = [:]
     private var requests: [UInt64: DispatchWorkItem] = [:]
     
-    public func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: WebServiceRawData.Type?) -> Bool {
+    public func isSupportedRequest(_ request: WebServiceBaseRequesting, forDataProcessingFromStorage rawDataType: WebServiceStorageRawData.Type?) -> Bool {
         // Support raw data from storage if response from storage always nil.
-        if rawDataTypeForRestoreFromStorage != nil && !rawDataFromStoreAlwaysNil { return false }
+        if rawDataType != nil && !rawDataFromStoreAlwaysNil { return false }
         
         // Support only WebServiceMockRequesting with enable support.
         return isSupportedRequest(request)
     }
     
-    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<WebServiceRawData, Error>) -> Void) {
+    public func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<WebServiceGatewayResponse, Error>) -> Void) {
         guard let request = convertToMockRequest(request) else {
             completion(.failure(WebServiceRequestError.notSupportRequest))
             return
@@ -117,7 +116,12 @@ open class WebServiceMockGateway: WebServiceGateway {
         //Request
         let workItem = DispatchWorkItem { [weak self] in
             self?.requests.removeValue(forKey: requestId)
-            completion(Result { RawData(result: try request.mockResponseBaseHandler(helper: helper)) })
+            completion(Result {
+                .init(
+                    result: try request.mockResponseBaseHandler(helper: helper),
+                    rawDataForStorage: nil
+                )
+            })
         }
         
         //Run request with pause time
@@ -131,16 +135,7 @@ open class WebServiceMockGateway: WebServiceGateway {
         }
     }
     
-    public func dataProcessing(request: WebServiceBaseRequesting, rawData: WebServiceRawData, fromStorage: Bool) throws -> Any {
-        guard fromStorage == false, let result = (rawData as? RawData)?.result else {
-            throw WebServiceRequestError.notSupportDataProcessing
-        }
-
-        return result
-    }
-
-    private struct RawData: WebServiceRawData {
-        let result: Any
-        let storableRawBinary: Data? = nil
+    public func dataProcessingFromStorage(request: WebServiceBaseRequesting, rawData: WebServiceStorageRawData) throws -> Any {
+        throw WebServiceRequestError.notSupportDataProcessing
     }
 }
