@@ -150,7 +150,7 @@ public class WebService {
     public func performBaseRequest(_ request: WebServiceBaseRequesting,
                                    key: AnyHashable? = nil,
                                    excludeDuplicate: Bool = false,
-                                   completionHandler: @escaping (_ response: WebServiceAnyResponse) -> Void) {
+                                   completionHandler: @escaping (_ response: WebServiceResponse<Any>) -> Void) {
         
         //1. Depend from previous read storage.
         weak var readStorageRequestInfo: ReadStorageDependRequestInfo? = readStorageDependNextRequestWait
@@ -189,7 +189,7 @@ public class WebService {
         var requestState = RequestState.inWork
         
         //Step #3: Call this closure with result response
-        let completeHandlerResponse: (WebServiceAnyResponse) -> Void = { [weak self, queueForResponse = self.queueForResponse] response in
+        let completeHandlerResponse: (WebServiceResponse<Any>) -> Void = { [weak self, queueForResponse = self.queueForResponse] response in
             //Usually main thread
             queueForResponse.async {
                 guard requestState == .inWork else { return }
@@ -265,7 +265,7 @@ public class WebService {
     public func readStorage<RequestType: WebServiceRequesting>(_ request: RequestType, dependencyNextRequest: ReadStorageDependencyType = .notDepend, completionHandler: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
         if let storage = internalFindStorage(request: request) {
             //CompletionResponse
-            let completionHandlerInternal:(_ timeStamp: Date?, _ response: WebServiceAnyResponse) -> Void = { completionHandler($0, $1.convert()) }
+            let completionHandlerInternal:(_ timeStamp: Date?, _ response: WebServiceResponse<Any>) -> Void = { completionHandler($0, $1.convert()) }
             
             //Request
             internalReadStorage(storage: storage, request: request, dependencyNextRequest: dependencyNextRequest, completionHandler: completionHandlerInternal)
@@ -287,76 +287,14 @@ public class WebService {
      */
     public func readStorageAnyData(_ request: WebServiceBaseRequesting,
                                    dependencyNextRequest: ReadStorageDependencyType = .notDepend,
-                                   completionHandler: @escaping (_ timeStamp: Date?, _ response: WebServiceAnyResponse) -> Void) {
+                                   completionHandler: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<Any>) -> Void) {
         if let storage = internalFindStorage(request: request) {
             internalReadStorage(storage: storage, request: request, dependencyNextRequest: dependencyNextRequest, completionHandler: completionHandler)
         } else {
             completionHandler(nil, .error(WebServiceRequestError.notFoundStorage))
         }
     }
-    
-    
-    // MARK: Perform requests use delegate for response
-    
-    /**
-     Request to server (gateway). Response result send to delegate.
-     
-     - Parameters:
-        - request: The request with data.
-        - responseDelegate: Weak delegate for response from this request.
-     */
-    public func performRequest(_ request: WebServiceBaseRequesting, responseDelegate: WebServiceDelegate?) {
-        internalPerformRequest(request, key: nil, excludeDuplicate: false, responseDelegate: responseDelegate)
-    }
-    
-    /**
-     Request to server (gateway). Response result send to delegate.
-     
-     - Parameters:
-         - request: The request with data.
-         - key: unique key for controling requests - contains and canceled. Also use for excludeDuplicate.
-         - excludeDuplicate: Exclude duplicate requests. Requests are equal if their keys match.
-         - responseDelegate: Weak delegate for response from this request.
-     */
-    public func performRequest(_ request: WebServiceBaseRequesting, key: AnyHashable, excludeDuplicate: Bool, responseDelegate: WebServiceDelegate?) {
-        internalPerformRequest(request, key: key, excludeDuplicate: excludeDuplicate, responseDelegate: responseDelegate)
-    }
-    
-    /**
-     Request to server (gateway). Response result send to delegate.
-     
-     - Parameters:
-         - request: The hashable (also equatable) request with data.
-         - excludeDuplicate: Exclude duplicate equatable requests.
-         - responseDelegate: Weak delegate for response from this request.
-     */
-    public func performRequest<RequestType: WebServiceBaseRequesting & Hashable>(_ request: RequestType, excludeDuplicate: Bool, responseDelegate: WebServiceDelegate?) {
-        internalPerformRequest(request, key: nil, excludeDuplicate: excludeDuplicate, responseDelegate: responseDelegate)
-    }
-    
-    /**
-     Read last success data from storage. Response result send to delegate.
-     
-     - Parameters:
-         - request: The request with data.
-         - key: unique key for controling requests, use only for response delegate.
-         - dependencyNextRequest: Type dependency from next performRequest.
-         - responseOnlyData: When `true` - response result send to delegate only if have data. Default false.
-         - responseDelegate: Weak delegate for response from this request.
-     */
-    public func readStorage(_ request: WebServiceBaseRequesting, key: AnyHashable? = nil, dependencyNextRequest: ReadStorageDependencyType = .notDepend, responseOnlyData: Bool = false, responseDelegate delegate: WebServiceDelegate) {
-        readStorageAnyData(request, dependencyNextRequest: dependencyNextRequest) { [weak delegate] _, response in
-            if responseOnlyData == false { }
-            else if case .data = response { }
-            else { return }
-            
-            if let delegate = delegate {
-                delegate.webServiceResponse(request: request, key: key, isStorageRequest: true, response: response)
-            }
-        }
-    }
-    
-    
+
     // MARK: Contains requests
     
     /// Returns a Boolean value indicating whether the current queue contains many requests.
@@ -510,17 +448,9 @@ public class WebService {
     
     
     // MARK: - Private functions
-    private func internalPerformRequest(_ request: WebServiceBaseRequesting, key: AnyHashable?, excludeDuplicate: Bool, responseDelegate delegate: WebServiceDelegate?) {
-        performBaseRequest(request, key: key, excludeDuplicate: excludeDuplicate) { [weak delegate] response in
-            if let delegate = delegate {
-                delegate.webServiceResponse(request: request, key: key, isStorageRequest: false, response: response)
-            }
-        }
-    }
-    
-    private func internalReadStorage(storage: WebServiceStorage, request: WebServiceBaseRequesting, dependencyNextRequest: ReadStorageDependencyType, completionHandler handler: @escaping (_ timeStamp: Date?, _ response: WebServiceAnyResponse) -> Void) {
+    private func internalReadStorage(storage: WebServiceStorage, request: WebServiceBaseRequesting, dependencyNextRequest: ReadStorageDependencyType, completionHandler handler: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<Any>) -> Void) {
         let nextRequestInfo: ReadStorageDependRequestInfo?
-        let completionHandler: (_ timeStamp: Date?, _ response: WebServiceAnyResponse) -> Void
+        let completionHandler: (_ timeStamp: Date?, _ response: WebServiceResponse<Any>) -> Void
         
         //1. Dependency setup
         if dependencyNextRequest == .notDepend {

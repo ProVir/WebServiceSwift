@@ -17,34 +17,35 @@ protocol WebServiceHtmlRequesting: WebServiceBaseRequesting {
 
 ///Gateway for get html data for URL.
 class WebServiceHtmlGateway: WebServiceGateway {
-    let queueForRequest: DispatchQueue? = DispatchQueue.global(qos: .background)
-    let queueForDataProcessing: DispatchQueue? = nil
-    let queueForDataProcessingFromStorage: DispatchQueue? = DispatchQueue.global(qos: .background)
+    let queueForRequest: DispatchQueue? = DispatchQueue.global(qos: .utility)
+    let queueForDataProcessingFromStorage: DispatchQueue? = DispatchQueue.global(qos: .utility)
     let useNetworkActivityIndicator = true
-    
-    /// Data from server as raw, used only as example
-    struct ServerData: WebServiceRawData {
-        let statusCode: Int
-        let binary: Data
-        
-        var storableRawBinary: Data? { return binary }
-    }
-    
-    func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: WebServiceRawData.Type?) -> Bool {
+
+    func isSupportedRequest(_ request: WebServiceBaseRequesting, forDataProcessingFromStorage rawDataType: WebServiceStorageRawData.Type?) -> Bool {
         return request is WebServiceHtmlRequesting
     }
     
-    func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<WebServiceRawData, Error>) -> Void) {
+    func performRequest(requestId: UInt64, request: WebServiceBaseRequesting, completion: @escaping (Result<WebServiceGatewayResponse, Error>) -> Void) {
         guard let url = (request as? WebServiceHtmlRequesting)?.url else {
             completion(.failure(WebServiceRequestError.notSupportRequest))
             return
         }
 
-        AF.request(url).responseData { response in
+        AF.request(url).responseData { [weak self] response in
+            guard let self = self else {
+                completion(.failure(WebServiceRequestError.gatewayInternal))
+                return
+            }
+
             switch response.result {
-            case .success(let data):
-                completion(.success(ServerData(statusCode: response.response?.statusCode ?? 0, binary: data)))
-                
+            case .success(let binary):
+                let result = Result<WebServiceGatewayResponse, Error> {
+                    try self.validateResponse(response)
+                    let data = try self.dataProcessing(binary: binary)
+                    return .init(result: data, rawDataForStorage: binary)
+                }
+                completion(result)
+
             case .failure(let error):
                 completion(.failure(error))
             }
@@ -52,21 +53,22 @@ class WebServiceHtmlGateway: WebServiceGateway {
     }
     
     func canceledRequest(requestId: UInt64) { /* Don't support */ }
-    
-    func dataProcessing(request: WebServiceBaseRequesting, rawData: WebServiceRawData, fromStorage: Bool) throws -> Any {
-        guard request is WebServiceHtmlRequesting else {
-            throw WebServiceRequestError.notSupportDataProcessing
-        }
-        
-        let binary: Data
-        if let data = rawData as? Data {
-            binary = data
-        } else if let data = rawData as? ServerData {
-            binary = data.binary
-        } else {
+
+    func dataProcessingFromStorage(request: WebServiceBaseRequesting, rawData: WebServiceStorageRawData) throws -> Any {
+        guard request is WebServiceHtmlRequesting, let binary = rawData as? Data else {
             throw WebServiceRequestError.notSupportDataProcessing
         }
 
+        return try dataProcessing(binary: binary)
+    }
+
+    private func validateResponse(_ response: DataResponse<Data>) throws {
+        if let httpCode = response.response?.statusCode, httpCode >= 300 {
+            throw WebServiceResponseError.httpStatusCode(httpCode)
+        }
+    }
+    
+    private func dataProcessing(binary: Data) throws -> Any {
         return String(data: binary, encoding: .utf8) ?? String(data: binary, encoding: .windowsCP1251) ?? ""
     }
 }

@@ -48,6 +48,11 @@ extension Data: WebServiceStorageRawData { }
 public struct WebServiceGatewayResponse {
     let result: Any
     let rawDataForStorage: WebServiceStorageRawData?
+
+    public init(result: Any, rawDataForStorage: WebServiceStorageRawData?) {
+        self.result = result
+        self.rawDataForStorage = rawDataForStorage
+    }
 }
 
 /// Response from storage
@@ -57,26 +62,7 @@ public enum WebServiceStorageResponse {
     case error(Error)
 }
 
-// MARK: Delegates
-
-/// WebService Delegate for responses
-public protocol WebServiceDelegate: class {
-    
-    /**
-     Response from storage or server
-     
-     - Parameters:
-     - request: Original request
-     - key: key from `performRequest` method if have
-     - isStorageRequest: Bool flag - response from storage or server
-     - response: Response enum with results
-     */
-    func webServiceResponse(request: WebServiceBaseRequesting, key: AnyHashable?, isStorageRequest: Bool, response: WebServiceAnyResponse)
-}
-
-
 // MARK: Provider
-
 /// Base protocol for providers
 public protocol WebServiceProvider {
     init(webService: WebService)

@@ -27,9 +27,7 @@ class ViewController: UIViewController {
         rawLabel.sizeToFit()
         let rawItem = UIBarButtonItem(customView: rawLabel)
         navigationItem.rightBarButtonItems?.append(rawItem)
-        
-        
-        siteWebProvider.delegate = self
+
         siteYouTubeProvider.excludeDuplicateDefault = true
     }
 
@@ -96,90 +94,77 @@ class ViewController: UIViewController {
         siteWebProvider.cancelAllRequests()
         siteYouTubeProvider.cancelRequests()
         
-        siteWebProvider.requestHtmlDataFromSiteSearch(request, dataFromStorage: { [weak self] html in
-            self?.rawTextView.text = html
-            self?.webView.loadHTMLString(html, baseURL: request.urlSite)
-            
-        }) { [weak self] response in
-            switch response {
-            case .data(let html):
-                self?.webServiceResponse(request: request, isStorageRequest: false, html: html)
-                
-            case .error(let error):
-                self?.webServiceResponse(isStorageRequest: false, error: error)
-                
-            case .canceledRequest:
-                break
+        siteWebProvider.requestHtmlDataFromSiteSearch(
+            request,
+            dataFromStorage: { [weak self] html in
+                self?.showContent(urlSite: request.urlSite, html: html)
+            },
+            completionHandler: { [weak self] response in
+                self?.webServiceResponse(urlSite: request.urlSite, fromStorage: false, response: response)
             }
-        }
+        )
     }
     
     func requestSiteMail(_ request: SiteWebServiceRequests.SiteMail) {
         siteYouTubeProvider.cancelRequests()
-        
-        siteWebProvider.requestHtmlDataFromSiteMail(request, includeResponseStorage: true)
+
+        siteWebProvider.requestHtmlDataFromSiteMail(
+            request,
+            dataFromStorage: { [weak self] html in
+                self?.showContent(urlSite: request.urlSite, html: html)
+            },
+            completionHandler: { [weak self] response in
+                self?.webServiceResponse(urlSite: request.urlSite, fromStorage: false, response: response)
+            }
+        )
     }
     
     func requestSiteYouTube() {
+        let urlSite = SiteWebServiceRequests.SiteYouTube().urlSite
         siteWebProvider.cancelAllRequests()
-        
+
         siteYouTubeProvider.readStorage(dependencyNextRequest: .dependFull) { [weak self] (timeStamp, response) in
-            if case .data(let html) = response {
-                if let timeStamp = timeStamp { print("Data from storage timeStamp = \(timeStamp)") }
-                self?.webServiceResponse(request: SiteWebServiceRequests.SiteYouTube(), isStorageRequest: true, html: html)
-            }
+            if let timeStamp = timeStamp { print("Data from storage timeStamp = \(timeStamp)") }
+            self?.webServiceResponse(urlSite: urlSite, fromStorage: true, response: response)
         }
-        
+
         siteYouTubeProvider.performRequest { [weak self] response in
-            switch response {
-            case .data(let html):
-                self?.webServiceResponse(request: SiteWebServiceRequests.SiteYouTube(), isStorageRequest: false, html: html)
-                
-            case .error(let error):
-                self?.webServiceResponse(isStorageRequest: false, error: error)
-                
-            case .canceledRequest:
-                break
-            }
+            self?.webServiceResponse(urlSite: urlSite, fromStorage: false, response: response)
         }
     }
 }
 
-//MARK: Responses
-extension ViewController: SiteWebProviderDelegate {
-    func webServiceResponse(request: WebServiceBaseRequesting, isStorageRequest: Bool, html: String) {
-        let baseUrl: URL
-        if let request = request as? SiteWebServiceRequests.SiteSearch {
-            baseUrl = request.urlSite
-        } else if let request = request as? SiteWebServiceRequests.SiteMail {
-            baseUrl = request.urlSite
-        } else if let request = request as? SiteWebServiceRequests.SiteYouTube {
-            baseUrl = request.urlSite
-        } else {
-            return
-        }
-        
+// MARK: Responses
+extension ViewController {
+    private func showContent(urlSite: URL, html: String) {
         rawTextView.text = html
-        webView.loadHTMLString(html, baseURL: baseUrl)
+        webView.loadHTMLString(html, baseURL: urlSite)
     }
-    
-    func webServiceResponse(request: WebServiceBaseRequesting, isStorageRequest: Bool, error: Error) {
-        webServiceResponse(isStorageRequest: isStorageRequest, error: error)
-    }
-    
-    func webServiceResponse(isStorageRequest: Bool, error: Error) {
-        if isStorageRequest {
-            print("Error read from storage: \(error)")
-            return
-        }
-        
+
+    private func showError(_ error: Error) {
         let text = (error as NSError).localizedDescription
-        
+
         let alert = UIAlertController(title: "Error", message: text, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK",
                                       style: .default,
                                       handler: nil))
-        
+
         present(alert, animated: true, completion: nil)
+    }
+
+    private func webServiceResponse(urlSite: URL, fromStorage: Bool, response: WebServiceResponse<String>) {
+        switch response {
+        case .data(let html):
+            showContent(urlSite: urlSite, html: html)
+
+        case .error(let error):
+            if fromStorage {
+                print("Error read from storage: \(error)")
+            } else {
+                showError(error)
+            }
+
+        case .canceledRequest: break
+        }
     }
 }

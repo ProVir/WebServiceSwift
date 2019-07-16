@@ -1,6 +1,6 @@
 //
 //  WebServiceRequestProvider.swift
-//  WebServiceSwift 3.0.0
+//  WebServiceSwift 4.0.0
 //
 //  Created by Короткий Виталий (ViR) on 24.04.2018.
 //  Updated to 3.0.0 by Короткий Виталий (ViR) on 04.09.2018.
@@ -17,15 +17,8 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
         self.service = webService
     }
     
-    /// Response delegate for responses. Apply before call new request.
-    public weak var delegate: WebServiceDelegate?
-    
     /// Default excludeDuplicate for hashable requests.
-    public var excludeDuplicateDefault: Bool = false
-    
-    /// When `true` - response result from storage send to delegate only if have data. 
-    public var responseStorageOnlyDataForDelegate: Bool = false
-    
+    private var internalExcludeDuplicateDefault: Bool = false
     
     // MARK: Perform requests and read from storage
     
@@ -37,7 +30,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
         - completionHandler: Closure for response result from server.
      */
     public func performRequest(_ request: RequestType, completionHandler: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
-        service.performBaseRequest(request, key: nil, excludeDuplicate: excludeDuplicateDefault, completionHandler: { completionHandler( $0.convert() ) })
+        service.performBaseRequest(request, key: nil, excludeDuplicate: internalExcludeDuplicateDefault, completionHandler: { completionHandler( $0.convert() ) })
     }
     
     /**
@@ -66,50 +59,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
     public func readStorage(_ request: RequestType, dependencyNextRequest: WebService.ReadStorageDependencyType = .notDepend, completionHandler: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
         service.readStorage(request, dependencyNextRequest: dependencyNextRequest, completionHandler: completionHandler)
     }
-    
-    
-    // MARK: Perform requests use delegate for response
-    
-    /**
-     Request to server (gateway). Response result send to `WebServiceRequestProvider.delegate`.
-     
-     - Parameters:
-        - request: The request with data.
-     */
-    public func performRequest(_ request: RequestType) {
-        internalPerformRequest(request, key: nil, excludeDuplicate: excludeDuplicateDefault, responseDelegate: delegate)
-    }
-    
-    /**
-     Request to server (gateway). Response result send to `WebServiceRequestProvider.delegate`.
-     
-     - Parameters:
-         - request: The request with data.
-         - key: unique key for controling requests - contains and canceled. Also use for excludeDuplicate.
-         - excludeDuplicate: Exclude duplicate requests. Requests are equal if their keys match.
-     */
-    public func performRequest(_ request: RequestType, key: AnyHashable, excludeDuplicate: Bool) {
-        service.performRequest(request, key: key, excludeDuplicate: excludeDuplicate, responseDelegate: delegate)
-    }
-    
-    /**
-     Read last success data from storage. Response result send to `WebServiceRequestProvider.delegate`.
-     
-     - Parameters:
-         - request: The request with data.
-         - key: unique key for controling requests, use only for response delegate.
-         - dependencyNextRequest: Type dependency from next performRequest.
-         - responseOnlyData: When `true` - response result send to delegate only if have data. Default use `responseStorageOnlyDataForDelegate`.
-     */
-    public func readStorage(_ request: RequestType, key: AnyHashable? = nil, dependencyNextRequest: WebService.ReadStorageDependencyType = .notDepend, responseOnlyData: Bool? = nil) {
-        if let delegate = delegate {
-            service.readStorage(request, key: key,
-                                dependencyNextRequest: dependencyNextRequest,
-                                responseOnlyData: responseOnlyData ?? responseStorageOnlyDataForDelegate,
-                                responseDelegate: delegate)
-        }
-    }
-    
+
     
     // MARK: Contains requests
     
@@ -142,7 +92,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
         return service.containsRequest(keyType: keyType)
     }
     
-    //MARK: Cancel requests
+    // MARK: Cancel requests
     
     /// Cancel all requests for request type. The RequestType.Type to find in the current queue.
     public func cancelRequests() {
@@ -167,7 +117,7 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
         service.cancelRequests(keyType: keyType)
     }
     
-    //MARK: Delete data in Storages
+    // MARK: Delete data in Storages
     
     /**
      Delete data in storage for concrete request.
@@ -177,20 +127,17 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
     public func deleteInStorage(request: RequestType) {
         service.deleteInStorage(request: request)
     }
-    
-    //MARK: Internal
-    private func internalPerformRequest(_ request: WebServiceBaseRequesting, key: AnyHashable?, excludeDuplicate: Bool, responseDelegate delegate: WebServiceDelegate?) {
-        service.performBaseRequest(request, key: key, excludeDuplicate: excludeDuplicate) { [weak delegate] response in
-            if let delegate = delegate {
-                delegate.webServiceResponse(request: request, key: key, isStorageRequest: false, response: response)
-            }
-        }
-    }
 }
 
-//MARK: Support Hashable requests
+// MARK: Support Hashable requests
 extension WebServiceRequestProvider where RequestType: Hashable {
-    
+
+    /// Default excludeDuplicate for hashable requests.
+    public var excludeDuplicateDefault: Bool {
+        get { return internalExcludeDuplicateDefault }
+        set { internalExcludeDuplicateDefault = newValue }
+    }
+
     /**
      Request to server (gateway). Response result in closure.
      
@@ -202,18 +149,6 @@ extension WebServiceRequestProvider where RequestType: Hashable {
     public func performRequest(_ request: RequestType, excludeDuplicate: Bool, completionHandler: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
         service.performBaseRequest(request, key: nil, excludeDuplicate: excludeDuplicate, completionHandler: { completionHandler( $0.convert() ) })
     }
-    
-    /**
-     Request to server (gateway). Response result send to `WebServiceRequestProvider.delegate`.
-     
-     - Parameters:
-         - request: The hashable (also equatable) request with data.
-         - excludeDuplicate: Exclude duplicate equatable requests.
-     */
-    public func performRequest(_ request: RequestType, excludeDuplicate: Bool) {
-        internalPerformRequest(request, key: nil, excludeDuplicate: excludeDuplicate, responseDelegate: delegate)
-    }
-    
     
     /**
      Returns a Boolean value indicating whether the current queue contains the given request.
@@ -245,16 +180,10 @@ extension WebServiceRequestProvider where RequestType: WebServiceEmptyRequesting
         - completionHandler: Closure for response result from server.
      */
     public func performRequest(completionHandler: @escaping (_ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
-        service.performBaseRequest(RequestType.init(), key: nil, excludeDuplicate: excludeDuplicateDefault, completionHandler: { completionHandler( $0.convert() ) })
+        service.performBaseRequest(RequestType.init(), key: nil, excludeDuplicate: internalExcludeDuplicateDefault) {
+            completionHandler($0.convert())
+        }
     }
-    
-    /**
-     Request to server (gateway). Response result send to `WebServiceRequestProvider.delegate`.
-     */
-    public func performRequest() {
-        internalPerformRequest(RequestType.init(), key: nil, excludeDuplicate: excludeDuplicateDefault, responseDelegate: delegate)
-    }
-    
     
     /**
      Read last success data from storage. Response result in closure.
@@ -267,22 +196,5 @@ extension WebServiceRequestProvider where RequestType: WebServiceEmptyRequesting
      */
     public func readStorage(dependencyNextRequest: WebService.ReadStorageDependencyType = .notDepend, completionHandler: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
         service.readStorage(RequestType.init(), dependencyNextRequest: dependencyNextRequest, completionHandler: completionHandler)
-    }
-    
-    /**
-     Read last success data from storage. Response result send to `WebServiceRequestProvider.delegate`.
-     
-     - Parameters:
-         - key: unique key for controling requests, use only for response delegate.
-         - dependencyNextRequest: Type dependency from next performRequest.
-         - responseOnlyData: When `true` - response result send to delegate only if have data. Default use `responseStorageOnlyDataForDelegate`.
-     */
-    public func readStorage(key: AnyHashable? = nil, dependencyNextRequest: WebService.ReadStorageDependencyType = .notDepend, responseOnlyData: Bool? = nil) {
-        if let delegate = delegate {
-            service.readStorage(RequestType.init(), key: key,
-                                dependencyNextRequest: dependencyNextRequest,
-                                responseOnlyData: responseOnlyData ?? responseStorageOnlyDataForDelegate,
-                                responseDelegate: delegate)
-        }
     }
 }

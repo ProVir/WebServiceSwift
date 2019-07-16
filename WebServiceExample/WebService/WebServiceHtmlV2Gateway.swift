@@ -16,7 +16,7 @@ class WebServiceHtmlV2GatewayHandler: AlamofireGatewayHandler {
         return .init(queueForRequest: DispatchQueue.global(qos: .utility), useNetworkActivityIndicator: true, handler: WebServiceHtmlV2GatewayHandler())
     }
 
-    func isSupportedRequest(_ request: WebServiceBaseRequesting, rawDataTypeForRestoreFromStorage: WebServiceRawData.Type?) -> Bool {
+    func isSupportedRequest(_ request: WebServiceBaseRequesting, forDataProcessingFromStorage rawDataType: WebServiceStorageRawData.Type?) -> Bool {
         return request is WebServiceHtmlRequesting
     }
 
@@ -36,11 +36,26 @@ class WebServiceHtmlV2GatewayHandler: AlamofireGatewayHandler {
         return AF.request(url)
     }
 
-    func dataProcessing(request: WebServiceBaseRequesting, rawData: WebServiceRawData, fromStorage: Bool) throws -> Any {
+    func responseAlamofire(_ response: DataResponse<Data>, requestId: UInt64, request: WebServiceBaseRequesting, innerData: Any?) throws -> WebServiceGatewayResponse {
+        switch response.result {
+        case .success(let binary):
+            let result = try dataProcessing(binary: binary)
+            return WebServiceGatewayResponse(result: result, rawDataForStorage: binary)
+
+        case .failure(let error):
+            throw error
+        }
+    }
+
+    func dataProcessingFromStorage(request: WebServiceBaseRequesting, rawData: WebServiceStorageRawData) throws -> Any {
         guard request is WebServiceHtmlRequesting, let binary = rawData as? Data else {
             throw WebServiceRequestError.notSupportDataProcessing
         }
 
+        return try dataProcessing(binary: binary)
+    }
+
+    private func dataProcessing(binary: Data) throws -> Any {
         if let result = String(data: binary, encoding: .utf8) ?? String(data: binary, encoding: .windowsCP1251) {
             return result
         } else {
