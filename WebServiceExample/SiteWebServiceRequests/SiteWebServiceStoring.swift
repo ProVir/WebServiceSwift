@@ -9,28 +9,24 @@
 import Foundation
 import WebServiceSwift
 
-extension SiteWebServiceRequests.SiteSearch: WebServiceRequestRawGeneralStoring {
+extension SiteWebServiceRequests.SiteSearch: WebServiceRequestEasyStoring {
 //    var dataClassificationForStorage: AnyHashable { return WebServiceDataClass.temporary }
     var identificatorForStorage: String? { return site.rawValue + ".\(domain)" }
 }
 
-extension SiteWebServiceRequests.SiteMail: WebServiceRequestValueGeneralStoring {
+extension SiteWebServiceRequests.SiteMail: WebServiceRequestBinaryValueStoring {
     var identificatorForStorage: String? { return site.rawValue }
-    
-    func writeDataToStorage(value: String) -> Data? {
+
+    func encodeToBinaryForStorage(value: String) -> Data? {
         return value.data(using: String.Encoding.utf8)
     }
-    
-    func readDataFromStorage(data: Data) throws -> String? {
-        return String(data: data, encoding: String.Encoding.utf8)
+
+    func decodeToValueFromStorage(binary: Data) throws -> String? {
+        return String(data: binary, encoding: String.Encoding.utf8)
     }
 }
 
-extension SiteWebServiceRequests.SiteYouTube: WebServiceRequestRawFileStoring {
-    var identificatorForFileStorage: String? { return "siteYouTube" }
+extension SiteWebServiceRequests.SiteYouTube: WebServiceRequestEasyStoring {
+    var identificatorForStorage: String? { return "siteYouTube" }
 }
-
-//extension SiteWebServiceRequests.SiteYouTube: WebServiceRequestRawDataBaseStoring {
-//    var identificatorForDataBaseStorage: String? { return "siteYouTube" }
-//}
 

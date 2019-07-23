@@ -34,7 +34,9 @@ public class WebService {
     
     /// Ignore gateway parameter ans always don't use networkActivityIndicator in statusBar when requests in process.
     public var disableNetworkActivityIndicator = false
-    
+
+    /// Default queue when gateway.queueForDataProcessingFromStorage = nil.
+    private let queueForStorageDefault: DispatchQueue = .global(qos: .utility)
     
     /**
      Constructor for WebService.
@@ -418,7 +420,7 @@ public class WebService {
         for storage in self.storages {
             let supportClasses = storage.supportDataClassification
             
-            if supportClasses.contains(dataClassification) {
+            if supportClasses?.contains(dataClassification) ?? false {
                 storage.deleteAll()
             }
         }
@@ -431,7 +433,7 @@ public class WebService {
         for storage in self.storages {
             let supportClasses = storage.supportDataClassification
             
-            if supportClasses.isEmpty {
+            if supportClasses == nil {
                 storage.deleteAll()
             }
         }
@@ -477,7 +479,7 @@ public class WebService {
         }
         
         //2. Perform read
-        storage.fetch(request: request) { [weak self, queueForResponse = self.queueForResponse] timeStamp, response in
+        storage.fetch(request: request) { [weak self, queueForResponse = self.queueForResponse, queueDefault = self.queueForStorageDefault] response in
             if (nextRequestInfo?.canRead() ?? true) == false {
                 self?.queueForResponse.async {
                     completionHandler(nil, .canceledRequest(duplicate: false))
@@ -486,10 +488,10 @@ public class WebService {
             }
 
             switch response {
-            case .rawData(let rawData):
+            case let .rawData(rawData, timeStamp):
                 if let gateway = self?.internalFindGateway(request: request, forDataProcessingFromStorage: type(of: rawData)) {
-                    //Handler closure with fined gateway for use next
-                    let handler = {
+                    let queue = gateway.queueForDataProcessingFromStorage ?? queueDefault
+                    queue.async {
                         do {
                             let data = try gateway.dataProcessingFromStorage(request: request, rawData: rawData)
                             queueForResponse.async {
@@ -501,13 +503,6 @@ public class WebService {
                             }
                         }
                     }
-
-                    //Perform handler
-                    if let queue = gateway.queueForDataProcessingFromStorage {
-                        queue.async(execute: handler)
-                    } else {
-                        handler()
-                    }
                 } else {
                     //Not found gateway
                     queueForResponse.async {
@@ -515,12 +510,12 @@ public class WebService {
                     }
                 }
 
-            case .value(let value):
+            case let .value(value, timeStamp):
                 queueForResponse.async {
                     completionHandler(timeStamp, .data(value))
                 }
 
-            case .error(let error):
+            case let .error(error):
                 queueForResponse.async {
                     completionHandler(nil, .error(error))
                 }
@@ -551,8 +546,7 @@ public class WebService {
         for storage in self.storages {
             let supportClasses = storage.supportDataClassification
             
-            if (supportClasses.isEmpty || supportClasses.contains(dataClass))
-                && storage.isSupportedRequest(request) {
+            if (supportClasses?.contains(dataClass) ?? true) && storage.isSupportedRequest(request) {
                 return storage
             }
         }

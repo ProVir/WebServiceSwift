@@ -1,5 +1,5 @@
 //
-//  WebServiceRequestProvider.swift
+//  RequestProvider.swift
 //  WebServiceSwift 4.0.0
 //
 //  Created by Короткий Виталий (ViR) on 24.04.2018.

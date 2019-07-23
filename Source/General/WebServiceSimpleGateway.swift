@@ -107,7 +107,6 @@ public class WebServiceSimpleGateway: WebServiceGateway {
         self.useNetworkActivityIndicator = useNetworkActivityIndicator
     }
     
-    
     // MARK: Gateway implementation
     public func isSupportedRequest(_ request: WebServiceBaseRequesting, forDataProcessingFromStorage rawDataType: WebServiceStorageRawData.Type?) -> Bool {
         return request is WebServiceSimpleBaseRequesting

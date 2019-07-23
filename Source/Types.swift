@@ -1,5 +1,5 @@
 //
-//  WebServiceTypes.swift
+//  Types.swift
 //  WebServiceSwift 4.0.0
 //
 //  Created by Короткий Виталий (ViR) on 16.04.2018.
@@ -8,6 +8,36 @@
 //
 
 import Foundation
+
+/// Base protocol for all types request.
+public protocol WebServiceBaseRequesting { }
+
+/// Generic protocol with information result type for all types request.
+public protocol WebServiceRequesting: WebServiceBaseRequesting {
+    /// Type for response data when success. For data without data you can use Void or Any?
+    associatedtype ResultType
+}
+
+/// Generic protocol without parameters for server and with information result type for all types request.
+public protocol WebServiceEmptyRequesting: WebServiceRequesting {
+    init()
+}
+
+/// RawData for Gateway
+public protocol WebServiceStorageRawData { }
+extension Data: WebServiceStorageRawData { }
+
+/// Base protocol for providers
+public protocol WebServiceProvider {
+    init(webService: WebService)
+}
+
+public extension WebService {
+    /// Create provider with this WebService
+    func createProvider<T: WebServiceProvider>() -> T {
+        return T.init(webService: self)
+    }
+}
 
 /**
  WebService general error enum for requests
