@@ -21,52 +21,6 @@ public extension WebServiceRequestBaseStoring {
     var dataClassificationForStorage: AnyHashable { return WebServiceDefaultDataClassification }
 }
 
-/// Protocol for requests with support storages as key -> value
-public protocol WebServiceRequestEasyStoring: WebServiceRequestBaseStoring {
-    /// Unique identificator for read and write data if current request support storage.
-    var identificatorForStorage: String? { get }
-}
-
-/// Conform to protocol if requests support storages
-public protocol WebServiceRequestBinaryValueStoring: WebServiceRequestBinaryValueBaseStoring, WebServiceRequesting {
-    /**
-     Encoding data from custom type to binary data.
-
-     - Parameter value: Value from response.
-     - Results: Binary data after encoding if supported.
-     */
-    func encodeToBinaryForStorage(value: ResultType) -> Data?
-
-    /**
-     Decoding from binary data to custom type.
-
-     - Parameter data: Binary data from storage.
-     - Results: Custom type after decoding if supported.
-     */
-    func decodeToValueFromStorage(binary: Data) throws -> ResultType?
-}
-
-
-/// No generic protocol for requests support storages
-public protocol WebServiceRequestBinaryValueBaseStoring: WebServiceRequestEasyStoring {
-    func encodeToBinaryForStorage(anyValue: Any) -> Data?
-    func decodeToAnyValueFromStorage(binary: Data) throws -> Any?
-}
-
-public extension WebServiceRequestBinaryValueStoring {
-    func encodeToBinaryForStorage(anyValue: Any) -> Data? {
-        if let value = anyValue as? ResultType {
-            return encodeToBinaryForStorage(value: value)
-        } else {
-            return nil
-        }
-    }
-
-    func decodeToAnyValueFromStorage(binary: Data) throws -> Any? {
-        return try decodeToValueFromStorage(binary: binary)
-    }
-}
-
 
 /// Response from storage
 public enum WebServiceStorageResponse {

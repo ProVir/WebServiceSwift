@@ -48,15 +48,11 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
     
     // MARK: WebServiceStoraging
     public func isSupportedRequest(_ request: WebServiceBaseRequesting) -> Bool {
-        guard let request = request as? WebServiceRequestEasyStoring else {
-            return false
-        }
-
-        return request.identificatorForStorage != nil
+        return identificatorForStorage(request: request) != nil
     }
     
     public func fetch(request: WebServiceBaseRequesting, completionHandler: @escaping (WebServiceStorageResponse) -> Void) {
-        guard let request = request as? WebServiceRequestEasyStoring, let identificator = request.identificatorForStorage else {
+        guard let identificator = identificatorForStorage(request: request) else {
             completionHandler(.error(WebServiceResponseError.notFoundData))
             return
         }
@@ -66,18 +62,17 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
                 completionHandler(.error(WebServiceResponseError.notFoundData))
                 return
             }
-            
+
             //Read Item from CoreData
             var timeStamp = item.timeStamp
             if timeStamp?.timeIntervalSinceNow ?? -0.1 > 0 {
                 timeStamp = nil
             }
-            
-            if item.isRaw {
+
+            if item.isRaw == true, request is WebServiceRequestEasyRawStoring {
                 completionHandler(.rawData(binary, timeStamp))
-                
-            } else if let request = request as? WebServiceRequestBinaryValueBaseStoring {
-                //Readed value and can decode
+
+            } else if item.isRaw == false, let request = request as? WebServiceRequestEasyValueBaseStoring {
                 do {
                     if let data = try request.decodeToAnyValueFromStorage(binary: binary) {
                         completionHandler(.value(data, timeStamp))
@@ -87,28 +82,30 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
                 } catch {
                     completionHandler(.error(error))
                 }
+
             } else {
-                //Value don't supported request
                 completionHandler(.error(WebServiceResponseError.notFoundData))
             }
         }
     }
 
     public func save(request: WebServiceBaseRequesting, rawData: WebServiceStorageRawData?, value: Any) {
-        guard let identificator = (request as? WebServiceRequestEasyStoring)?.identificatorForStorage else {
-            return
-        }
-
+        let idItem: String
         let binary: Data
         let isRaw: Bool
         let timeStamp = Date()
 
-        if let request = request as? WebServiceRequestBinaryValueBaseStoring,
-           let binaryData = request.encodeToBinaryForStorage(anyValue: value) {
+        if let request = request as? WebServiceRequestEasyValueBaseStoring,
+            let identificator = request.identificatorForStorage,
+            let binaryData = request.encodeToBinaryForStorage(anyValue: value) {
+            idItem = identificator
             binary = binaryData
             isRaw = true
 
-        } else if let binaryData = rawData as? Data {
+        } else if let request = request as? WebServiceRequestEasyRawStoring,
+            let identificator = request.identificatorForStorage,
+            let binaryData = rawData as? Data {
+            idItem = identificator
             binary = binaryData
             isRaw = true
 
@@ -118,10 +115,10 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
 
         //Save in CoreData
         managedObjectContext.perform {
-            let item = self.findStoreData(identificator: identificator) ?? {
+            let item = self.findStoreData(identificator: idItem) ?? {
                 let entityDescription = NSEntityDescription.entity(forEntityName: "Item", in: self.managedObjectContext)!
                 let item = Item(entity: entityDescription, insertInto: self.managedObjectContext)
-                item.idItem = identificator
+                item.idItem = idItem
                 return item
                 }()
 
@@ -134,7 +131,7 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
     }
     
     public func delete(request: WebServiceBaseRequesting) {
-        guard let identificator = (request as? WebServiceRequestEasyStoring)?.identificatorForStorage else {
+        guard let identificator = identificatorForStorage(request: request) else {
             return
         }
         
@@ -160,6 +157,16 @@ public class WebServiceDataBaseStorage: WebServiceStorage {
     }
 
     //MARK: - Private
+    private func identificatorForStorage(request: WebServiceBaseRequesting) -> String? {
+        if let request = request as? WebServiceRequestEasyRawStoring {
+            return request.identificatorForStorage
+        } else if let request = request as? WebServiceRequestEasyValueBaseStoring {
+            return request.identificatorForStorage
+        } else {
+            return nil
+        }
+    }
+
     private func saveContext() {
         if managedObjectContext.hasChanges {
             do {

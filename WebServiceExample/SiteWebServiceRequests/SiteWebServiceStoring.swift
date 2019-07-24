@@ -9,12 +9,12 @@
 import Foundation
 import WebServiceSwift
 
-extension SiteWebServiceRequests.SiteSearch: WebServiceRequestEasyStoring {
+extension SiteWebServiceRequests.SiteSearch: WebServiceRequestEasyRawStoring {
 //    var dataClassificationForStorage: AnyHashable { return WebServiceDataClass.temporary }
     var identificatorForStorage: String? { return site.rawValue + ".\(domain)" }
 }
 
-extension SiteWebServiceRequests.SiteMail: WebServiceRequestBinaryValueStoring {
+extension SiteWebServiceRequests.SiteMail: WebServiceRequestEasyValueStoring {
     var identificatorForStorage: String? { return site.rawValue }
 
     func encodeToBinaryForStorage(value: String) -> Data? {
@@ -26,7 +26,10 @@ extension SiteWebServiceRequests.SiteMail: WebServiceRequestBinaryValueStoring {
     }
 }
 
-extension SiteWebServiceRequests.SiteYouTube: WebServiceRequestEasyStoring {
+extension SiteWebServiceRequests.SiteYouTube: WebServiceRequestEasyRawStoring {
     var identificatorForStorage: String? { return "siteYouTube" }
 }
 
+extension SiteWebServiceRequests.ExampleCodingResponse: WebServiceRequestEasyValueStoring {
+    var identificatorForStorage: String? { return "exampleCodingResponse" }
+}

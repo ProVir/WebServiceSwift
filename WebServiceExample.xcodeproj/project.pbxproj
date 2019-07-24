@@ -41,6 +41,7 @@
 		88E5994E22E5E3FA00CDAA90 /* WebServiceFileStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AEB1F4E92A1000E3FA3 /* WebServiceFileStorage.swift */; };
 		88E599DE22E7442800CDAA90 /* WebServiceMemoryStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D22B0A20D7F91800C44198 /* WebServiceMemoryStorage.swift */; };
 		88E59A2322E7647600CDAA90 /* WebServiceDataBaseStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 507529A421032E61008A167A /* WebServiceDataBaseStorage.swift */; };
+		88E59A7622E85AB100CDAA90 /* EasyStoring.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88E59A7522E85AB100CDAA90 /* EasyStoring.swift */; };
 		F7FE9D6708B7621E6DEBF692 /* libPods-WebServiceSwift.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 24A0CD2C446B67E36EF3409D /* libPods-WebServiceSwift.a */; };
 /* End PBXBuildFile section */
 
@@ -111,6 +112,7 @@
 		85924404FE98C539DF31A8DB /* Pods-WebServiceExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WebServiceExample.debug.xcconfig"; path = "Pods/Target Support Files/Pods-WebServiceExample/Pods-WebServiceExample.debug.xcconfig"; sourceTree = "<group>"; };
 		88E597CB22DE2CBE00CDAA90 /* Gateway.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gateway.swift; sourceTree = "<group>"; };
 		88E597CD22DE792500CDAA90 /* Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
+		88E59A7522E85AB100CDAA90 /* EasyStoring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EasyStoring.swift; sourceTree = "<group>"; };
 		918173D2DBEB2D8E5D5A88E4 /* Pods-WebServiceSwift.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WebServiceSwift.debug.xcconfig"; path = "Pods/Target Support Files/Pods-WebServiceSwift/Pods-WebServiceSwift.debug.xcconfig"; sourceTree = "<group>"; };
 		F4B8A17FA11DD9EA2D2B9A1B /* Pods-WebServiceExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WebServiceExample.release.xcconfig"; path = "Pods/Target Support Files/Pods-WebServiceExample/Pods-WebServiceExample.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -192,6 +194,7 @@
 				506CAFCD2084D707008AB016 /* Types.swift */,
 				88E597CB22DE2CBE00CDAA90 /* Gateway.swift */,
 				88E597CD22DE792500CDAA90 /* Storage.swift */,
+				88E59A7522E85AB100CDAA90 /* EasyStoring.swift */,
 				50BFAFF7208F4C8A007E8FBD /* RequestProvider.swift */,
 				5054625620C066B500595948 /* PThreadMutexLock.swift */,
 				50D22B0E20DA9FA000C44198 /* General */,
@@ -448,6 +451,7 @@
 				50D22B0D20D8AE8600C44198 /* WebServiceMockRequestGateway.swift in Sources */,
 				88E5994E22E5E3FA00CDAA90 /* WebServiceFileStorage.swift in Sources */,
 				88E597CC22DE2CBE00CDAA90 /* Gateway.swift in Sources */,
+				88E59A7622E85AB100CDAA90 /* EasyStoring.swift in Sources */,
 				506CAFCF2084D729008AB016 /* Types.swift in Sources */,
 				88318B0422AAB5C400631B12 /* AlamofireSimpleGateway.swift in Sources */,
 				50844338207D244900C757C7 /* WebServiceMockGateway.swift in Sources */,

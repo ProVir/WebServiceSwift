@@ -41,6 +41,15 @@ enum SiteWebServiceRequests {
     struct SiteYouTube: WebServiceEmptyRequesting, Hashable {
         typealias ResultType = String
     }
+
+    struct ExampleCodingResponse: WebServiceEmptyRequesting {
+        typealias ResultType = Response
+
+        struct Response: Codable {
+            let key: String
+            let value: Int
+        }
+    }
 }
 
 

@@ -89,28 +89,24 @@ public class WebServiceFileStorage: WebServiceStorage {
     
     // MARK: WebServiceStoraging
     public func isSupportedRequest(_ request: WebServiceBaseRequesting) -> Bool {
-        guard let request = request as? WebServiceRequestEasyStoring else {
-            return false
-        }
-
-        return request.identificatorForStorage != nil
+        return identificatorForStorage(request: request) != nil
     }
     
     public func fetch(request: WebServiceBaseRequesting, completionHandler: @escaping (WebServiceStorageResponse) -> Void) {
-        guard let request = request as? WebServiceRequestEasyStoring, let identificator = request.identificatorForStorage else {
-            completionHandler(.error(WebServiceResponseError.notFoundData))
-            return
-        }
-
         switch storeFormat {
         case .autoWithMeta:
+            guard let identificator = identificatorForStorage(request: request) else {
+                completionHandler(.error(WebServiceResponseError.notFoundData))
+                return
+            }
+
             readStoreData(identificator: identificator) { result in
                 switch result {
                 case .success(let storeData):
                     if storeData.isRaw {
                         completionHandler(.rawData(storeData.binary, storeData.timeStamp))
 
-                    } else if let request = request as? WebServiceRequestBinaryValueBaseStoring {
+                    } else if let request = request as? WebServiceRequestEasyValueBaseStoring {
                         do {
                             if let value = try request.decodeToAnyValueFromStorage(binary: storeData.binary) {
                                 completionHandler(.value(value, storeData.timeStamp))
@@ -131,21 +127,23 @@ public class WebServiceFileStorage: WebServiceStorage {
             }
 
         case .binaryValue:
+            guard let request = request as? WebServiceRequestEasyValueBaseStoring,
+                let identificator = request.identificatorForStorage else {
+                completionHandler(.error(WebServiceResponseError.notFoundData))
+                return
+            }
+
             readBinaryData(identificator: identificator) { result in
                 switch result {
                 case .success(let binaryData):
-                    if let request = request as? WebServiceRequestBinaryValueBaseStoring {
-                        do {
-                            if let value = try request.decodeToAnyValueFromStorage(binary: binaryData) {
-                                completionHandler(.value(value, nil))
-                            } else {
-                                completionHandler(.error(WebServiceResponseError.notFoundData))
-                            }
-                        } catch {
-                            completionHandler(.error(error))
+                    do {
+                        if let value = try request.decodeToAnyValueFromStorage(binary: binaryData) {
+                            completionHandler(.value(value, nil))
+                        } else {
+                            completionHandler(.error(WebServiceResponseError.notFoundData))
                         }
-                    } else {
-                        completionHandler(.error(WebServiceResponseError.notFoundData))
+                    } catch {
+                        completionHandler(.error(error))
                     }
 
                 case .failure(let error):
@@ -154,6 +152,12 @@ public class WebServiceFileStorage: WebServiceStorage {
             }
 
         case .binaryRaw:
+            guard let request = request as? WebServiceRequestEasyRawStoring,
+                let identificator = request.identificatorForStorage else {
+                    completionHandler(.error(WebServiceResponseError.notFoundData))
+                    return
+            }
+
             readBinaryData(identificator: identificator) { result in
                 switch result {
                 case .success(let binaryData):
@@ -167,39 +171,41 @@ public class WebServiceFileStorage: WebServiceStorage {
     }
 
     public func save(request: WebServiceBaseRequesting, rawData: WebServiceStorageRawData?, value: Any) {
-        guard let identificator = (request as? WebServiceRequestEasyStoring)?.identificatorForStorage else {
-            return
-        }
-
         switch storeFormat {
         case .autoWithMeta:
+            guard let identificator = identificatorForStorage(request: request) else {
+                return
+            }
+
             let timeStamp = Date()
-            if let request = request as? WebServiceRequestBinaryValueBaseStoring,
+            if let request = request as? WebServiceRequestEasyValueBaseStoring,
                let binaryData = request.encodeToBinaryForStorage(anyValue: value) {
                 let storeData = StoreData(binary: binaryData, isRaw: false, timeStamp: timeStamp)
                 writeStoreData(identificator: identificator, data: storeData)
 
-            } else if let binaryData = rawData as? Data {
-                //Raw
+            } else if request is WebServiceRequestEasyRawStoring, let binaryData = rawData as? Data {
                 let storeData = StoreData(binary: binaryData, isRaw: false, timeStamp: timeStamp)
                 writeStoreData(identificator: identificator, data: storeData)
             }
 
         case .binaryValue:
-            if let request = request as? WebServiceRequestBinaryValueBaseStoring,
+            if let request = request as? WebServiceRequestEasyValueBaseStoring,
+               let identificator = request.identificatorForStorage,
                let binaryData = request.encodeToBinaryForStorage(anyValue: value) {
                 writeBinaryData(identificator: identificator, data: binaryData)
             }
 
         case .binaryRaw:
-            if let binaryData = rawData as? Data {
+            if let request = request as? WebServiceRequestEasyRawStoring,
+               let identificator = request.identificatorForStorage,
+               let binaryData = rawData as? Data {
                 writeBinaryData(identificator: identificator, data: binaryData)
             }
         }
     }
     
     public func delete(request: WebServiceBaseRequesting) {
-        guard let identificator = (request as? WebServiceRequestEasyStoring)?.identificatorForStorage else {
+        guard let identificator = identificatorForStorage(request: request) else {
             return
         }
         
@@ -229,6 +235,16 @@ public class WebServiceFileStorage: WebServiceStorage {
     
 
     //MARK: - Storage private
+    private func identificatorForStorage(request: WebServiceBaseRequesting) -> String? {
+        if let request = request as? WebServiceRequestEasyRawStoring {
+            return request.identificatorForStorage
+        } else if let request = request as? WebServiceRequestEasyValueBaseStoring {
+            return request.identificatorForStorage
+        } else {
+            return nil
+        }
+    }
+
     private func readStoreData(identificator: String, completion: @escaping (Result<StoreData, Error>) -> Void) {
         let url = filesDir.appendingPathComponent("\(prefixNameFiles)\(identificator)")
         
