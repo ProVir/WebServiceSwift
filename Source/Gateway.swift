@@ -27,10 +27,9 @@ public protocol WebServiceGateway: class {
     /// Thread Dispatch Queue for `dataProcessingFromStorage()` method with raw data from storage.
     var queueForDataProcessingFromStorage: DispatchQueue? { get }
 
-    #if os(iOS)
+
     /// When `true`, showed networkActivityIndicator in statusBar when requests in process.
     var useNetworkActivityIndicator: Bool { get }
-    #endif
 
     /**
      Asks whether the request supports this gateway.
@@ -78,3 +77,10 @@ public protocol WebServiceGateway: class {
      */
     func dataProcessingFromStorage(request: WebServiceBaseRequesting, rawData: WebServiceStorageRawData) throws -> Any
 }
+
+#if os(iOS)
+#else
+extension WebServiceGateway {
+    var useNetworkActivityIndicator: Bool { return false }
+}
+#endif

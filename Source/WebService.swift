@@ -78,8 +78,8 @@ public class WebService {
     }
 
     // MARK: Private data
-    private static var staticMutex = PThreadMutexLock()
-    private var mutex = PThreadMutexLock()
+    private static let staticMutex = PThreadMutexLock()
+    private let mutex = PThreadMutexLock()
     
     private static var networkActivityIndicatorRequestIds = Set<UInt64>() {
         didSet {
