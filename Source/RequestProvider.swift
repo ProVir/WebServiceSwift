@@ -46,21 +46,6 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
         service.performBaseRequest(request, key: key, excludeDuplicate: excludeDuplicate, completionHandler: { completionHandler( $0.convert() ) })
     }
     
-    /**
-     Read last success data from storage. Response result in closure.
-     
-     - Parameters:
-         - request: The request with data.
-         - dependencyNextRequest: Type dependency from next performRequest.
-         - completionHandler: Closure for read data from storage.
-         - timeStamp: TimeStamp when saved from server (gateway).
-         - response: Result read from storage.
-     */
-    public func readStorage(_ request: RequestType, dependencyNextRequest: WebService.ReadStorageDependencyType = .notDepend, completionHandler: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
-        service.readStorage(request, dependencyNextRequest: dependencyNextRequest, completionHandler: completionHandler)
-    }
-
-    
     // MARK: Contains requests
     
     /**
@@ -116,17 +101,6 @@ public class WebServiceRequestProvider<RequestType: WebServiceRequesting>: WebSe
     public func cancelRequests<K: Hashable>(keyType: K.Type) {
         service.cancelRequests(keyType: keyType)
     }
-    
-    // MARK: Delete data in Storages
-    
-    /**
-     Delete data in storage for concrete request.
-     
-     - Parameter request: Original request.
-     */
-    public func deleteInStorage(request: RequestType) {
-        service.deleteInStorage(request: request)
-    }
 }
 
 // MARK: Support Hashable requests
@@ -170,7 +144,7 @@ extension WebServiceRequestProvider where RequestType: Hashable {
     }
 }
 
-//MARK: Support Empty requests
+// MARK: Support Empty requests
 extension WebServiceRequestProvider where RequestType: WebServiceEmptyRequesting {
     
     /**
@@ -184,15 +158,43 @@ extension WebServiceRequestProvider where RequestType: WebServiceEmptyRequesting
             completionHandler($0.convert())
         }
     }
-    
+}
+
+// MARK: Support Storages
+extension WebServiceRequestProvider where RequestType: WebServiceRequestBaseStoring {
     /**
      Read last success data from storage. Response result in closure.
-     
+
      - Parameters:
-         - dependencyNextRequest: Type dependency from next performRequest.
-         - completionHandler: Closure for read data from storage.
-         - timeStamp: TimeStamp when saved from server (gateway).
-         - response: Result read from storage.
+     - request: The request with data.
+     - dependencyNextRequest: Type dependency from next performRequest.
+     - completionHandler: Closure for read data from storage.
+     - timeStamp: TimeStamp when saved from server (gateway).
+     - response: Result read from storage.
+     */
+    public func readStorage(_ request: RequestType, dependencyNextRequest: WebService.ReadStorageDependencyType = .notDepend, completionHandler: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
+        service.readStorage(request, dependencyNextRequest: dependencyNextRequest, completionHandler: completionHandler)
+    }
+
+    /**
+     Delete data in storage for concrete request.
+
+     - Parameter request: Original request.
+     */
+    public func deleteInStorage(request: RequestType) {
+        service.deleteInStorage(request: request)
+    }
+}
+
+extension WebServiceRequestProvider where RequestType: WebServiceRequestBaseStoring, RequestType: WebServiceEmptyRequesting {
+    /**
+     Read last success data from storage. Response result in closure.
+
+     - Parameters:
+     - dependencyNextRequest: Type dependency from next performRequest.
+     - completionHandler: Closure for read data from storage.
+     - timeStamp: TimeStamp when saved from server (gateway).
+     - response: Result read from storage.
      */
     public func readStorage(dependencyNextRequest: WebService.ReadStorageDependencyType = .notDepend, completionHandler: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
         service.readStorage(RequestType.init(), dependencyNextRequest: dependencyNextRequest, completionHandler: completionHandler)

@@ -32,11 +32,11 @@ public class WebServiceMemoryStorage: WebServiceStorage {
     }
     
     // MARK: WebServiceStoraging
-    public func isSupportedRequest(_ request: WebServiceBaseRequesting) -> Bool {
+    public func isSupportedRequest(_ request: WebServiceRequestBaseStoring) -> Bool {
         return identificatorForStorage(request: request) != nil
     }
     
-    public func fetch(request: WebServiceBaseRequesting, completionHandler: @escaping (WebServiceStorageResponse) -> Void) {
+    public func fetch(request: WebServiceRequestBaseStoring, completionHandler: @escaping (WebServiceStorageResponse) -> Void) {
         guard let identificator = identificatorForStorage(request: request) else {
             completionHandler(.error(WebServiceResponseError.notFoundData))
             return
@@ -57,7 +57,7 @@ public class WebServiceMemoryStorage: WebServiceStorage {
         }
     }
 
-    public func save(request: WebServiceBaseRequesting, rawData: WebServiceStorageRawData?, value: Any) {
+    public func save(request: WebServiceRequestBaseStoring, rawData: WebServiceStorageRawData?, value: Any) {
         guard let identificator = identificatorForStorage(request: request) else {
             return
         }
@@ -82,7 +82,7 @@ public class WebServiceMemoryStorage: WebServiceStorage {
         }
     }
     
-    public func delete(request: WebServiceBaseRequesting) {
+    public func delete(request: WebServiceRequestBaseStoring) {
         if let identificator = identificatorForStorage(request: request) {
             mutex.synchronized {
                 memoryData.removeValue(forKey: identificator)
@@ -96,7 +96,7 @@ public class WebServiceMemoryStorage: WebServiceStorage {
         }
     }
 
-    private func identificatorForStorage(request: WebServiceBaseRequesting) -> String? {
+    private func identificatorForStorage(request: WebServiceRequestBaseStoring) -> String? {
         if let request = request as? WebServiceRequestEasyRawStoring {
             return request.identificatorForStorage
         } else if let request = request as? WebServiceRequestEasyValueBaseStoring {

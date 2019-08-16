@@ -36,6 +36,8 @@
 		50E9C1C721077979003E6D4E /* SiteWebServiceStoring.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E9C1C621077979003E6D4E /* SiteWebServiceStoring.swift */; };
 		61461D4A3EF74DD8EA170CF1 /* libPods-WebServiceExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 097DC5181F8BC28E4BC049B9 /* libPods-WebServiceExample.a */; };
 		88318B0422AAB5C400631B12 /* AlamofireSimpleGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625920C1026800595948 /* AlamofireSimpleGateway.swift */; };
+		884F84D22301BA29000D20BE /* StorageHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 884F84D12301BA29000D20BE /* StorageHandler.swift */; };
+		884F862A23058E6F000D20BE /* Tasks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 884F862923058E6F000D20BE /* Tasks.swift */; };
 		8853EF2222EA0AF200C93531 /* GatewayHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8853EF2122EA0AF200C93531 /* GatewayHandler.swift */; };
 		88B3D13222F88A720096B332 /* NetworkIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B3D13122F88A720096B332 /* NetworkIndicator.swift */; };
 		88E597CC22DE2CBE00CDAA90 /* Gateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88E597CB22DE2CBE00CDAA90 /* Gateway.swift */; };
@@ -112,6 +114,8 @@
 		50F4943120565FD1004F1E08 /* WebServiceMockGateway.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebServiceMockGateway.swift; sourceTree = "<group>"; };
 		83873141EF5334067DE0C2D6 /* Pods-WebServiceSwift.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WebServiceSwift.release.xcconfig"; path = "Pods/Target Support Files/Pods-WebServiceSwift/Pods-WebServiceSwift.release.xcconfig"; sourceTree = "<group>"; };
 		85924404FE98C539DF31A8DB /* Pods-WebServiceExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WebServiceExample.debug.xcconfig"; path = "Pods/Target Support Files/Pods-WebServiceExample/Pods-WebServiceExample.debug.xcconfig"; sourceTree = "<group>"; };
+		884F84D12301BA29000D20BE /* StorageHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageHandler.swift; sourceTree = "<group>"; };
+		884F862923058E6F000D20BE /* Tasks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tasks.swift; sourceTree = "<group>"; };
 		8853EF2122EA0AF200C93531 /* GatewayHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatewayHandler.swift; sourceTree = "<group>"; };
 		88B3D13122F88A720096B332 /* NetworkIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkIndicator.swift; sourceTree = "<group>"; };
 		88E597CB22DE2CBE00CDAA90 /* Gateway.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gateway.swift; sourceTree = "<group>"; };
@@ -197,6 +201,8 @@
 				501D2AE41F4E8FA2000E3FA3 /* WebService.swift */,
 				88B3D13122F88A720096B332 /* NetworkIndicator.swift */,
 				8853EF2122EA0AF200C93531 /* GatewayHandler.swift */,
+				884F84D12301BA29000D20BE /* StorageHandler.swift */,
+				884F862923058E6F000D20BE /* Tasks.swift */,
 				506CAFCD2084D707008AB016 /* Types.swift */,
 				88E597CB22DE2CBE00CDAA90 /* Gateway.swift */,
 				88E597CD22DE792500CDAA90 /* Storage.swift */,
@@ -461,6 +467,8 @@
 				88E59A7622E85AB100CDAA90 /* EasyStoring.swift in Sources */,
 				506CAFCF2084D729008AB016 /* Types.swift in Sources */,
 				88318B0422AAB5C400631B12 /* AlamofireSimpleGateway.swift in Sources */,
+				884F862A23058E6F000D20BE /* Tasks.swift in Sources */,
+				884F84D22301BA29000D20BE /* StorageHandler.swift in Sources */,
 				50844338207D244900C757C7 /* WebServiceMockGateway.swift in Sources */,
 				8853EF2222EA0AF200C93531 /* GatewayHandler.swift in Sources */,
 				50BFAFF9208F4C8E007E8FBD /* RequestProvider.swift in Sources */,

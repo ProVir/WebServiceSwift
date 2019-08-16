@@ -46,7 +46,7 @@ public protocol WebServiceStorage: class {
      - Parameter request: Request for test.
      - Returns: If request support this storage - return true.
      */
-    func isSupportedRequest(_ request: WebServiceBaseRequesting) -> Bool
+    func isSupportedRequest(_ request: WebServiceRequestBaseStoring) -> Bool
 
     /**
      Read data from storage.
@@ -56,7 +56,7 @@ public protocol WebServiceStorage: class {
      - completionHandler: After readed data need call with result data. This closure need call and only one. Be sure to call in the main thread.
      - response: Result response enum with data. If not data - use .error(WebServiceResponseError.notFoundData)
      */
-    func fetch(request: WebServiceBaseRequesting, completionHandler: @escaping (_ response: WebServiceStorageResponse) -> Void)
+    func fetch(request: WebServiceRequestBaseStoring, completionHandler: @escaping (_ response: WebServiceStorageResponse) -> Void)
 
     /**
      Save data from server (gateway).
@@ -67,14 +67,14 @@ public protocol WebServiceStorage: class {
      - rawData: Raw data for save - universal type, need process in gateway
      - value: Value type for save, no need process in gateway
      */
-    func save(request: WebServiceBaseRequesting, rawData: WebServiceStorageRawData?, value: Any)
+    func save(request: WebServiceRequestBaseStoring, rawData: WebServiceStorageRawData?, value: Any)
 
     /**
      Delete data in storage for concrete request.
 
      - Parameter request: Original request.
      */
-    func delete(request: WebServiceBaseRequesting)
+    func delete(request: WebServiceRequestBaseStoring)
 
     /// Delete all data in storage.
     func deleteAll()

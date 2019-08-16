@@ -233,7 +233,9 @@ public class WebService {
 
                     switch result {
                     case .success(let response):
-                        storage?.save(request: request, rawData: response.rawDataForStorage, value: response.result)
+                        if let request = request as? WebServiceRequestBaseStoring {
+                            storage?.save(request: request, rawData: response.rawDataForStorage, value: response.result)
+                        }
                         completeHandlerResponse(.data(response.result))
 
                     case .failure(let error):
@@ -264,7 +266,7 @@ public class WebService {
          - timeStamp: TimeStamp when saved from server (gateway).
          - response: Result read from storage.
      */
-    public func readStorage<RequestType: WebServiceRequesting>(_ request: RequestType, dependencyNextRequest: ReadStorageDependencyType = .notDepend, completionHandler: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
+    public func readStorage<RequestType: WebServiceRequesting & WebServiceRequestBaseStoring>(_ request: RequestType, dependencyNextRequest: ReadStorageDependencyType = .notDepend, completionHandler: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<RequestType.ResultType>) -> Void) {
         if let storage = internalFindStorage(request: request) {
             //CompletionResponse
             let completionHandlerInternal:(_ timeStamp: Date?, _ response: WebServiceResponse<Any>) -> Void = { completionHandler($0, $1.convert()) }
@@ -287,7 +289,7 @@ public class WebService {
         - timeStamp: TimeStamp when saved from server (gateway).
         - response: Result read from storage.
      */
-    public func readStorageAnyData(_ request: WebServiceBaseRequesting,
+    public func readStorageAnyData(_ request: WebServiceRequestBaseStoring,
                                    dependencyNextRequest: ReadStorageDependencyType = .notDepend,
                                    completionHandler: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<Any>) -> Void) {
         if let storage = internalFindStorage(request: request) {
@@ -405,7 +407,7 @@ public class WebService {
      
      - Parameter request: Original request.
      */
-    public func deleteInStorage(request: WebServiceBaseRequesting) {
+    public func deleteInStorage(request: WebServiceRequestBaseStoring) {
         if let storage = internalFindStorage(request: request) {
             storage.delete(request: request)
         }
@@ -450,7 +452,7 @@ public class WebService {
     
     
     // MARK: - Private functions
-    private func internalReadStorage(storage: WebServiceStorage, request: WebServiceBaseRequesting, dependencyNextRequest: ReadStorageDependencyType, completionHandler handler: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<Any>) -> Void) {
+    private func internalReadStorage(storage: WebServiceStorage, request: WebServiceRequestBaseStoring, dependencyNextRequest: ReadStorageDependencyType, completionHandler handler: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<Any>) -> Void) {
         let nextRequestInfo: ReadStorageDependRequestInfo?
         let completionHandler: (_ timeStamp: Date?, _ response: WebServiceResponse<Any>) -> Void
         
@@ -536,13 +538,9 @@ public class WebService {
     }
     
     private func internalFindStorage(request: WebServiceBaseRequesting) -> WebServiceStorage? {
-        let dataClass: AnyHashable
-        if let request = request as? WebServiceRequestBaseStoring {
-            dataClass = request.dataClassificationForStorage
-        } else {
-            dataClass = WebServiceDefaultDataClassification
-        }
-        
+        guard let request = request as? WebServiceRequestBaseStoring else { return nil }
+        let dataClass = request.dataClassificationForStorage
+
         for storage in self.storages {
             let supportClasses = storage.supportDataClassification
             

@@ -47,7 +47,7 @@ class SiteWebProvider: WebServiceProvider {
     }
     
     //MARK: - Private
-    private func internalReadStorageHtmlData(_ request: WebServiceBaseRequesting, dataFromStorage: @escaping ((_ data: String) -> Void)) {
+    private func internalReadStorageHtmlData(_ request: WebServiceRequestBaseStoring, dataFromStorage: @escaping ((_ data: String) -> Void)) {
         webService.readStorageAnyData(request, dependencyNextRequest: .dependFull) { _, response in
             let response = response.convert(String.self)
             if case .data(let data) = response {

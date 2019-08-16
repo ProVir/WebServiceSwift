@@ -23,30 +23,17 @@ final class GatewayRequestIdProvider {
     }
 }
 
-class GatewayHandler {
-    private struct RequestData {
-        let requestId: UInt64
-        let gatewayIndex: Int
-        let cancelHandler: () -> Void
-    }
-
-    private enum RequestState {
-        case inWork
-        case completed
-        case error
-        case canceled
-    }
-
+final class GatewayHandler {
     let queueForResponse: DispatchQueue
     let queueForStorageDefault: DispatchQueue = .global(qos: .utility)
 
     var disableNetworkActivityIndicator = false
 
     private let mutex = PThreadMutexLock()
-
     private let gateways: [WebServiceGateway]
-    private var requestList: [UInt64: RequestData] = [:] //All requests
+    private lazy var saveToStorageHandler: (WebServiceBaseRequesting, WebServiceStorageRawData?, _ value: Any) -> Void = { _, _, _ in }
 
+    private var requestList: [UInt64: RequestTask] = [:] //All requests
     private var requestsForTypes: [String: Set<UInt64>] = [:]        //[Request.Type: [Id]]
     private var requestsForHashs: [AnyHashable: Set<UInt64>] = [:]   //[Request<Hashable>: [Id]]
     private var requestsForKeys:  [AnyHashable: Set<UInt64>] = [:]   //[Key: [Id]]
@@ -57,6 +44,10 @@ class GatewayHandler {
         self.queueForResponse = queueForResponse
     }
 
+    func setup(saveToStorageHandler: @escaping (WebServiceBaseRequesting, WebServiceStorageRawData?, _ value: Any) -> Void) {
+        self.saveToStorageHandler = saveToStorageHandler
+    }
+
     deinit {
         let requestList = mutex.synchronized { self.requestList }
         let requestListIds = Set(requestList.keys)
@@ -64,13 +55,14 @@ class GatewayHandler {
         NetworkActivityIndicatorHandler.shared.removeRequests(requestListIds)
 
         //Cancel all requests for gateways
-        let requestsWithGateways = requestList.map { (_, value) -> (RequestData, WebServiceGateway) in
-            (value, self.gateways[value.gatewayIndex])
+        let requestsWithGateways = requestList.compactMap { (_, task) -> (RequestTask.WorkData, WebServiceGateway)? in
+            guard let request = task.workData else { return nil }
+            return (request, self.gateways[request.gatewayIndex])
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [queueForResponse] in
             requestsWithGateways.forEach { (request, gateway) in
-                request.cancelHandler()
+                request.cancelHandler(false)
 
                 let queue = gateway.queueForRequest ?? queueForResponse
                 queue.async {
@@ -84,117 +76,140 @@ class GatewayHandler {
         request: WebServiceBaseRequesting,
         key: AnyHashable?,
         excludeDuplicate: Bool,
+        storageTask: StorageTask?,
+        storageDependency: StorageDependency,
         completionHandler: @escaping (_ response: WebServiceResponse<Any>) -> Void
-    ) {
+    ) -> RequestTask {
+        let task = RequestTask(request: request, key: key, storageTask: storageTask, storageDependency: storageDependency)
 
-        //1. Depend from previous read storage.
-//        weak var readStorageRequestInfo: ReadStorageDependRequestInfo? = readStorageDependNextRequestWait
-//        readStorageDependNextRequestWait = nil
-
-        //2. Test duplicate requests
+        //1. Test duplicate requests
         let requestHashable = request as? AnyHashable
 
         if excludeDuplicate, let key = key {
             if containsRequest(key: key) {
-//                readStorageRequestInfo?.setDuplicate()
+                task.setState(.duplicate, finishTask: true)
                 completionHandler(.canceledRequest(duplicate: true))
-                return
+                return task
             }
         } else if excludeDuplicate, let requestHashable = requestHashable {
             if mutex.synchronized({ !(requestsForHashs[requestHashable]?.isEmpty ?? true) }) {
-//                readStorageRequestInfo?.setDuplicate()
+                task.setState(.duplicate, finishTask: true)
                 completionHandler(.canceledRequest(duplicate: true))
-                return
+                return task
             }
         }
 
-        //3. Find Gateway and Storage
+        //2. Find Gateway and Storage
         guard let (gateway, gatewayIndex) = findGateway(request: request) else {
-//            readStorageRequestInfo?.setState(.error)
+            task.setState(.error, finishTask: true)
             completionHandler(.error(WebServiceRequestError.notFoundGateway))
-            return
+            return task
         }
 
-//        let storage = internalFindStorage(request: request)
-
-        //4. Request in memory database and perform request (Step #0 -> Step #4)
+        //3. Request in memory database and perform request (Step #0 -> Step #4)
         let requestType = type(of: request)
         let requestId = GatewayRequestIdProvider.shared.generateRequestId()
 
-        var requestState = RequestState.inWork
-
-        //Step #3: Call this closure with result response
-        let completeHandlerResponse: (WebServiceResponse<Any>) -> Void = { [weak self, queueForResponse = self.queueForResponse] response in
+        //Step #3 of 3: Call this closure with result response
+        let completionHandlerResponse: (WebServiceResponse<Any>) -> Void = { [weak self, queueForResponse = self.queueForResponse] response in
             //Usually main thread
             queueForResponse.async {
-                guard requestState == .inWork else { return }
+                if task.isFinished { return }
 
                 self?.removeRequest(requestId: requestId, key: key, requestHashable: requestHashable, requestType: requestType)
 
                 switch response {
                 case .data(let data):
-                    requestState = .completed
-//                    readStorageRequestInfo?.setState(requestState)
+                    task.setState(.success, finishTask: true)
                     completionHandler(.data(data))
 
                 case .error(let error):
-                    requestState = .error
-//                    readStorageRequestInfo?.setState(requestState)
+                    task.setState(.error, finishTask: true)
                     completionHandler(.error(error))
 
                 case .canceledRequest(duplicate: let duplicate):
-                    requestState = .canceled
-//                    readStorageRequestInfo?.setState(requestState)
+                    task.setState(duplicate ? .duplicate : .canceled, finishTask: true)
                     completionHandler(.canceledRequest(duplicate: duplicate))
                 }
             }
         }
 
         //Step #0: Add request to memory database
-        let requestData = RequestData(requestId: requestId, gatewayIndex: gatewayIndex, cancelHandler: {
-            completeHandlerResponse(.canceledRequest(duplicate: false))
-        })
-        addRequest(request: requestData, key: key, requestHashable: requestHashable, requestType: requestType, gateway: gateway)
+        task.workData = RequestTask.WorkData(requestId: requestId, gatewayIndex: gatewayIndex, cancelHandler: { [weak self] neededInGatewayCancel in
+            completionHandlerResponse(.canceledRequest(duplicate: false))
 
-        //Step #2: Beginer request closure
-        let requestHandler = {
+            if neededInGatewayCancel, let self = self {
+                let gateway = self.gateways[gatewayIndex]
+                let queue = gateway.queueForRequest ?? self.queueForResponse
+                queue.async {
+                    gateway.canceledRequest(requestId: requestId)
+                }
+            }
+        })
+        addRequest(requestId: requestId, task: task, key: key, requestHashable: requestHashable, requestType: requestType, gateway: gateway)
+
+        //Step #2 of 3: Begin request closure
+        let requestHandler = { [saveToStorageHandler] in
             gateway.performRequest(
                 requestId: requestId,
                 request: request,
                 completion: { result in
-                    guard requestState == .inWork else { return }
+                    if task.isFinished { return }
 
                     switch result {
                     case .success(let response):
-//                        storage?.save(request: request, rawData: response.rawDataForStorage, value: response.result)
-                        completeHandlerResponse(.data(response.result))
+                        saveToStorageHandler(request, response.rawDataForStorage, response.result)
+                        completionHandlerResponse(.data(response.result))
 
                     case .failure(let error):
-                        completeHandlerResponse(.error(error))
+                        completionHandlerResponse(.error(error))
                     }
                 }
             )
         }
 
-        //Step #1: Call request in queue
+        //Step #1 of 3: Call request in queue
         if let queue = gateway.queueForRequest {
             queue.async(execute: requestHandler)
         } else {
             requestHandler()
         }
+
+        return task
+    }
+
+    func rawDataProcessing(request: WebServiceRequestBaseStoring, rawData: WebServiceStorageRawData, completion: @escaping (Result<Any, Error>) -> Void) {
+        guard let (gateway, _) = findGateway(request: request, forDataProcessingFromStorage: type(of: rawData)) else {
+            completion(.failure(WebServiceRequestError.notFoundGateway))
+            return
+        }
+
+        let queue = gateway.queueForDataProcessingFromStorage ?? queueForStorageDefault
+        queue.async {
+            completion(.init { try gateway.dataProcessingFromStorage(request: request, rawData: rawData) })
+        }
+    }
+
+    // MARK: List
+    func allTasks() -> [RequestTask] {
+        return mutex.synchronized {
+            requestList
+                .map { $0.value }
+                .sorted { ($0.workData?.requestId ?? 0) < ($1.workData?.requestId ?? 0) }
+        }
     }
 
     // MARK: Contains
     func containsManyRequests() -> Bool {
-        return mutex.synchronized { !requestList.isEmpty }
+        return mutex.synchronized { requestList.isEmpty == false }
     }
 
     func containsRequest<RequestType: WebServiceBaseRequesting & Hashable>(_ request: RequestType) -> Bool {
-        return mutex.synchronized { !(requestsForHashs[request]?.isEmpty ?? true) }
+        return mutex.synchronized { (requestsForHashs[request]?.isEmpty ?? true) == false }
     }
 
     func containsRequest(type requestType: WebServiceBaseRequesting.Type) -> Bool {
-        return mutex.synchronized { !(requestsForTypes["\(requestType)"]?.isEmpty ?? true) }
+        return mutex.synchronized { (requestsForTypes["\(requestType)"]?.isEmpty ?? true) == false }
     }
 
     func containsRequest(key: AnyHashable) -> Bool {
@@ -247,23 +262,23 @@ class GatewayHandler {
         return nil
     }
 
-    private func addRequest(request: RequestData, key: AnyHashable?, requestHashable: AnyHashable?, requestType: WebServiceBaseRequesting.Type, gateway: WebServiceGateway) {
+    private func addRequest(requestId: UInt64, task: RequestTask, key: AnyHashable?, requestHashable: AnyHashable?, requestType: WebServiceBaseRequesting.Type, gateway: WebServiceGateway) {
         if disableNetworkActivityIndicator == false && gateway.useNetworkActivityIndicator {
-            NetworkActivityIndicatorHandler.shared.addRequest(request.requestId)
+            NetworkActivityIndicatorHandler.shared.addRequest(requestId)
         }
 
         mutex.lock()
         defer { mutex.unlock() }
 
-        requestList[request.requestId] = request
-        requestsForTypes["\(requestType)", default: Set<UInt64>()].insert(request.requestId)
+        requestList[requestId] = task
+        requestsForTypes["\(requestType)", default: Set<UInt64>()].insert(requestId)
 
         if let key = key {
-            requestsForKeys[key, default: Set<UInt64>()].insert(request.requestId)
+            requestsForKeys[key, default: Set<UInt64>()].insert(requestId)
         }
 
         if let requestHashable = requestHashable {
-            requestsForHashs[requestHashable, default: Set<UInt64>()].insert(request.requestId)
+            requestsForHashs[requestHashable, default: Set<UInt64>()].insert(requestId)
         }
     }
 
@@ -319,13 +334,7 @@ class GatewayHandler {
     private func cancelRequests(ids: Set<UInt64>) {
         for requestId in ids {
             if let request = mutex.synchronized({ self.requestList[requestId] }) {
-                request.cancelHandler()
-
-                let gateway = gateways[request.gatewayIndex]
-                let queue = gateway.queueForRequest ?? queueForResponse
-                queue.async {
-                    gateway.canceledRequest(requestId: request.requestId)
-                }
+                request.cancel()
             }
         }
     }

@@ -88,11 +88,11 @@ public class WebServiceFileStorage: WebServiceStorage {
     
     
     // MARK: WebServiceStoraging
-    public func isSupportedRequest(_ request: WebServiceBaseRequesting) -> Bool {
+    public func isSupportedRequest(_ request: WebServiceRequestBaseStoring) -> Bool {
         return identificatorForStorage(request: request) != nil
     }
     
-    public func fetch(request: WebServiceBaseRequesting, completionHandler: @escaping (WebServiceStorageResponse) -> Void) {
+    public func fetch(request: WebServiceRequestBaseStoring, completionHandler: @escaping (WebServiceStorageResponse) -> Void) {
         switch storeFormat {
         case .autoWithMeta:
             guard let identificator = identificatorForStorage(request: request) else {
@@ -170,7 +170,7 @@ public class WebServiceFileStorage: WebServiceStorage {
         }
     }
 
-    public func save(request: WebServiceBaseRequesting, rawData: WebServiceStorageRawData?, value: Any) {
+    public func save(request: WebServiceRequestBaseStoring, rawData: WebServiceStorageRawData?, value: Any) {
         switch storeFormat {
         case .autoWithMeta:
             guard let identificator = identificatorForStorage(request: request) else {
@@ -204,7 +204,7 @@ public class WebServiceFileStorage: WebServiceStorage {
         }
     }
     
-    public func delete(request: WebServiceBaseRequesting) {
+    public func delete(request: WebServiceRequestBaseStoring) {
         guard let identificator = identificatorForStorage(request: request) else {
             return
         }
@@ -235,7 +235,7 @@ public class WebServiceFileStorage: WebServiceStorage {
     
 
     //MARK: - Storage private
-    private func identificatorForStorage(request: WebServiceBaseRequesting) -> String? {
+    private func identificatorForStorage(request: WebServiceRequestBaseStoring) -> String? {
         if let request = request as? WebServiceRequestEasyRawStoring {
             return request.identificatorForStorage
         } else if let request = request as? WebServiceRequestEasyValueBaseStoring {
