@@ -62,7 +62,7 @@ final class GatewayHandler {
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [queueForResponse] in
             requestsWithGateways.forEach { (request, gateway) in
-                request.cancelHandler(false)
+                request.cancelHandler(false, .destroyed)
 
                 let queue = gateway.queueForRequest ?? queueForResponse
                 queue.async {
@@ -87,22 +87,22 @@ final class GatewayHandler {
 
         if excludeDuplicate, let key = key {
             if containsRequest(key: key) {
-                task.setState(.duplicate, finishTask: true)
-                completionHandler(.canceledRequest(duplicate: true))
+                task.setState(.canceled, canceledReason: .duplicate, finishTask: true)
+                completionHandler(.canceled(.duplicate))
                 return task
             }
         } else if excludeDuplicate, let requestHashable = requestHashable {
             if mutex.synchronized({ !(requestsForHashs[requestHashable]?.isEmpty ?? true) }) {
-                task.setState(.duplicate, finishTask: true)
-                completionHandler(.canceledRequest(duplicate: true))
+                task.setState(.canceled, canceledReason: .duplicate, finishTask: true)
+                completionHandler(.canceled(.duplicate))
                 return task
             }
         }
 
         //2. Find Gateway and Storage
         guard let (gateway, gatewayIndex) = findGateway(request: request) else {
-            task.setState(.error, finishTask: true)
-            completionHandler(.error(RequestError.notFoundGateway))
+            task.setState(.failure, canceledReason: nil, finishTask: true)
+            completionHandler(.failure(RequestError.notFoundGateway))
             return task
         }
 
@@ -119,24 +119,24 @@ final class GatewayHandler {
                 self?.removeRequest(requestId: requestId, key: key, requestHashable: requestHashable, requestType: requestType)
 
                 switch response {
-                case .data(let data):
-                    task.setState(.success, finishTask: true)
-                    completionHandler(.data(data))
+                case .success(let data):
+                    task.setState(.success, canceledReason: nil, finishTask: true)
+                    completionHandler(.success(data))
 
-                case .error(let error):
-                    task.setState(.error, finishTask: true)
-                    completionHandler(.error(error))
+                case .failure(let error):
+                    task.setState(.failure, canceledReason: nil, finishTask: true)
+                    completionHandler(.failure(error))
 
-                case .canceledRequest(duplicate: let duplicate):
-                    task.setState(duplicate ? .duplicate : .canceled, finishTask: true)
-                    completionHandler(.canceledRequest(duplicate: duplicate))
+                case .canceled(let reason):
+                    task.setState(.canceled, canceledReason: reason, finishTask: true)
+                    completionHandler(.canceled(reason))
                 }
             }
         }
 
         //Step #0: Add request to memory database
-        task.workData = RequestTask.WorkData(requestId: requestId, gatewayIndex: gatewayIndex, cancelHandler: { [weak self] neededInGatewayCancel in
-            completionHandlerResponse(.canceledRequest(duplicate: false))
+        task.workData = RequestTask.WorkData(requestId: requestId, gatewayIndex: gatewayIndex, cancelHandler: { [weak self] neededInGatewayCancel, canceledReason in
+            completionHandlerResponse(.canceled(canceledReason))
 
             if neededInGatewayCancel, let self = self {
                 let gateway = self.gateways[gatewayIndex]
@@ -155,14 +155,13 @@ final class GatewayHandler {
                 request: request,
                 completion: { result in
                     if task.isFinished { return }
-
                     switch result {
                     case .success(let response):
                         saveToStorageHandler(request, response.rawDataForStorage, response.result)
-                        completionHandlerResponse(.data(response.result))
+                        completionHandlerResponse(.success(response.result))
 
                     case .failure(let error):
-                        completionHandlerResponse(.error(error))
+                        completionHandlerResponse(.failure(error))
                     }
                 }
             )

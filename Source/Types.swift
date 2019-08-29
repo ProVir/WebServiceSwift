@@ -60,6 +60,13 @@ public enum ResponseError: Error {
     case httpStatusCode(Int)
 }
 
+public enum RequestCanceledReason: Hashable {
+    case duplicate
+    case user
+    case destroyed
+    case unknown
+}
+
 /**
  Result response for concrete type from gateway
  
@@ -69,22 +76,22 @@ public enum ResponseError: Error {
  - `duplicateRequest`: If `excludeDuplicate == true` and this request contained in queue
  */
 public enum Response<T> {
-    case data(T)
-    case error(Error)
-    case canceledRequest(duplicate: Bool)
-    
+    case success(T)
+    case failure(Error)
+    case canceled(RequestCanceledReason)
+
     /// Data if success response
-    public func dataResponse() -> T? {
+    public var result: T? {
         switch self {
-        case .data(let d): return d
+        case .success(let r): return r
         default: return nil
         }
     }
     
     /// Error if response completed with error
-    public func errorResponse() -> Error? {
+    public var error: Error? {
         switch self {
-        case .error(let err): return err
+        case .failure(let err): return err
         default: return nil
         }
     }
@@ -92,16 +99,16 @@ public enum Response<T> {
     /// Is canceled request, also true when duplicated request
     public var isCanceled: Bool {
         switch self {
-        case .canceledRequest: return true
+        case .canceled: return true
         default: return false
         }
     }
     
-    /// Canceled becouse duplicate request
-    public var isDuplicate: Bool {
+    /// Canceled reason if canceled
+    public var canceledReason: RequestCanceledReason? {
         switch self {
-        case .canceledRequest(duplicate: let duplicate): return duplicate
-        default: return false
+        case .canceled(let reason): return reason
+        default: return nil
         }
     }
 }
@@ -126,18 +133,18 @@ public extension Response {
     ///Convert to response with concrete other type data.
     func convert<T>(_ typeData: T.Type) -> Response<T> {
         switch self {
-        case .data(let data):
+        case .success(let data):
             if let data = data as? T {
-                return .data(data)
+                return .success(data)
             } else {
-                return .error(ResponseError.invalidData(ConvertError(from: type(of: data), to: T.self)))
+                return .failure(ResponseError.invalidData(ConvertError(from: type(of: data), to: T.self)))
             }
             
-        case .error(let error):
-            return .error(error)
+        case .failure(let error):
+            return .failure(error)
             
-        case .canceledRequest(duplicate: let duplicate):
-            return .canceledRequest(duplicate: duplicate)
+        case .canceled(let reason):
+            return .canceled(reason)
         }
     }
 }

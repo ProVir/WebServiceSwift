@@ -38,8 +38,8 @@ final class StorageHandler {
         let task = StorageTask(request: request)
 
         guard let storage = findStorage(request: request) else {
-            handler(nil, .error(RequestError.notFoundStorage))
-            task.setStateFromStorage(.error)
+            handler(nil, .failure(RequestError.notFoundStorage))
+            task.setStateFromStorage(.failure)
             return task
         }
 
@@ -47,17 +47,17 @@ final class StorageHandler {
         let completionAsyncHandler = { [queueForResponse] (timeStamp: Date?, response: Response<Any>) in
             queueForResponse.async {
                 if task.isCanceled {
-                    handler(nil, .canceledRequest(duplicate: task.state == .duplicate))
+                    handler(nil, .canceled(task.requestCanceledReason))
                     return
                 }
 
                 switch response {
-                case .data:
+                case .success:
                     task.setStateFromStorage(.success)
-                case .error:
-                    task.setStateFromStorage(.error)
-                case .canceledRequest(let duplicate):
-                    task.setStateFromStorage(duplicate ? .duplicate : .canceled)
+                case .failure:
+                    task.setStateFromStorage(.failure)
+                case .canceled:
+                    task.setStateFromStorage(.canceled)
                 }
 
                 handler(timeStamp, response)
@@ -67,7 +67,7 @@ final class StorageHandler {
         //2. Perform read
         storage.fetch(request: request) { [weak self] response in
             guard let self = self, task.isCanceled == false else {
-                completionAsyncHandler(nil, .canceledRequest(duplicate: false))
+                completionAsyncHandler(nil, .canceled(.unknown))
                 return
             }
 
@@ -75,16 +75,16 @@ final class StorageHandler {
             case let .rawData(rawData, timeStamp):
                 self.rawDataProcessingHandler(request, rawData) { result in
                     switch result {
-                    case .success(let data): completionAsyncHandler(timeStamp, .data(data))
-                    case .failure(let error): completionAsyncHandler(nil, .error(error))
+                    case .success(let data): completionAsyncHandler(timeStamp, .success(data))
+                    case .failure(let error): completionAsyncHandler(nil, .failure(error))
                     }
                 }
 
             case let .value(value, timeStamp):
-                completionAsyncHandler(timeStamp, .data(value))
+                completionAsyncHandler(timeStamp, .success(value))
 
             case let .error(error):
-                completionAsyncHandler(nil, .error(error))
+                completionAsyncHandler(nil, .failure(error))
             }
         }
 

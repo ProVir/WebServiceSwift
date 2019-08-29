@@ -11,9 +11,8 @@ import Foundation
 public enum RequestState: Hashable, CaseIterable {
     case inProgress
     case success
-    case error
+    case failure
     case canceled
-    case duplicate
 }
 
 public enum StorageDependency {
@@ -26,7 +25,7 @@ public enum StorageDependency {
         switch self {
         case .notDepend: return false
         case .dependSuccessResult: return state == .success
-        case .dependFull: return state != .inProgress && state != .error
+        case .dependFull: return state != .inProgress && state != .failure
         case .dependManual(let list): return list.contains(state)
         }
     }
@@ -39,11 +38,12 @@ public final class RequestTask {
     public let storageDependency: StorageDependency
 
     public var state: RequestState { return mutex.synchronized { self.unsafeState } }
+    public var canceledReason: RequestCanceledReason? { return mutex.synchronized { self.unsafeCanceledReason } }
 
     public func cancel() {
         if state == .inProgress {
-            setState(.canceled, finishTask: false)
-            workData?.cancelHandler(true)
+            setState(.canceled, canceledReason: .user, finishTask: false)
+            workData?.cancelHandler(true, .user)
         }
     }
 
@@ -56,6 +56,7 @@ public final class RequestTask {
 
     private let mutex = PThreadMutexLock()
     private var unsafeState: RequestState = .inProgress
+    private var unsafeCanceledReason: RequestCanceledReason?
     private var unsafeWorkData: WorkData?
     private var unsafeFinished: Bool = false
 }
@@ -63,8 +64,7 @@ public final class RequestTask {
 public final class StorageTask {
     public enum CanceledReason {
         case user
-        case storage
-        case request(RequestState)
+        case request(RequestState, RequestCanceledReason?)
     }
 
     public let request: BaseRequest
@@ -93,7 +93,7 @@ extension RequestTask {
     struct WorkData {
         let requestId: UInt64
         let gatewayIndex: Int
-        let cancelHandler: (_ neededInGatewayCancel: Bool) -> Void
+        let cancelHandler: (_ neededInGatewayCancel: Bool, RequestCanceledReason) -> Void
     }
 
     var workData: WorkData? {
@@ -105,9 +105,11 @@ extension RequestTask {
         return mutex.synchronized { unsafeFinished }
     }
 
-    func setState(_ state: RequestState, finishTask: Bool) {
+    func setState(_ state: RequestState, canceledReason: RequestCanceledReason?, finishTask: Bool) {
         mutex.synchronized {
             self.unsafeState = state
+            self.unsafeCanceledReason = canceledReason
+
             if state != .inProgress && finishTask {
                 self.unsafeFinished = true
                 self.unsafeWorkData = nil
@@ -115,29 +117,33 @@ extension RequestTask {
         }
 
         if storageDependency.shouldCancel(requestState: state) {
-            storageTask?.cancelFromRequest(state: state)
+            storageTask?.cancelFromRequest(reason: canceledReason)
         }
     }
 }
 
 extension StorageTask {
     var isCanceled: Bool {
-        return mutex.synchronized { unsafeState == .canceled || unsafeState == .duplicate }
+        return mutex.synchronized { unsafeState == .canceled }
+    }
+
+    var requestCanceledReason: RequestCanceledReason {
+        switch canceledReason {
+        case .request(_, let reason): return reason ?? .unknown
+        default: return .unknown
+        }
     }
 
     func setStateFromStorage(_ state: RequestState) {
         mutex.synchronized {
             self.unsafeState = state
-            if state == .canceled || state == .duplicate {
-                self.unsafeCanceledReason = .storage
-            }
         }
     }
 
-    func cancelFromRequest(state: RequestState) {
+    func cancelFromRequest(reason: RequestCanceledReason?) {
         mutex.synchronized {
-            self.unsafeState = (state == .duplicate ? .duplicate : .canceled)
-            self.unsafeCanceledReason = .request(state)
+            self.unsafeState = .canceled
+            self.unsafeCanceledReason = .request(state, reason)
         }
     }
 }
