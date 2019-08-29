@@ -12,39 +12,39 @@ final class StorageHandler {
 
     private let queueForResponse: DispatchQueue
     private let mutex = PThreadMutexLock()
-    private let storages: [WebServiceStorage]
+    private let storages: [Storage]
 
-    private lazy var rawDataProcessingHandler: (WebServiceRequestBaseStoring, WebServiceStorageRawData, (Result<Any, Error>) -> Void) -> Void
+    private lazy var rawDataProcessingHandler: (RequestBaseStorable, StorageRawData, (Result<Any, Error>) -> Void) -> Void
         = { fatalError("Need setup StorageHandler before use") }()
 
-    init(storages: [WebServiceStorage], queueForResponse: DispatchQueue) {
+    init(storages: [Storage], queueForResponse: DispatchQueue) {
         self.storages = storages
         self.queueForResponse = queueForResponse
     }
 
-    func setup(rawDataProcessingHandler: @escaping (WebServiceRequestBaseStoring, WebServiceStorageRawData, (Result<Any, Error>) -> Void) -> Void) {
+    func setup(rawDataProcessingHandler: @escaping (RequestBaseStorable, StorageRawData, (Result<Any, Error>) -> Void) -> Void) {
         self.rawDataProcessingHandler = rawDataProcessingHandler
     }
 
-    func save(request: WebServiceRequestBaseStoring, rawData: WebServiceStorageRawData?, value: Any) {
+    func save(request: RequestBaseStorable, rawData: StorageRawData?, value: Any) {
         guard let storage = findStorage(request: request) else { return }
         storage.save(request: request, rawData: rawData, value: value)
     }
 
     func fetch(
-        request: WebServiceRequestBaseStoring,
-        handler: @escaping (_ timeStamp: Date?, _ response: WebServiceResponse<Any>) -> Void
+        request: RequestBaseStorable,
+        handler: @escaping (_ timeStamp: Date?, _ response: Response<Any>) -> Void
     ) -> StorageTask {
         let task = StorageTask(request: request)
 
         guard let storage = findStorage(request: request) else {
-            handler(nil, .error(WebServiceRequestError.notFoundStorage))
+            handler(nil, .error(RequestError.notFoundStorage))
             task.setStateFromStorage(.error)
             return task
         }
 
         //1. Wrapped handler
-        let completionAsyncHandler = { [queueForResponse] (timeStamp: Date?, response: WebServiceResponse<Any>) in
+        let completionAsyncHandler = { [queueForResponse] (timeStamp: Date?, response: Response<Any>) in
             queueForResponse.async {
                 if task.isCanceled {
                     handler(nil, .canceledRequest(duplicate: task.state == .duplicate))
@@ -91,7 +91,7 @@ final class StorageHandler {
         return task
     }
 
-    func deleteInStorage(request: WebServiceRequestBaseStoring) {
+    func deleteInStorage(request: RequestBaseStorable) {
         if let storage = findStorage(request: request) {
             storage.delete(request: request)
         }
@@ -122,7 +122,7 @@ final class StorageHandler {
     }
 
     // MARK: - Private
-    private func findStorage(request: WebServiceRequestBaseStoring) -> WebServiceStorage? {
+    private func findStorage(request: RequestBaseStorable) -> Storage? {
         let dataClass = request.dataClassificationForStorage
         for storage in self.storages {
             let supportClasses = storage.supportDataClassification

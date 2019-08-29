@@ -9,22 +9,21 @@
 import Foundation
 
 /// Default data classification for storages.
-public let WebServiceDefaultDataClassification = "default"
+public let defaultDataClassification = "default"
 
 /// Base protocol for all requests with support storages
-public protocol WebServiceRequestBaseStoring: WebServiceBaseRequesting {
+public protocol RequestBaseStorable: BaseRequest {
     /// Data classification to distinguish between storage
     var dataClassificationForStorage: AnyHashable { get }
 }
 
-public extension WebServiceRequestBaseStoring {
-    var dataClassificationForStorage: AnyHashable { return WebServiceDefaultDataClassification }
+public extension RequestBaseStorable {
+    var dataClassificationForStorage: AnyHashable { return defaultDataClassification }
 }
 
-
 /// Response from storage
-public enum WebServiceStorageResponse {
-    case rawData(WebServiceStorageRawData, Date?)
+public enum StorageResponse {
+    case rawData(StorageRawData, Date?)
     case value(Any, Date?)
     case error(Error)
 }
@@ -35,7 +34,7 @@ public enum WebServiceStorageResponse {
 
  RawData - data without process, original data from server
  */
-public protocol WebServiceStorage: class {
+public protocol Storage: class {
 
     /// Data classification support list. nil = support all.
     var supportDataClassification: Set<AnyHashable>? { get }
@@ -46,7 +45,7 @@ public protocol WebServiceStorage: class {
      - Parameter request: Request for test.
      - Returns: If request support this storage - return true.
      */
-    func isSupportedRequest(_ request: WebServiceRequestBaseStoring) -> Bool
+    func isSupportedRequest(_ request: RequestBaseStorable) -> Bool
 
     /**
      Read data from storage.
@@ -56,7 +55,7 @@ public protocol WebServiceStorage: class {
      - completionHandler: After readed data need call with result data. This closure need call and only one. Be sure to call in the main thread.
      - response: Result response enum with data. If not data - use .error(WebServiceResponseError.notFoundData)
      */
-    func fetch(request: WebServiceRequestBaseStoring, completionHandler: @escaping (_ response: WebServiceStorageResponse) -> Void)
+    func fetch(request: RequestBaseStorable, completionHandler: @escaping (_ response: StorageResponse) -> Void)
 
     /**
      Save data from server (gateway).
@@ -67,14 +66,14 @@ public protocol WebServiceStorage: class {
      - rawData: Raw data for save - universal type, need process in gateway
      - value: Value type for save, no need process in gateway
      */
-    func save(request: WebServiceRequestBaseStoring, rawData: WebServiceStorageRawData?, value: Any)
+    func save(request: RequestBaseStorable, rawData: StorageRawData?, value: Any)
 
     /**
      Delete data in storage for concrete request.
 
      - Parameter request: Original request.
      */
-    func delete(request: WebServiceRequestBaseStoring)
+    func delete(request: RequestBaseStorable)
 
     /// Delete all data in storage.
     func deleteAll()

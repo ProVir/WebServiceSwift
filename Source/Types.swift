@@ -10,37 +10,25 @@
 import Foundation
 
 /// Base protocol for all types request.
-public protocol WebServiceBaseRequesting { }
+public protocol BaseRequest { }
 
 /// Generic protocol with information result type for all types request.
-public protocol WebServiceRequesting: WebServiceBaseRequesting {
+public protocol Request: BaseRequest {
     /// Type for response data when success. For data without data you can use Void or Any?
     associatedtype ResultType
 }
 
 /// Generic protocol without parameters for server and with information result type for all types request.
-public protocol WebServiceEmptyRequesting: WebServiceRequesting {
+public protocol EmptyRequest: Request {
     init()
 }
 
 /// RawData for Gateway
-public protocol WebServiceStorageRawData { }
-extension Data: WebServiceStorageRawData { }
-
-/// Base protocol for providers
-public protocol WebServiceProvider {
-    init(webService: WebService)
-}
-
-public extension WebService {
-    /// Create provider with this WebService
-    func createProvider<T: WebServiceProvider>() -> T {
-        return T.init(webService: self)
-    }
-}
+public protocol StorageRawData { }
+extension Data: StorageRawData { }
 
 /**
- WebService general error enum for requests
+ General error enum for requests
  
  - `noFoundGateway`: If gateway not found in `[gateways]` for request
  - `noFoundStorage`: If storage not found in `[storages]` for request
@@ -49,7 +37,7 @@ public extension WebService {
  - `invalidRequest`: Validation request and create request to server failed.
  - `gatewayInternal`: Internal error in gateway.
  */
-public enum WebServiceRequestError: Error {
+public enum RequestError: Error {
     case notFoundGateway
     case notFoundStorage
     
@@ -60,9 +48,8 @@ public enum WebServiceRequestError: Error {
     case gatewayInternal
 }
 
-
-/// WebService general error enum for response
-public enum WebServiceResponseError: Error {
+/// General error enum for response
+public enum ResponseError: Error {
     /// Data from server invalid. Usually error value is `WebServiceResponse.ConvertError` or `DecoderError`
     case invalidData(Error)
 
@@ -74,14 +61,14 @@ public enum WebServiceResponseError: Error {
 }
 
 /**
- WebService result response for concrete type from gateway
+ Result response for concrete type from gateway
  
  - `data(T)`: Success response with data with require type
  - `error(Error)`: Error response
  - `canceledRequest`: Reqest canceled (called `WebService.cancelRequests()` method for this request)
  - `duplicateRequest`: If `excludeDuplicate == true` and this request contained in queue
  */
-public enum WebServiceResponse<T> {
+public enum Response<T> {
     case data(T)
     case error(Error)
     case canceledRequest(duplicate: Bool)
@@ -120,30 +107,30 @@ public enum WebServiceResponse<T> {
 }
 
 ///Response from other type
-public extension WebServiceResponse {
+public extension Response {
     struct ConvertError: Error {
         let from: Any.Type
         let to: Any.Type
     }
     
     ///Convert to response with other type data automatic.
-    func convert<T>() -> WebServiceResponse<T> {
+    func convert<T>() -> Response<T> {
         return convert(T.self)
     }
     
     ///Convert to response with type from request
-    func convert<RequestType: WebServiceRequesting>(request: RequestType) -> WebServiceResponse<RequestType.ResultType> {
+    func convert<RequestType: Request>(request: RequestType) -> Response<RequestType.ResultType> {
         return convert(RequestType.ResultType.self)
     }
     
     ///Convert to response with concrete other type data.
-    func convert<T>(_ typeData: T.Type) -> WebServiceResponse<T> {
+    func convert<T>(_ typeData: T.Type) -> Response<T> {
         switch self {
         case .data(let data):
             if let data = data as? T {
                 return .data(data)
             } else {
-                return .error(WebServiceResponseError.invalidData(ConvertError(from: type(of: data), to: T.self)))
+                return .error(ResponseError.invalidData(ConvertError(from: type(of: data), to: T.self)))
             }
             
         case .error(let error):
@@ -154,4 +141,3 @@ public extension WebServiceResponse {
         }
     }
 }
-

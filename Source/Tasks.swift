@@ -22,7 +22,7 @@ public enum StorageDependency {
     case dependFull
     case dependManual(Set<RequestState>)
 
-    func needCancel(requestState state: RequestState) -> Bool {
+    func shouldCancel(requestState state: RequestState) -> Bool {
         switch self {
         case .notDepend: return false
         case .dependSuccessResult: return state == .success
@@ -33,7 +33,7 @@ public enum StorageDependency {
 }
 
 public final class RequestTask {
-    public let request: WebServiceBaseRequesting
+    public let request: BaseRequest
     public let key: AnyHashable?
     public let storageTask: StorageTask?
     public let storageDependency: StorageDependency
@@ -47,7 +47,7 @@ public final class RequestTask {
         }
     }
 
-    init(request: WebServiceBaseRequesting, key: AnyHashable?, storageTask: StorageTask?, storageDependency: StorageDependency) {
+    init(request: BaseRequest, key: AnyHashable?, storageTask: StorageTask?, storageDependency: StorageDependency) {
         self.request = request
         self.key = key
         self.storageTask = storageTask
@@ -67,7 +67,7 @@ public final class StorageTask {
         case request(RequestState)
     }
 
-    public let request: WebServiceBaseRequesting
+    public let request: BaseRequest
 
     public var state: RequestState { return mutex.synchronized { self.unsafeState } }
     public var canceledReason: CanceledReason? { return mutex.synchronized { self.unsafeCanceledReason } }
@@ -79,7 +79,7 @@ public final class StorageTask {
         }
     }
 
-    init(request: WebServiceBaseRequesting) {
+    init(request: BaseRequest) {
         self.request = request
     }
 
@@ -88,7 +88,7 @@ public final class StorageTask {
     private var unsafeCanceledReason: CanceledReason?
 }
 
-// MARK: Internal
+// MARK: - Internal
 extension RequestTask {
     struct WorkData {
         let requestId: UInt64
@@ -114,7 +114,7 @@ extension RequestTask {
             }
         }
 
-        if storageDependency.needCancel(requestState: state) {
+        if storageDependency.shouldCancel(requestState: state) {
             storageTask?.cancelFromRequest(state: state)
         }
     }

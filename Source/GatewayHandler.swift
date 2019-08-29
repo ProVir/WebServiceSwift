@@ -30,21 +30,21 @@ final class GatewayHandler {
     var disableNetworkActivityIndicator = false
 
     private let mutex = PThreadMutexLock()
-    private let gateways: [WebServiceGateway]
-    private lazy var saveToStorageHandler: (WebServiceBaseRequesting, WebServiceStorageRawData?, _ value: Any) -> Void = { _, _, _ in }
+    private let gateways: [Gateway]
+    private lazy var saveToStorageHandler: (BaseRequest, StorageRawData?, _ value: Any) -> Void = { _, _, _ in }
 
     private var requestList: [UInt64: RequestTask] = [:] //All requests
     private var requestsForTypes: [String: Set<UInt64>] = [:]        //[Request.Type: [Id]]
     private var requestsForHashs: [AnyHashable: Set<UInt64>] = [:]   //[Request<Hashable>: [Id]]
     private var requestsForKeys:  [AnyHashable: Set<UInt64>] = [:]   //[Key: [Id]]
 
-    init(gateways: [WebServiceGateway],
+    init(gateways: [Gateway],
          queueForResponse: DispatchQueue) {
         self.gateways = gateways
         self.queueForResponse = queueForResponse
     }
 
-    func setup(saveToStorageHandler: @escaping (WebServiceBaseRequesting, WebServiceStorageRawData?, _ value: Any) -> Void) {
+    func setup(saveToStorageHandler: @escaping (BaseRequest, StorageRawData?, _ value: Any) -> Void) {
         self.saveToStorageHandler = saveToStorageHandler
     }
 
@@ -55,7 +55,7 @@ final class GatewayHandler {
         NetworkActivityIndicatorHandler.shared.removeRequests(requestListIds)
 
         //Cancel all requests for gateways
-        let requestsWithGateways = requestList.compactMap { (_, task) -> (RequestTask.WorkData, WebServiceGateway)? in
+        let requestsWithGateways = requestList.compactMap { (_, task) -> (RequestTask.WorkData, Gateway)? in
             guard let request = task.workData else { return nil }
             return (request, self.gateways[request.gatewayIndex])
         }
@@ -73,12 +73,12 @@ final class GatewayHandler {
     }
 
     func perform(
-        request: WebServiceBaseRequesting,
+        request: BaseRequest,
         key: AnyHashable?,
         excludeDuplicate: Bool,
         storageTask: StorageTask?,
         storageDependency: StorageDependency,
-        completionHandler: @escaping (_ response: WebServiceResponse<Any>) -> Void
+        completionHandler: @escaping (_ response: Response<Any>) -> Void
     ) -> RequestTask {
         let task = RequestTask(request: request, key: key, storageTask: storageTask, storageDependency: storageDependency)
 
@@ -102,7 +102,7 @@ final class GatewayHandler {
         //2. Find Gateway and Storage
         guard let (gateway, gatewayIndex) = findGateway(request: request) else {
             task.setState(.error, finishTask: true)
-            completionHandler(.error(WebServiceRequestError.notFoundGateway))
+            completionHandler(.error(RequestError.notFoundGateway))
             return task
         }
 
@@ -111,7 +111,7 @@ final class GatewayHandler {
         let requestId = GatewayRequestIdProvider.shared.generateRequestId()
 
         //Step #3 of 3: Call this closure with result response
-        let completionHandlerResponse: (WebServiceResponse<Any>) -> Void = { [weak self, queueForResponse = self.queueForResponse] response in
+        let completionHandlerResponse: (Response<Any>) -> Void = { [weak self, queueForResponse = self.queueForResponse] response in
             //Usually main thread
             queueForResponse.async {
                 if task.isFinished { return }
@@ -178,9 +178,9 @@ final class GatewayHandler {
         return task
     }
 
-    func rawDataProcessing(request: WebServiceRequestBaseStoring, rawData: WebServiceStorageRawData, completion: @escaping (Result<Any, Error>) -> Void) {
+    func rawDataProcessing(request: RequestBaseStorable, rawData: StorageRawData, completion: @escaping (Result<Any, Error>) -> Void) {
         guard let (gateway, _) = findGateway(request: request, forDataProcessingFromStorage: type(of: rawData)) else {
-            completion(.failure(WebServiceRequestError.notFoundGateway))
+            completion(.failure(RequestError.notFoundGateway))
             return
         }
 
@@ -204,11 +204,11 @@ final class GatewayHandler {
         return mutex.synchronized { requestList.isEmpty == false }
     }
 
-    func containsRequest<RequestType: WebServiceBaseRequesting & Hashable>(_ request: RequestType) -> Bool {
+    func containsRequest<RequestType: BaseRequest & Hashable>(_ request: RequestType) -> Bool {
         return mutex.synchronized { (requestsForHashs[request]?.isEmpty ?? true) == false }
     }
 
-    func containsRequest(type requestType: WebServiceBaseRequesting.Type) -> Bool {
+    func containsRequest(type requestType: BaseRequest.Type) -> Bool {
         return mutex.synchronized { (requestsForTypes["\(requestType)"]?.isEmpty ?? true) == false }
     }
 
@@ -226,13 +226,13 @@ final class GatewayHandler {
         cancelRequests(ids: Set(requestList.keys))
     }
 
-    func cancelRequests<RequestType: WebServiceBaseRequesting & Hashable>(_ request: RequestType) {
+    func cancelRequests<RequestType: BaseRequest & Hashable>(_ request: RequestType) {
         if let list = mutex.synchronized({ requestsForHashs[request] }) {
             cancelRequests(ids: list)
         }
     }
 
-    func cancelRequests(type requestType: WebServiceBaseRequesting.Type) {
+    func cancelRequests(type requestType: BaseRequest.Type) {
         if let list = mutex.synchronized({ requestsForTypes["\(requestType)"] }) {
             cancelRequests(ids: list)
         }
@@ -252,7 +252,7 @@ final class GatewayHandler {
 
 
     // MARK: - Private
-    private func findGateway(request: WebServiceBaseRequesting, forDataProcessingFromStorage rawDataType: WebServiceStorageRawData.Type? = nil) -> (WebServiceGateway, Int)? {
+    private func findGateway(request: BaseRequest, forDataProcessingFromStorage rawDataType: StorageRawData.Type? = nil) -> (Gateway, Int)? {
         for (index, gateway) in self.gateways.enumerated() {
             if gateway.isSupportedRequest(request, forDataProcessingFromStorage: rawDataType) {
                 return (gateway, index)
@@ -262,7 +262,7 @@ final class GatewayHandler {
         return nil
     }
 
-    private func addRequest(requestId: UInt64, task: RequestTask, key: AnyHashable?, requestHashable: AnyHashable?, requestType: WebServiceBaseRequesting.Type, gateway: WebServiceGateway) {
+    private func addRequest(requestId: UInt64, task: RequestTask, key: AnyHashable?, requestHashable: AnyHashable?, requestType: BaseRequest.Type, gateway: Gateway) {
         if disableNetworkActivityIndicator == false && gateway.useNetworkActivityIndicator {
             NetworkActivityIndicatorHandler.shared.addRequest(requestId)
         }
@@ -282,7 +282,7 @@ final class GatewayHandler {
         }
     }
 
-    private func removeRequest(requestId: UInt64, key: AnyHashable?, requestHashable: AnyHashable?, requestType: WebServiceBaseRequesting.Type) {
+    private func removeRequest(requestId: UInt64, key: AnyHashable?, requestHashable: AnyHashable?, requestType: BaseRequest.Type) {
         NetworkActivityIndicatorHandler.shared.removeRequest(requestId)
 
         mutex.lock()

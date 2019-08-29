@@ -1,5 +1,5 @@
 //
-//  EasyStoring.swift
+//  CommonStoring.swift
 //  WebServiceSwift 4.0.0
 //
 //  Created by Короткий Виталий (ViR) on 24/07/2019.
@@ -9,13 +9,13 @@
 import Foundation
 
 /// Protocol for requests with support storages as key -> value
-public protocol WebServiceRequestEasyRawStoring: WebServiceRequestBaseStoring {
+public protocol RequestCommonRawStorable: RequestBaseStorable {
     /// Unique identificator for read and write data if current request support storage.
     var identificatorForStorage: String? { get }
 }
 
 /// Conform to protocol if requests support storages
-public protocol WebServiceRequestEasyValueStoring: WebServiceRequestEasyValueBaseStoring, WebServiceRequesting {
+public protocol RequestCommonValueStorable: RequestCommonValueBaseStorable, Request {
 
     /// Unique identificator for read and write data if current request support storage.
     /*var identificatorForStorage: String? { get }*/
@@ -40,7 +40,7 @@ public protocol WebServiceRequestEasyValueStoring: WebServiceRequestEasyValueBas
 }
 
 /// No generic protocol for requests support storages
-public protocol WebServiceRequestEasyValueBaseStoring: WebServiceRequestBaseStoring {
+public protocol RequestCommonValueBaseStorable: RequestBaseStorable {
     /// Unique identificator for read and write data if current request support storage.
     var identificatorForStorage: String? { get }
 
@@ -48,7 +48,7 @@ public protocol WebServiceRequestEasyValueBaseStoring: WebServiceRequestBaseStor
     func decodeToAnyValueFromStorage(binary: Data) throws -> Any?
 }
 
-public extension WebServiceRequestEasyValueStoring {
+public extension RequestCommonValueStorable {
     func encodeToBinaryForStorage(anyValue: Any) -> Data? {
         if let value = anyValue as? ResultType {
             return encodeToBinaryForStorage(value: value)
@@ -62,7 +62,7 @@ public extension WebServiceRequestEasyValueStoring {
     }
 }
 
-public extension WebServiceRequestEasyValueStoring where ResultType: Codable {
+public extension RequestCommonValueStorable where ResultType: Codable {
     func encodeToBinaryForStorage(value: ResultType) -> Data? {
         let encoder = PropertyListEncoder()
         encoder.outputFormat = .binary
