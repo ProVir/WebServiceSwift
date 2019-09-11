@@ -148,3 +148,38 @@ public extension Response {
         }
     }
 }
+
+// Filter for find requests
+public struct RequestFilter {
+    enum Value {
+        case request(BaseRequest)   //BaseRequest & Hashable
+        case requestType(BaseRequest.Type)
+        case key(AnyHashable)   //Hashable
+        case keyType(RequestFilterKeyTypeWrapper)  //KeyTypeWrapper<Hashable>
+        case and([Value])
+        case or([Value])
+    }
+    let value: Value
+
+    public init<RequestType: BaseRequest & Hashable>(request: RequestType) { value = .request(request) }
+    public init(requestType: BaseRequest.Type) { value = .requestType(requestType) }
+    public init<K: Hashable>(key: K) { value = .key(key) }
+    public init<K: Hashable>(keyType: K.Type) { value = .keyType(KeyTypeWrapper<K>()) }
+    public init(and list: [RequestFilter]) { value = .and(list.map { $0.value }) }
+    public init(or list: [RequestFilter]) { value = .or(list.map { $0.value }) }
+
+    public static func request<RequestType: BaseRequest & Hashable>(_ request: RequestType) -> RequestFilter { return .init(request: request) }
+    public static func requestType(_ requestType: BaseRequest.Type) -> RequestFilter { return .init(requestType: requestType) }
+    public static func key<K: Hashable>(_ key: K) -> RequestFilter { return .init(key: key) }
+    public static func keyType<K: Hashable>(_ keyType: K.Type) -> RequestFilter { return .init(keyType: keyType) }
+    public static func and(_ list: [RequestFilter]) -> RequestFilter { return .init(and: list) }
+    public static func or(_ list: [RequestFilter]) -> RequestFilter { return .init(or: list) }
+
+    struct KeyTypeWrapper<K: Hashable>: RequestFilterKeyTypeWrapper {
+        func isEqualType(key: Any) -> Bool { return key is K }
+    }
+}
+
+protocol RequestFilterKeyTypeWrapper {
+    func isEqualType(key: Any) -> Bool
+}

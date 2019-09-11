@@ -1,5 +1,5 @@
 //
-//  StorageHandler.swift
+//  StoragesManager.swift
 //  WebServiceSwift 4.0.0
 //
 //  Created by Vitalii Korotkii on 12/08/2019.
@@ -8,13 +8,12 @@
 
 import Foundation
 
-final class StorageHandler {
-
-    private let queueForResponse: DispatchQueue
+final class StoragesManager {
     private let mutex = PThreadMutexLock()
     private let storages: [Storage]
+    private let queueForResponse: DispatchQueue
 
-    private lazy var rawDataProcessingHandler: (RequestBaseStorable, StorageRawData, (Result<Any, Error>) -> Void) -> Void
+    private lazy var rawDataProcessingHandler: (RequestBaseStorable, StorageRawData, @escaping (Result<Any, Error>) -> Void) -> Void
         = { fatalError("Need setup StorageHandler before use") }()
 
     init(storages: [Storage], queueForResponse: DispatchQueue) {
@@ -22,7 +21,12 @@ final class StorageHandler {
         self.queueForResponse = queueForResponse
     }
 
-    func setup(rawDataProcessingHandler: @escaping (RequestBaseStorable, StorageRawData, (Result<Any, Error>) -> Void) -> Void) {
+    init(copyConfigurationFrom manager: StoragesManager) {
+        self.storages = manager.storages
+        self.queueForResponse = manager.queueForResponse
+    }
+
+    func setup(rawDataProcessingHandler: @escaping (RequestBaseStorable, StorageRawData, @escaping (Result<Any, Error>) -> Void) -> Void) {
         self.rawDataProcessingHandler = rawDataProcessingHandler
     }
 

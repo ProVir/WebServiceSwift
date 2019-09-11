@@ -15,15 +15,23 @@ public enum RequestState: Hashable, CaseIterable {
     case canceled
 }
 
-public enum StorageDependency {
-    case notDepend
-    case dependSuccessResult
-    case dependFull
-    case dependManual(Set<RequestState>)
+public struct StorageDependency {
+    public enum Regime {
+        case dependSuccessResult
+        case dependFull
+        case dependManual(Set<RequestState>)
+    }
+
+    public let task: StorageTask
+    public let regime: Regime
+
+    init(task: StorageTask, regime: Regime = .dependSuccessResult) {
+        self.task = task
+        self.regime = regime
+    }
 
     func shouldCancel(requestState state: RequestState) -> Bool {
-        switch self {
-        case .notDepend: return false
+        switch regime {
         case .dependSuccessResult: return state == .success
         case .dependFull: return state != .inProgress && state != .failure
         case .dependManual(let list): return list.contains(state)
@@ -34,8 +42,7 @@ public enum StorageDependency {
 public final class RequestTask {
     public let request: BaseRequest
     public let key: AnyHashable?
-    public let storageTask: StorageTask?
-    public let storageDependency: StorageDependency
+    public let storageDependency: StorageDependency?
 
     public var state: RequestState { return mutex.synchronized { self.unsafeState } }
     public var canceledReason: RequestCanceledReason? { return mutex.synchronized { self.unsafeCanceledReason } }
@@ -47,10 +54,9 @@ public final class RequestTask {
         }
     }
 
-    init(request: BaseRequest, key: AnyHashable?, storageTask: StorageTask?, storageDependency: StorageDependency) {
+    init(request: BaseRequest, key: AnyHashable?, storageDependency: StorageDependency?) {
         self.request = request
         self.key = key
-        self.storageTask = storageTask
         self.storageDependency = storageDependency
     }
 
@@ -116,8 +122,8 @@ extension RequestTask {
             }
         }
 
-        if storageDependency.shouldCancel(requestState: state) {
-            storageTask?.cancelFromRequest(reason: canceledReason)
+        if let storageDependency = storageDependency, storageDependency.shouldCancel(requestState: state) {
+            storageDependency.task.cancelFromRequest(reason: canceledReason)
         }
     }
 }
@@ -129,7 +135,7 @@ extension StorageTask {
 
     var requestCanceledReason: RequestCanceledReason {
         switch canceledReason {
-        case .request(_, let reason): return reason ?? .unknown
+        case .some(.request(_, let reason)): return reason ?? .unknown
         default: return .unknown
         }
     }
