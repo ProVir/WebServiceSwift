@@ -10,13 +10,13 @@ import Foundation
 
 final class StoragesManager {
     private let mutex = PThreadMutexLock()
-    private let storages: [Storage]
+    private let storages: [NetworkStorage]
     private let queueForResponse: DispatchQueue
 
-    private lazy var rawDataProcessingHandler: (RequestBaseStorable, StorageRawData, @escaping (Result<Any, Error>) -> Void) -> Void
+    private lazy var rawDataProcessingHandler: (NetworkRequestBaseStorable, NetworkStorageRawData, @escaping (Result<Any, Error>) -> Void) -> Void
         = { fatalError("Need setup StorageHandler before use") }()
 
-    init(storages: [Storage], queueForResponse: DispatchQueue) {
+    init(storages: [NetworkStorage], queueForResponse: DispatchQueue) {
         self.storages = storages
         self.queueForResponse = queueForResponse
     }
@@ -26,29 +26,29 @@ final class StoragesManager {
         self.queueForResponse = manager.queueForResponse
     }
 
-    func setup(rawDataProcessingHandler: @escaping (RequestBaseStorable, StorageRawData, @escaping (Result<Any, Error>) -> Void) -> Void) {
+    func setup(rawDataProcessingHandler: @escaping (NetworkRequestBaseStorable, NetworkStorageRawData, @escaping (Result<Any, Error>) -> Void) -> Void) {
         self.rawDataProcessingHandler = rawDataProcessingHandler
     }
 
-    func save(request: RequestBaseStorable, rawData: StorageRawData?, value: Any) {
+    func save(request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData?, value: Any) {
         guard let storage = findStorage(request: request) else { return }
         storage.save(request: request, rawData: rawData, value: value)
     }
 
     func fetch(
-        request: RequestBaseStorable,
-        handler: @escaping (_ timeStamp: Date?, _ response: Response<Any>) -> Void
-    ) -> StorageTask {
-        let task = StorageTask(request: request)
+        request: NetworkRequestBaseStorable,
+        handler: @escaping (_ timeStamp: Date?, _ response: NetworkResponse<Any>) -> Void
+    ) -> NetworkStorageTask {
+        let task = NetworkStorageTask(request: request)
 
         guard let storage = findStorage(request: request) else {
-            handler(nil, .failure(RequestError.notFoundStorage))
+            handler(nil, .failure(NetworkRequestError.notFoundStorage))
             task.setStateFromStorage(.failure)
             return task
         }
 
         //1. Wrapped handler
-        let completionAsyncHandler = { [queueForResponse] (timeStamp: Date?, response: Response<Any>) in
+        let completionAsyncHandler = { [queueForResponse] (timeStamp: Date?, response: NetworkResponse<Any>) in
             queueForResponse.async {
                 if task.isCanceled {
                     handler(nil, .canceled(task.requestCanceledReason))
@@ -95,7 +95,7 @@ final class StoragesManager {
         return task
     }
 
-    func deleteInStorage(request: RequestBaseStorable) {
+    func deleteInStorage(request: NetworkRequestBaseStorable) {
         if let storage = findStorage(request: request) {
             storage.delete(request: request)
         }
@@ -126,7 +126,7 @@ final class StoragesManager {
     }
 
     // MARK: - Private
-    private func findStorage(request: RequestBaseStorable) -> Storage? {
+    private func findStorage(request: NetworkRequestBaseStorable) -> NetworkStorage? {
         let dataClass = request.dataClassificationForStorage
         for storage in self.storages {
             let supportClasses = storage.supportDataClassification

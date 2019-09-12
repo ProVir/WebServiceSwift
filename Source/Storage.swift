@@ -12,18 +12,18 @@ import Foundation
 public let defaultDataClassification = "default"
 
 /// Base protocol for all requests with support storages
-public protocol RequestBaseStorable: BaseRequest {
+public protocol NetworkRequestBaseStorable: BaseNetworkRequest {
     /// Data classification to distinguish between storage
     var dataClassificationForStorage: AnyHashable { get }
 }
 
-public extension RequestBaseStorable {
+public extension NetworkRequestBaseStorable {
     var dataClassificationForStorage: AnyHashable { return defaultDataClassification }
 }
 
 /// Response from storage
-public enum StorageResponse {
-    case rawData(StorageRawData, Date?)
+public enum NetworkStorageResponse {
+    case rawData(NetworkStorageRawData, Date?)
     case value(Any, Date?)
     case error(Error)
 }
@@ -34,7 +34,7 @@ public enum StorageResponse {
 
  RawData - data without process, original data from server
  */
-public protocol Storage: class {
+public protocol NetworkStorage: class {
 
     /// Data classification support list. nil = support all.
     var supportDataClassification: Set<AnyHashable>? { get }
@@ -45,7 +45,7 @@ public protocol Storage: class {
      - Parameter request: Request for test.
      - Returns: If request support this storage - return true.
      */
-    func isSupportedRequest(_ request: RequestBaseStorable) -> Bool
+    func isSupportedRequest(_ request: NetworkRequestBaseStorable) -> Bool
 
     /**
      Read data from storage.
@@ -55,7 +55,7 @@ public protocol Storage: class {
      - completionHandler: After readed data need call with result data. This closure need call and only one. Be sure to call in the main thread.
      - response: Result response enum with data. If not data - use .error(WebServiceResponseError.notFoundData)
      */
-    func fetch(request: RequestBaseStorable, completionHandler: @escaping (_ response: StorageResponse) -> Void)
+    func fetch(request: NetworkRequestBaseStorable, completionHandler: @escaping (_ response: NetworkStorageResponse) -> Void)
 
     /**
      Save data from server (gateway).
@@ -66,14 +66,14 @@ public protocol Storage: class {
      - rawData: Raw data for save - universal type, need process in gateway
      - value: Value type for save, no need process in gateway
      */
-    func save(request: RequestBaseStorable, rawData: StorageRawData?, value: Any)
+    func save(request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData?, value: Any)
 
     /**
      Delete data in storage for concrete request.
 
      - Parameter request: Original request.
      */
-    func delete(request: RequestBaseStorable)
+    func delete(request: NetworkRequestBaseStorable)
 
     /// Delete all data in storage.
     func deleteAll()

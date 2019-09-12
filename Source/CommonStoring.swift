@@ -9,13 +9,13 @@
 import Foundation
 
 /// Protocol for requests with support storages as key -> value
-public protocol RequestCommonRawStorable: RequestBaseStorable {
+public protocol NetworkRequestCommonRawStorable: NetworkRequestBaseStorable {
     /// Unique identificator for read and write data if current request support storage.
     var identificatorForStorage: String? { get }
 }
 
 /// Conform to protocol if requests support storages
-public protocol RequestCommonValueStorable: RequestCommonValueBaseStorable, Request {
+public protocol NetworkRequestCommonValueStorable: NetworkRequestCommonValueBaseStorable, NetworkRequest {
 
     /// Unique identificator for read and write data if current request support storage.
     /*var identificatorForStorage: String? { get }*/
@@ -40,7 +40,7 @@ public protocol RequestCommonValueStorable: RequestCommonValueBaseStorable, Requ
 }
 
 /// No generic protocol for requests support storages
-public protocol RequestCommonValueBaseStorable: RequestBaseStorable {
+public protocol NetworkRequestCommonValueBaseStorable: NetworkRequestBaseStorable {
     /// Unique identificator for read and write data if current request support storage.
     var identificatorForStorage: String? { get }
 
@@ -48,7 +48,7 @@ public protocol RequestCommonValueBaseStorable: RequestBaseStorable {
     func decodeToAnyValueFromStorage(binary: Data) throws -> Any?
 }
 
-public extension RequestCommonValueStorable {
+public extension NetworkRequestCommonValueStorable {
     func encodeToBinaryForStorage(anyValue: Any) -> Data? {
         if let value = anyValue as? ResultType {
             return encodeToBinaryForStorage(value: value)
@@ -62,7 +62,7 @@ public extension RequestCommonValueStorable {
     }
 }
 
-public extension RequestCommonValueStorable where ResultType: Codable {
+public extension NetworkRequestCommonValueStorable where ResultType: Codable {
     func encodeToBinaryForStorage(value: ResultType) -> Data? {
         let encoder = PropertyListEncoder()
         encoder.outputFormat = .binary

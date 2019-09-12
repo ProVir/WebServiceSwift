@@ -21,7 +21,7 @@ final class Session {
     private let gatewaysManager: GatewaysManager
     private let storagesManager: StoragesManager
 
-    public convenience init(gateways: [Gateway], storages: [Storage], queueForResponse: DispatchQueue = DispatchQueue.main) {
+    public convenience init(gateways: [NetworkGateway], storages: [NetworkStorage], queueForResponse: DispatchQueue = DispatchQueue.main) {
         let gatewaysManager = GatewaysManager(gateways: gateways, queueForResponse: queueForResponse)
         let storagesManager = StoragesManager(storages: storages, queueForResponse: queueForResponse)
         self.init(gatewaysManager: gatewaysManager, storagesManager: storagesManager, queueForResponse: queueForResponse)
@@ -40,7 +40,7 @@ final class Session {
         self.queueForResponse = queueForResponse
 
         gatewaysManager.setup(saveToStorageHandler: { [weak storagesManager] (request, rawData, value) in
-            if let request = request as? RequestBaseStorable {
+            if let request = request as? NetworkRequestBaseStorable {
                 storagesManager?.save(request: request, rawData: rawData, value: value)
             }
         })
@@ -52,12 +52,12 @@ final class Session {
     // MARK: Perform requests
     @discardableResult
     public func perform(
-        baseRequest: BaseRequest,
+        baseRequest: BaseNetworkRequest,
         key: AnyHashable?,
         excludeDuplicate: Bool,
-        storageDependency: StorageDependency?,
-        completionHandler: @escaping (_ response: Response<Any>) -> Void
-    ) -> RequestTask {
+        storageDependency: NetworkStorageDependency?,
+        completionHandler: @escaping (_ response: NetworkResponse<Any>) -> Void
+    ) -> NetworkRequestTask {
         return gatewaysManager.perform(
             request: baseRequest,
             key: key,
@@ -68,13 +68,13 @@ final class Session {
     }
 
     @discardableResult
-    public func perform<RequestType: Request>(
+    public func perform<RequestType: NetworkRequest>(
         request: RequestType,
         key: AnyHashable? = nil,
         excludeDuplicate: Bool = false,
-        storageDependency: StorageDependency? = nil,
-        completionHandler: @escaping (_ response: Response<RequestType.ResultType>) -> Void
-    ) -> RequestTask {
+        storageDependency: NetworkStorageDependency? = nil,
+        completionHandler: @escaping (_ response: NetworkResponse<RequestType.ResultType>) -> Void
+    ) -> NetworkRequestTask {
         return gatewaysManager.perform(
             request: request,
             key: key,
@@ -86,29 +86,29 @@ final class Session {
 
     // MARK: Read storage
     @discardableResult
-    func fetch(baseRequest: RequestBaseStorable, handler: @escaping (_ timeStamp: Date?, _ response: Response<Any>) -> Void) -> StorageTask {
+    func fetch(baseRequest: NetworkRequestBaseStorable, handler: @escaping (_ timeStamp: Date?, _ response: NetworkResponse<Any>) -> Void) -> NetworkStorageTask {
         return storagesManager.fetch(request: baseRequest, handler: handler)
     }
 
     @discardableResult
-    func fetch<RequestType: Request & RequestBaseStorable>(
+    func fetch<RequestType: NetworkRequest & NetworkRequestBaseStorable>(
         request: RequestType,
-        handler: @escaping (_ timeStamp: Date?, _ response: Response<RequestType.ResultType>) -> Void
-    ) -> StorageTask {
+        handler: @escaping (_ timeStamp: Date?, _ response: NetworkResponse<RequestType.ResultType>) -> Void
+    ) -> NetworkStorageTask {
         return storagesManager.fetch(request: request, handler: { handler( $0, $1.convert() ) })
     }
 
     // MARK: Control requests
-    func tasks(filter: RequestFilter?) -> [RequestTask] {
+    func tasks(filter: NetworkRequestFilter?) -> [NetworkRequestTask] {
         return gatewaysManager.tasks(filter: filter)
     }
 
-    func containsRequest(filter: RequestFilter?) -> Bool {
+    func containsRequest(filter: NetworkRequestFilter?) -> Bool {
         return gatewaysManager.contains(filter: filter)
     }
 
     @discardableResult
-    func cancelRequests(filter: RequestFilter?) -> [RequestTask] {
+    func cancelRequests(filter: NetworkRequestFilter?) -> [NetworkRequestTask] {
         return gatewaysManager.cancel(filter: filter)
     }
 }

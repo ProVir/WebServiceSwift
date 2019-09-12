@@ -8,44 +8,42 @@
 
 import Foundation
 
-public enum RequestState: Hashable, CaseIterable {
+public enum NetworkTaskState: Hashable, CaseIterable {
     case inProgress
     case success
     case failure
     case canceled
 }
 
-public struct StorageDependency {
+public struct NetworkStorageDependency {
     public enum Regime {
         case dependSuccessResult
         case dependFull
-        case dependManual(Set<RequestState>)
     }
 
-    public let task: StorageTask
+    public let task: NetworkStorageTask
     public let regime: Regime
 
-    init(task: StorageTask, regime: Regime = .dependSuccessResult) {
+    init(task: NetworkStorageTask, regime: Regime = .dependSuccessResult) {
         self.task = task
         self.regime = regime
     }
 
-    func shouldCancel(requestState state: RequestState) -> Bool {
+    func shouldCancel(requestState state: NetworkTaskState) -> Bool {
         switch regime {
         case .dependSuccessResult: return state == .success
-        case .dependFull: return state != .inProgress && state != .failure
-        case .dependManual(let list): return list.contains(state)
+        case .dependFull: return state == .success || state == .canceled
         }
     }
 }
 
-public final class RequestTask {
-    public let request: BaseRequest
+public final class NetworkRequestTask {
+    public let request: BaseNetworkRequest
     public let key: AnyHashable?
-    public let storageDependency: StorageDependency?
+    public let storageDependency: NetworkStorageDependency?
 
-    public var state: RequestState { return mutex.synchronized { self.unsafeState } }
-    public var canceledReason: RequestCanceledReason? { return mutex.synchronized { self.unsafeCanceledReason } }
+    public var state: NetworkTaskState { return mutex.synchronized { self.unsafeState } }
+    public var canceledReason: NetworkRequestCanceledReason? { return mutex.synchronized { self.unsafeCanceledReason } }
 
     public func cancel() {
         if state == .inProgress {
@@ -54,28 +52,28 @@ public final class RequestTask {
         }
     }
 
-    init(request: BaseRequest, key: AnyHashable?, storageDependency: StorageDependency?) {
+    init(request: BaseNetworkRequest, key: AnyHashable?, storageDependency: NetworkStorageDependency?) {
         self.request = request
         self.key = key
         self.storageDependency = storageDependency
     }
 
     private let mutex = PThreadMutexLock()
-    private var unsafeState: RequestState = .inProgress
-    private var unsafeCanceledReason: RequestCanceledReason?
+    private var unsafeState: NetworkTaskState = .inProgress
+    private var unsafeCanceledReason: NetworkRequestCanceledReason?
     private var unsafeWorkData: WorkData?
     private var unsafeFinished: Bool = false
 }
 
-public final class StorageTask {
+public final class NetworkStorageTask {
     public enum CanceledReason {
         case user
-        case request(RequestState, RequestCanceledReason?)
+        case request(NetworkTaskState, NetworkRequestCanceledReason?)
     }
 
-    public let request: BaseRequest
+    public let request: BaseNetworkRequest
 
-    public var state: RequestState { return mutex.synchronized { self.unsafeState } }
+    public var state: NetworkTaskState { return mutex.synchronized { self.unsafeState } }
     public var canceledReason: CanceledReason? { return mutex.synchronized { self.unsafeCanceledReason } }
 
     public func cancel() {
@@ -85,21 +83,21 @@ public final class StorageTask {
         }
     }
 
-    init(request: BaseRequest) {
+    init(request: BaseNetworkRequest) {
         self.request = request
     }
 
     private let mutex = PThreadMutexLock()
-    private var unsafeState: RequestState = .inProgress
+    private var unsafeState: NetworkTaskState = .inProgress
     private var unsafeCanceledReason: CanceledReason?
 }
 
 // MARK: - Internal
-extension RequestTask {
+extension NetworkRequestTask {
     struct WorkData {
         let requestId: UInt64
         let gatewayIndex: Int
-        let cancelHandler: (_ neededInGatewayCancel: Bool, RequestCanceledReason) -> Void
+        let cancelHandler: (_ neededInGatewayCancel: Bool, NetworkRequestCanceledReason) -> Void
     }
 
     var workData: WorkData? {
@@ -111,7 +109,7 @@ extension RequestTask {
         return mutex.synchronized { unsafeFinished }
     }
 
-    func setState(_ state: RequestState, canceledReason: RequestCanceledReason?, finishTask: Bool) {
+    func setState(_ state: NetworkTaskState, canceledReason: NetworkRequestCanceledReason?, finishTask: Bool) {
         mutex.synchronized {
             self.unsafeState = state
             self.unsafeCanceledReason = canceledReason
@@ -128,25 +126,25 @@ extension RequestTask {
     }
 }
 
-extension StorageTask {
+extension NetworkStorageTask {
     var isCanceled: Bool {
         return mutex.synchronized { unsafeState == .canceled }
     }
 
-    var requestCanceledReason: RequestCanceledReason {
+    var requestCanceledReason: NetworkRequestCanceledReason {
         switch canceledReason {
         case .some(.request(_, let reason)): return reason ?? .unknown
         default: return .unknown
         }
     }
 
-    func setStateFromStorage(_ state: RequestState) {
+    func setStateFromStorage(_ state: NetworkTaskState) {
         mutex.synchronized {
             self.unsafeState = state
         }
     }
 
-    func cancelFromRequest(reason: RequestCanceledReason?) {
+    func cancelFromRequest(reason: NetworkRequestCanceledReason?) {
         mutex.synchronized {
             self.unsafeState = .canceled
             self.unsafeCanceledReason = .request(state, reason)

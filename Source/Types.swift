@@ -10,22 +10,22 @@
 import Foundation
 
 /// Base protocol for all types request.
-public protocol BaseRequest { }
+public protocol BaseNetworkRequest { }
 
 /// Generic protocol with information result type for all types request.
-public protocol Request: BaseRequest {
+public protocol NetworkRequest: BaseNetworkRequest {
     /// Type for response data when success. For data without data you can use Void or Any?
     associatedtype ResultType
 }
 
 /// Generic protocol without parameters for server and with information result type for all types request.
-public protocol EmptyRequest: Request {
+public protocol EmptyNetworkRequest: NetworkRequest {
     init()
 }
 
 /// RawData for Gateway
-public protocol StorageRawData { }
-extension Data: StorageRawData { }
+public protocol NetworkStorageRawData { }
+extension Data: NetworkStorageRawData { }
 
 /**
  General error enum for requests
@@ -37,7 +37,7 @@ extension Data: StorageRawData { }
  - `invalidRequest`: Validation request and create request to server failed.
  - `gatewayInternal`: Internal error in gateway.
  */
-public enum RequestError: Error {
+public enum NetworkRequestError: Error {
     case notFoundGateway
     case notFoundStorage
     
@@ -49,7 +49,7 @@ public enum RequestError: Error {
 }
 
 /// General error enum for response
-public enum ResponseError: Error {
+public enum NetworkResponseError: Error {
     /// Data from server invalid. Usually error value is `WebServiceResponse.ConvertError` or `DecoderError`
     case invalidData(Error)
 
@@ -60,7 +60,7 @@ public enum ResponseError: Error {
     case httpStatusCode(Int)
 }
 
-public enum RequestCanceledReason: Hashable {
+public enum NetworkRequestCanceledReason: Hashable {
     case duplicate
     case user
     case destroyed
@@ -75,10 +75,10 @@ public enum RequestCanceledReason: Hashable {
  - `canceledRequest`: Reqest canceled (called `WebService.cancelRequests()` method for this request)
  - `duplicateRequest`: If `excludeDuplicate == true` and this request contained in queue
  */
-public enum Response<T> {
+public enum NetworkResponse<T> {
     case success(T)
     case failure(Error)
-    case canceled(RequestCanceledReason)
+    case canceled(NetworkRequestCanceledReason)
 
     /// Data if success response
     public var result: T? {
@@ -105,7 +105,7 @@ public enum Response<T> {
     }
     
     /// Canceled reason if canceled
-    public var canceledReason: RequestCanceledReason? {
+    public var canceledReason: NetworkRequestCanceledReason? {
         switch self {
         case .canceled(let reason): return reason
         default: return nil
@@ -114,30 +114,30 @@ public enum Response<T> {
 }
 
 ///Response from other type
-public extension Response {
+public extension NetworkResponse {
     struct ConvertError: Error {
         let from: Any.Type
         let to: Any.Type
     }
     
     ///Convert to response with other type data automatic.
-    func convert<T>() -> Response<T> {
+    func convert<T>() -> NetworkResponse<T> {
         return convert(T.self)
     }
     
     ///Convert to response with type from request
-    func convert<RequestType: Request>(request: RequestType) -> Response<RequestType.ResultType> {
+    func convert<RequestType: NetworkRequest>(request: RequestType) -> NetworkResponse<RequestType.ResultType> {
         return convert(RequestType.ResultType.self)
     }
     
     ///Convert to response with concrete other type data.
-    func convert<T>(_ typeData: T.Type) -> Response<T> {
+    func convert<T>(_ typeData: T.Type) -> NetworkResponse<T> {
         switch self {
         case .success(let data):
             if let data = data as? T {
                 return .success(data)
             } else {
-                return .failure(ResponseError.invalidData(ConvertError(from: type(of: data), to: T.self)))
+                return .failure(NetworkResponseError.invalidData(ConvertError(from: type(of: data), to: T.self)))
             }
             
         case .failure(let error):
@@ -150,36 +150,36 @@ public extension Response {
 }
 
 // Filter for find requests
-public struct RequestFilter {
+public struct NetworkRequestFilter {
     enum Value {
-        case request(BaseRequest)   //BaseRequest & Hashable
-        case requestType(BaseRequest.Type)
+        case request(BaseNetworkRequest)   //BaseRequest & Hashable
+        case requestType(BaseNetworkRequest.Type)
         case key(AnyHashable)   //Hashable
-        case keyType(RequestFilterKeyTypeWrapper)  //KeyTypeWrapper<Hashable>
+        case keyType(NetworkRequestFilterKeyTypeWrapper)  //KeyTypeWrapper<Hashable>
         case and([Value])
         case or([Value])
     }
     let value: Value
 
-    public init<RequestType: BaseRequest & Hashable>(request: RequestType) { value = .request(request) }
-    public init(requestType: BaseRequest.Type) { value = .requestType(requestType) }
+    public init<RequestType: BaseNetworkRequest & Hashable>(request: RequestType) { value = .request(request) }
+    public init(requestType: BaseNetworkRequest.Type) { value = .requestType(requestType) }
     public init<K: Hashable>(key: K) { value = .key(key) }
     public init<K: Hashable>(keyType: K.Type) { value = .keyType(KeyTypeWrapper<K>()) }
-    public init(and list: [RequestFilter]) { value = .and(list.map { $0.value }) }
-    public init(or list: [RequestFilter]) { value = .or(list.map { $0.value }) }
+    public init(and list: [NetworkRequestFilter]) { value = .and(list.map { $0.value }) }
+    public init(or list: [NetworkRequestFilter]) { value = .or(list.map { $0.value }) }
 
-    public static func request<RequestType: BaseRequest & Hashable>(_ request: RequestType) -> RequestFilter { return .init(request: request) }
-    public static func requestType(_ requestType: BaseRequest.Type) -> RequestFilter { return .init(requestType: requestType) }
-    public static func key<K: Hashable>(_ key: K) -> RequestFilter { return .init(key: key) }
-    public static func keyType<K: Hashable>(_ keyType: K.Type) -> RequestFilter { return .init(keyType: keyType) }
-    public static func and(_ list: [RequestFilter]) -> RequestFilter { return .init(and: list) }
-    public static func or(_ list: [RequestFilter]) -> RequestFilter { return .init(or: list) }
+    public static func request<RequestType: BaseNetworkRequest & Hashable>(_ request: RequestType) -> NetworkRequestFilter { return .init(request: request) }
+    public static func requestType(_ requestType: BaseNetworkRequest.Type) -> NetworkRequestFilter { return .init(requestType: requestType) }
+    public static func key<K: Hashable>(_ key: K) -> NetworkRequestFilter { return .init(key: key) }
+    public static func keyType<K: Hashable>(_ keyType: K.Type) -> NetworkRequestFilter { return .init(keyType: keyType) }
+    public static func and(_ list: [NetworkRequestFilter]) -> NetworkRequestFilter { return .init(and: list) }
+    public static func or(_ list: [NetworkRequestFilter]) -> NetworkRequestFilter { return .init(or: list) }
 
-    struct KeyTypeWrapper<K: Hashable>: RequestFilterKeyTypeWrapper {
+    struct KeyTypeWrapper<K: Hashable>: NetworkRequestFilterKeyTypeWrapper {
         func isEqualType(key: Any) -> Bool { return key is K }
     }
 }
 
-protocol RequestFilterKeyTypeWrapper {
+protocol NetworkRequestFilterKeyTypeWrapper {
     func isEqualType(key: Any) -> Bool
 }

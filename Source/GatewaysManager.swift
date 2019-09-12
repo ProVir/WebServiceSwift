@@ -26,15 +26,15 @@ final class RequestIdProvider {
 final class GatewaysManager {
     var disableNetworkActivityIndicator = false
 
-    private let gateways: [Gateway]
+    private let gateways: [NetworkGateway]
     private let tasksStorage = TasksStorage()
 
     private let queueForResponse: DispatchQueue
     private let queueForStorageDefault: DispatchQueue = .global(qos: .utility)
 
-    private lazy var saveToStorageHandler: (BaseRequest, StorageRawData?, _ value: Any) -> Void = { _, _, _ in }
+    private lazy var saveToStorageHandler: (BaseNetworkRequest, NetworkStorageRawData?, _ value: Any) -> Void = { _, _, _ in }
 
-    init(gateways: [Gateway], queueForResponse: DispatchQueue) {
+    init(gateways: [NetworkGateway], queueForResponse: DispatchQueue) {
         self.gateways = gateways
         self.queueForResponse = queueForResponse
     }
@@ -45,7 +45,7 @@ final class GatewaysManager {
         self.disableNetworkActivityIndicator = manager.disableNetworkActivityIndicator
     }
 
-    func setup(saveToStorageHandler: @escaping (BaseRequest, StorageRawData?, _ value: Any) -> Void) {
+    func setup(saveToStorageHandler: @escaping (BaseNetworkRequest, NetworkStorageRawData?, _ value: Any) -> Void) {
         self.saveToStorageHandler = saveToStorageHandler
     }
 
@@ -56,7 +56,7 @@ final class GatewaysManager {
         NetworkActivityIndicatorHandler.shared.removeRequests(requestListIds)
 
         //Cancel all requests for gateways
-        let requestsWithGateways = requestList.compactMap { (_, task) -> (RequestTask.WorkData, Gateway)? in
+        let requestsWithGateways = requestList.compactMap { (_, task) -> (NetworkRequestTask.WorkData, NetworkGateway)? in
             guard let request = task.workData else { return nil }
             return (request, self.gateways[request.gatewayIndex])
         }
@@ -74,13 +74,13 @@ final class GatewaysManager {
     }
 
     func perform(
-        request: BaseRequest,
+        request: BaseNetworkRequest,
         key: AnyHashable?,
         excludeDuplicate: Bool,
-        storageDependency: StorageDependency?,
-        completionHandler: @escaping (_ response: Response<Any>) -> Void
-    ) -> RequestTask {
-        let task = RequestTask(request: request, key: key, storageDependency: storageDependency)
+        storageDependency: NetworkStorageDependency?,
+        completionHandler: @escaping (_ response: NetworkResponse<Any>) -> Void
+    ) -> NetworkRequestTask {
+        let task = NetworkRequestTask(request: request, key: key, storageDependency: storageDependency)
 
         //1. Test duplicate requests
         if excludeDuplicate && tasksStorage.containsDuplicate(task: task) {
@@ -92,7 +92,7 @@ final class GatewaysManager {
         //2. Find Gateway and Storage
         guard let (gateway, gatewayIndex) = findGateway(request: request) else {
             task.setState(.failure, canceledReason: nil, finishTask: true)
-            completionHandler(.failure(RequestError.notFoundGateway))
+            completionHandler(.failure(NetworkRequestError.notFoundGateway))
             return task
         }
 
@@ -100,7 +100,7 @@ final class GatewaysManager {
         let requestId = RequestIdProvider.shared.generateRequestId()
 
         //Step #3 of 3: Call this closure with result response
-        let completionHandlerResponse: (Response<Any>) -> Void = { [weak self, queueForResponse = self.queueForResponse] response in
+        let completionHandlerResponse: (NetworkResponse<Any>) -> Void = { [weak self, queueForResponse = self.queueForResponse] response in
             //Usually main thread
             queueForResponse.async {
                 if task.isFinished { return }
@@ -124,7 +124,7 @@ final class GatewaysManager {
         }
 
         //Step #0: Add request to memory database
-        task.workData = RequestTask.WorkData(requestId: requestId, gatewayIndex: gatewayIndex, cancelHandler: { [weak self] neededInGatewayCancel, canceledReason in
+        task.workData = NetworkRequestTask.WorkData(requestId: requestId, gatewayIndex: gatewayIndex, cancelHandler: { [weak self] neededInGatewayCancel, canceledReason in
             completionHandlerResponse(.canceled(canceledReason))
 
             if neededInGatewayCancel, let self = self {
@@ -166,9 +166,9 @@ final class GatewaysManager {
         return task
     }
 
-    func rawDataProcessing(request: RequestBaseStorable, rawData: StorageRawData, completion: @escaping (Result<Any, Error>) -> Void) {
+    func rawDataProcessing(request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData, completion: @escaping (Result<Any, Error>) -> Void) {
         guard let (gateway, _) = findGateway(request: request, forDataProcessingFromStorage: type(of: rawData)) else {
-            completion(.failure(RequestError.notFoundGateway))
+            completion(.failure(NetworkRequestError.notFoundGateway))
             return
         }
 
@@ -179,22 +179,22 @@ final class GatewaysManager {
     }
 
     // MARK: Tasks
-    func tasks(filter: RequestFilter?) -> [RequestTask] {
+    func tasks(filter: NetworkRequestFilter?) -> [NetworkRequestTask] {
         return tasksStorage.tasks(filter: filter)
     }
 
-    func contains(filter: RequestFilter?) -> Bool {
+    func contains(filter: NetworkRequestFilter?) -> Bool {
         return tasksStorage.contains(filter: filter)
     }
 
-    func cancel(filter: RequestFilter?) -> [RequestTask] {
+    func cancel(filter: NetworkRequestFilter?) -> [NetworkRequestTask] {
         let tasks = tasksStorage.tasks(filter: filter)
         tasks.forEach { $0.cancel() }
         return tasks
     }
 
     // MARK: - Private
-    private func findGateway(request: BaseRequest, forDataProcessingFromStorage rawDataType: StorageRawData.Type? = nil) -> (Gateway, Int)? {
+    private func findGateway(request: BaseNetworkRequest, forDataProcessingFromStorage rawDataType: NetworkStorageRawData.Type? = nil) -> (NetworkGateway, Int)? {
         for (index, gateway) in self.gateways.enumerated() {
             if gateway.isSupportedRequest(request, forDataProcessingFromStorage: rawDataType) {
                 return (gateway, index)
@@ -204,7 +204,7 @@ final class GatewaysManager {
         return nil
     }
 
-    private func addRequest(requestId: UInt64, task: RequestTask, gateway: Gateway) {
+    private func addRequest(requestId: UInt64, task: NetworkRequestTask, gateway: NetworkGateway) {
         if disableNetworkActivityIndicator == false && gateway.useNetworkActivityIndicator {
             NetworkActivityIndicatorHandler.shared.addRequest(requestId)
         }

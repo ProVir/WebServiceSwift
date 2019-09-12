@@ -11,12 +11,12 @@ import Foundation
 final class TasksStorage {
     private let mutex = PThreadMutexLock()
 
-    private var tasks: [UInt64: RequestTask] = [:]               //All requests
+    private var tasks: [UInt64: NetworkRequestTask] = [:]               //All requests
     private var mapRequestTypes: [String: Set<UInt64>] = [:]        //[Request.Type: [Id]]
     private var mapRequestHashs: [AnyHashable: Set<UInt64>] = [:]   //[Request<Hashable>: [Id]]
     private var mapRequestKeys:  [AnyHashable: Set<UInt64>] = [:]   //[Key: [Id]]
 
-    func addTask(requestId: UInt64, task: RequestTask) {
+    func addTask(requestId: UInt64, task: NetworkRequestTask) {
         mutex.lock()
         defer { mutex.unlock() }
 
@@ -42,17 +42,17 @@ final class TasksStorage {
         removeFromMapRequest(&mapRequestKeys, key: keyForMapRequestKeys(task), requestId: requestId)
     }
 
-    func allTasks() -> [(requestId: UInt64, task: RequestTask)] {
+    func allTasks() -> [(requestId: UInt64, task: NetworkRequestTask)] {
         return mutex.synchronized {
             tasks.map { ($0.key, $0.value) }.sorted { $0.0 < $1.0 }
         }
     }
 
-    func fetch(requestId: UInt64) -> RequestTask? {
+    func fetch(requestId: UInt64) -> NetworkRequestTask? {
         return mutex.synchronized { tasks[requestId] }
     }
 
-    func containsDuplicate(task: RequestTask) -> Bool {
+    func containsDuplicate(task: NetworkRequestTask) -> Bool {
         if let key = task.key {
             return mutex.synchronized {
                 (mapRequestKeys[key]?.isEmpty ?? true) == false
@@ -66,7 +66,7 @@ final class TasksStorage {
         }
     }
 
-    func tasks(filter: RequestFilter?) -> [RequestTask] {
+    func tasks(filter: NetworkRequestFilter?) -> [NetworkRequestTask] {
         return mutex.synchronized {
             if let filter = filter {
                 return findIds(use: filter.value, onlyFirst: false)
@@ -78,7 +78,7 @@ final class TasksStorage {
         }
     }
 
-    func contains(filter: RequestFilter?) -> Bool {
+    func contains(filter: NetworkRequestFilter?) -> Bool {
         return mutex.synchronized {
             if let filter = filter {
                 return self.findIds(use: filter.value, onlyFirst: true).isEmpty == false
@@ -91,23 +91,23 @@ final class TasksStorage {
 
 
     // MARK: - Private
-    private func keyForMapRequestTypes(_ task: RequestTask) -> String {
+    private func keyForMapRequestTypes(_ task: NetworkRequestTask) -> String {
         return "\(type(of: task.request))"
     }
 
-    private func keyForMapRequestTypes(_ requestType: BaseRequest.Type) -> String {
+    private func keyForMapRequestTypes(_ requestType: BaseNetworkRequest.Type) -> String {
         return "\(requestType)"
     }
 
-    private func keyForMapRequestHashs(_ task: RequestTask) -> AnyHashable? {
+    private func keyForMapRequestHashs(_ task: NetworkRequestTask) -> AnyHashable? {
         return task.request as? AnyHashable
     }
 
-    private func keyForMapRequestHashs(_ request: BaseRequest) -> AnyHashable? {
+    private func keyForMapRequestHashs(_ request: BaseNetworkRequest) -> AnyHashable? {
         return request as? AnyHashable
     }
 
-    private func keyForMapRequestKeys(_ task: RequestTask) -> AnyHashable? {
+    private func keyForMapRequestKeys(_ task: NetworkRequestTask) -> AnyHashable? {
         return task.key
     }
 
@@ -123,7 +123,7 @@ final class TasksStorage {
     }
 
     // MARK: Find use filter
-    private func findIds(use filter: RequestFilter.Value, onlyFirst: Bool) -> Set<UInt64> {
+    private func findIds(use filter: NetworkRequestFilter.Value, onlyFirst: Bool) -> Set<UInt64> {
         switch filter {
         case let .request(request): return findIds(request: request)
         case let .requestType(requestType): return findIds(requestType: requestType)
@@ -144,12 +144,12 @@ final class TasksStorage {
         }
     }
 
-    private func findIds(request: BaseRequest) -> Set<UInt64> {
+    private func findIds(request: BaseNetworkRequest) -> Set<UInt64> {
         guard let key = keyForMapRequestHashs(request) else { return [] }
         return mapRequestHashs[key] ?? []
     }
 
-    private func findIds(requestType: BaseRequest.Type) -> Set<UInt64> {
+    private func findIds(requestType: BaseNetworkRequest.Type) -> Set<UInt64> {
         let key = keyForMapRequestTypes(requestType)
         return mapRequestTypes[key] ?? []
     }
@@ -158,7 +158,7 @@ final class TasksStorage {
         return mapRequestKeys[key] ?? []
     }
 
-    private func findIds(keyType wrapper: RequestFilterKeyTypeWrapper, onlyFirst: Bool) -> Set<UInt64> {
+    private func findIds(keyType wrapper: NetworkRequestFilterKeyTypeWrapper, onlyFirst: Bool) -> Set<UInt64> {
         var ids = Set<UInt64>()
         for (requestKey, requestIds) in mapRequestKeys {
             if wrapper.isEqualType(key: requestKey.base) {

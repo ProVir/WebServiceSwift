@@ -9,18 +9,18 @@
 import Foundation
 
 /// Response from gateway when success
-public struct GatewayResponse {
+public struct NetworkGatewayResponse {
     let result: Any
-    let rawDataForStorage: StorageRawData?
+    let rawDataForStorage: NetworkStorageRawData?
 
-    public init(result: Any, rawDataForStorage: StorageRawData?) {
+    public init(result: Any, rawDataForStorage: NetworkStorageRawData?) {
         self.result = result
         self.rawDataForStorage = rawDataForStorage
     }
 }
 
 /// Protocol for gateway
-public protocol Gateway: class {
+public protocol NetworkGateway: class {
     /// Thread Dispatch Queue for `perofrmRequest()` and `cancelRequests()` methods.
     var queueForRequest: DispatchQueue? { get }
 
@@ -40,7 +40,7 @@ public protocol Gateway: class {
      - forDataProcessingFromStorage: If no nil - request restore raw data from storage with data.
      - Returns: If request support this gateway - return true.
      */
-    func isSupportedRequest(_ request: BaseRequest, forDataProcessingFromStorage rawDataType: StorageRawData.Type?) -> Bool
+    func isSupportedRequest(_ request: BaseNetworkRequest, forDataProcessingFromStorage rawDataType: NetworkStorageRawData.Type?) -> Bool
 
     /**
      Perform request to server. Need call `completionWithRawData` and only one.
@@ -52,7 +52,7 @@ public protocol Gateway: class {
      - request: Original request with data.
      - completionWithRawData: Result with raw data from server or error. RawData usually binary data and this data saved as rawData in storage.
      */
-    func performRequest(requestId: UInt64, request: BaseRequest, completion: @escaping (Result<GatewayResponse, Error>) -> Void)
+    func performRequest(requestId: UInt64, request: BaseNetworkRequest, completion: @escaping (Result<NetworkGatewayResponse, Error>) -> Void)
 
     /**
      Preformed after canceled request.
@@ -74,7 +74,7 @@ public protocol Gateway: class {
      - Throws: Error proccess data from storage to result.
      - Returns: Result data.
      */
-    func dataProcessingFromStorage(request: BaseRequest, rawData: StorageRawData) throws -> Any
+    func dataProcessingFromStorage(request: BaseNetworkRequest, rawData: NetworkStorageRawData) throws -> Any
 }
 
 #if os(iOS)
