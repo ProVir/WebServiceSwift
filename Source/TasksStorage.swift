@@ -14,7 +14,7 @@ final class TasksStorage {
     private var tasks: [NetworkRequestId: NetworkRequestTask] = [:]               //All requests
     private var mapRequestTypes: [String: Set<NetworkRequestId>] = [:]        //[Request.Type: [Id]]
     private var mapRequestHashs: [AnyHashable: Set<NetworkRequestId>] = [:]   //[Request<Hashable>: [Id]]
-    private var mapRequestKeys:  [AnyHashable: Set<NetworkRequestId>] = [:]   //[Key: [Id]]
+    private var mapRequestKeys: [NetworkRequestKeyWrapper: Set<NetworkRequestId>] = [:]   //[Key: [Id]]
 
     func addTask(requestId: NetworkRequestId, task: NetworkRequestTask) {
         mutex.lock()
@@ -53,7 +53,7 @@ final class TasksStorage {
     }
 
     func containsDuplicate(task: NetworkRequestTask) -> Bool {
-        if let key = task.key {
+        if let key = keyForMapRequestKeys(task) {
             return mutex.synchronized {
                 (mapRequestKeys[key]?.isEmpty ?? true) == false
             }
@@ -95,7 +95,7 @@ final class TasksStorage {
         return "\(type(of: task.request))"
     }
 
-    private func keyForMapRequestTypes(_ requestType: BaseNetworkRequest.Type) -> String {
+    private func keyForMapRequestTypes(_ requestType: NetworkBaseRequest.Type) -> String {
         return "\(requestType)"
     }
 
@@ -103,12 +103,12 @@ final class TasksStorage {
         return task.request as? AnyHashable
     }
 
-    private func keyForMapRequestHashs(_ request: BaseNetworkRequest) -> AnyHashable? {
+    private func keyForMapRequestHashs(_ request: NetworkBaseRequest) -> AnyHashable? {
         return request as? AnyHashable
     }
 
-    private func keyForMapRequestKeys(_ task: NetworkRequestTask) -> AnyHashable? {
-        return task.key
+    private func keyForMapRequestKeys(_ task: NetworkRequestTask) -> NetworkRequestKeyWrapper? {
+        return task.key.map { NetworkRequestKeyWrapper(key: $0) }
     }
 
     private func removeFromMapRequest<K: Hashable>(_ map: inout [K: Set<NetworkRequestId>], key: K?, requestId: NetworkRequestId) {
@@ -144,24 +144,24 @@ final class TasksStorage {
         }
     }
 
-    private func findIds(request: BaseNetworkRequest) -> Set<NetworkRequestId> {
+    private func findIds(request: NetworkBaseRequest) -> Set<NetworkRequestId> {
         guard let key = keyForMapRequestHashs(request) else { return [] }
         return mapRequestHashs[key] ?? []
     }
 
-    private func findIds(requestType: BaseNetworkRequest.Type) -> Set<NetworkRequestId> {
+    private func findIds(requestType: NetworkBaseRequest.Type) -> Set<NetworkRequestId> {
         let key = keyForMapRequestTypes(requestType)
         return mapRequestTypes[key] ?? []
     }
 
-    private func findIds(key: AnyHashable) -> Set<NetworkRequestId> {
-        return mapRequestKeys[key] ?? []
+    private func findIds(key: NetworkBaseRequestKey) -> Set<NetworkRequestId> {
+        return mapRequestKeys[NetworkRequestKeyWrapper(key: key)] ?? []
     }
 
     private func findIds(keyType wrapper: NetworkRequestFilterKeyTypeWrapper, onlyFirst: Bool) -> Set<NetworkRequestId> {
         var ids = Set<NetworkRequestId>()
         for (requestKey, requestIds) in mapRequestKeys {
-            if wrapper.isEqualType(key: requestKey.base) {
+            if wrapper.isEqualType(key: requestKey.key) {
                 if onlyFirst {
                     return requestIds
                 } else {

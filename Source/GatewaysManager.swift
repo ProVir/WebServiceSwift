@@ -31,7 +31,7 @@ final class GatewaysManager {
     private let queueForResponse: DispatchQueue
     private let queueForStorageDefault: DispatchQueue = .global(qos: .utility)
 
-    private lazy var saveToStorageHandler: (BaseNetworkRequest, NetworkStorageRawData?, _ value: Any) -> Void = { _, _, _ in }
+    private lazy var saveToStorageHandler: (NetworkBaseRequest, NetworkStorageRawData?, _ value: Any) -> Void = { _, _, _ in }
 
     init(config: NetworkSessionConfiguration) {
         self.gateways = config.gateways
@@ -39,7 +39,7 @@ final class GatewaysManager {
         self.disableNetworkActivityIndicator = config.disableNetworkActivityIndicator
     }
 
-    func setup(saveToStorageHandler: @escaping (BaseNetworkRequest, NetworkStorageRawData?, _ value: Any) -> Void) {
+    func setup(saveToStorageHandler: @escaping (NetworkBaseRequest, NetworkStorageRawData?, _ value: Any) -> Void) {
         self.saveToStorageHandler = saveToStorageHandler
     }
 
@@ -68,8 +68,8 @@ final class GatewaysManager {
     }
 
     func perform(
-        request: BaseNetworkRequest,
-        key: AnyHashable?,
+        request: NetworkBaseRequest,
+        key: NetworkBaseRequestKey?,
         excludeDuplicate: Bool,
         storageDependency: NetworkStorageDependency?,
         completionHandler: @escaping (_ response: NetworkResponse<Any>) -> Void
@@ -188,7 +188,7 @@ final class GatewaysManager {
     }
 
     // MARK: - Private
-    private func findGateway(request: BaseNetworkRequest, forDataProcessingFromStorage rawDataType: NetworkStorageRawData.Type? = nil) -> (NetworkGateway, Int)? {
+    private func findGateway(request: NetworkBaseRequest, forDataProcessingFromStorage rawDataType: NetworkStorageRawData.Type? = nil) -> (NetworkGateway, Int)? {
         for (index, gateway) in self.gateways.enumerated() {
             if gateway.isSupportedRequest(request, forDataProcessingFromStorage: rawDataType) {
                 return (gateway, index)

@@ -40,7 +40,7 @@ public protocol NetworkGateway: class {
      - forDataProcessingFromStorage: If no nil - request restore raw data from storage with data.
      - Returns: If request support this gateway - return true.
      */
-    func isSupportedRequest(_ request: BaseNetworkRequest, forDataProcessingFromStorage rawDataType: NetworkStorageRawData.Type?) -> Bool
+    func isSupportedRequest(_ request: NetworkBaseRequest, forDataProcessingFromStorage rawDataType: NetworkStorageRawData.Type?) -> Bool
 
     /**
      Perform request to server. Need call `completionWithRawData` and only one.
@@ -52,7 +52,7 @@ public protocol NetworkGateway: class {
      - request: Original request with data.
      - completionWithRawData: Result with raw data from server or error. RawData usually binary data and this data saved as rawData in storage.
      */
-    func performRequest(requestId: NetworkRequestId, request: BaseNetworkRequest, completion: @escaping (Result<NetworkGatewayResponse, Error>) -> Void)
+    func performRequest(requestId: NetworkRequestId, request: NetworkBaseRequest, completion: @escaping (Result<NetworkGatewayResponse, Error>) -> Void)
 
     /**
      Preformed after canceled request.
@@ -74,7 +74,7 @@ public protocol NetworkGateway: class {
      - Throws: Error proccess data from storage to result.
      - Returns: Result data.
      */
-    func dataProcessingFromStorage(request: BaseNetworkRequest, rawData: NetworkStorageRawData) throws -> Any
+    func dataProcessingFromStorage(request: NetworkBaseRequest, rawData: NetworkStorageRawData) throws -> Any
 }
 
 #if os(iOS)

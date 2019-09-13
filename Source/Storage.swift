@@ -12,7 +12,7 @@ import Foundation
 public let defaultDataClassification = "default"
 
 /// Base protocol for all requests with support storages
-public protocol NetworkRequestBaseStorable: BaseNetworkRequest {
+public protocol NetworkRequestBaseStorable: NetworkBaseRequest {
     /// Data classification to distinguish between storage
     var dataClassificationForStorage: AnyHashable { get }
 }

@@ -201,9 +201,9 @@
 				88E597CB22DE2CBE00CDAA90 /* Gateway.swift */,
 				88E597CD22DE792500CDAA90 /* Storage.swift */,
 				88E59A7522E85AB100CDAA90 /* CommonStoring.swift */,
+				5054625620C066B500595948 /* PThreadMutexLock.swift */,
 				501D2AE41F4E8FA2000E3FA3 /* WebService.swift */,
 				50BFAFF7208F4C8A007E8FBD /* RequestProvider.swift */,
-				5054625620C066B500595948 /* PThreadMutexLock.swift */,
 				50D22B0E20DA9FA000C44198 /* General */,
 				5054625220C065B200595948 /* Alamofire */,
 			);

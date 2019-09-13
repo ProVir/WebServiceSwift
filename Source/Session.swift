@@ -50,8 +50,8 @@ final class NetworkSession {
     // MARK: Perform requests
     @discardableResult
     public func perform(
-        baseRequest: BaseNetworkRequest,
-        key: AnyHashable?,
+        baseRequest: NetworkBaseRequest,
+        key: NetworkBaseRequestKey?,
         excludeDuplicate: Bool,
         storageDependency: NetworkStorageDependency?,
         completionHandler: @escaping (_ response: NetworkResponse<Any>) -> Void
@@ -68,7 +68,7 @@ final class NetworkSession {
     @discardableResult
     public func perform<RequestType: NetworkRequest>(
         request: RequestType,
-        key: AnyHashable? = nil,
+        key: NetworkBaseRequestKey? = nil,
         excludeDuplicate: Bool = false,
         storageDependency: NetworkStorageDependency? = nil,
         completionHandler: @escaping (_ response: NetworkResponse<RequestType.ResultType>) -> Void

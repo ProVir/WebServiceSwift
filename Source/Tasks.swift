@@ -38,8 +38,8 @@ public struct NetworkStorageDependency {
 }
 
 public final class NetworkRequestTask {
-    public let request: BaseNetworkRequest
-    public let key: AnyHashable?
+    public let request: NetworkBaseRequest
+    public let key: NetworkBaseRequestKey?
     public let storageDependency: NetworkStorageDependency?
 
     public var state: NetworkTaskState { return mutex.synchronized { self.unsafeState } }
@@ -52,7 +52,7 @@ public final class NetworkRequestTask {
         }
     }
 
-    init(request: BaseNetworkRequest, key: AnyHashable?, storageDependency: NetworkStorageDependency?) {
+    init(request: NetworkBaseRequest, key: NetworkBaseRequestKey?, storageDependency: NetworkStorageDependency?) {
         self.request = request
         self.key = key
         self.storageDependency = storageDependency
@@ -71,7 +71,7 @@ public final class NetworkStorageTask {
         case request(NetworkTaskState, NetworkRequestCanceledReason?)
     }
 
-    public let request: BaseNetworkRequest
+    public let request: NetworkBaseRequest
 
     public var state: NetworkTaskState { return mutex.synchronized { self.unsafeState } }
     public var canceledReason: CanceledReason? { return mutex.synchronized { self.unsafeCanceledReason } }
@@ -83,7 +83,7 @@ public final class NetworkStorageTask {
         }
     }
 
-    init(request: BaseNetworkRequest) {
+    init(request: NetworkBaseRequest) {
         self.request = request
     }
 
