@@ -28,22 +28,22 @@ public final class NetworkActivityIndicatorHandler {
     }
 
     // MARK: Internal
-    func addRequest(_ requestId: UInt64) {
+    func addRequest(_ requestId: NetworkRequestId) {
         mutex.synchronized { listRequestId.insert(requestId) }
     }
 
-    func removeRequest(_ requestId: UInt64) {
+    func removeRequest(_ requestId: NetworkRequestId) {
         mutex.synchronized { listRequestId.remove(requestId) }
     }
 
-    func removeRequests(_ requestListIds: Set<UInt64>) {
+    func removeRequests(_ requestListIds: Set<NetworkRequestId>) {
         mutex.synchronized { listRequestId.subtract(requestListIds) }
     }
 
     // MARK: Private
     private let mutex = PThreadMutexLock()
 
-    private var listRequestId = Set<UInt64>() {
+    private var listRequestId = Set<NetworkRequestId>() {
         didSet { self.isVisible = listRequestId.isEmpty == false }
     }
 

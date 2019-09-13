@@ -12,13 +12,13 @@ final class RequestIdProvider {
     static let shared = RequestIdProvider()
 
     private let mutex = PThreadMutexLock()
-    private var lastRequestId: UInt64 = 0
+    private var lastRequestId: NetworkRequestId = .init(0)
 
-    func generateRequestId() -> UInt64 {
+    func generateRequestId() -> NetworkRequestId {
         mutex.lock()
         defer { mutex.unlock() }
 
-        lastRequestId = lastRequestId &+ 1
+        lastRequestId = .init(lastRequestId.value &+ 1)
         return lastRequestId
     }
 }
@@ -204,7 +204,7 @@ final class GatewaysManager {
         return nil
     }
 
-    private func addRequest(requestId: UInt64, task: NetworkRequestTask, gateway: NetworkGateway) {
+    private func addRequest(requestId: NetworkRequestId, task: NetworkRequestTask, gateway: NetworkGateway) {
         if disableNetworkActivityIndicator == false && gateway.useNetworkActivityIndicator {
             NetworkActivityIndicatorHandler.shared.addRequest(requestId)
         }
@@ -212,7 +212,7 @@ final class GatewaysManager {
         tasksStorage.addTask(requestId: requestId, task: task)
     }
 
-    private func removeRequest(requestId: UInt64) {
+    private func removeRequest(requestId: NetworkRequestId) {
         NetworkActivityIndicatorHandler.shared.removeRequest(requestId)
 
         tasksStorage.removeTask(requestId: requestId)

@@ -52,7 +52,7 @@ public protocol NetworkGateway: class {
      - request: Original request with data.
      - completionWithRawData: Result with raw data from server or error. RawData usually binary data and this data saved as rawData in storage.
      */
-    func performRequest(requestId: UInt64, request: BaseNetworkRequest, completion: @escaping (Result<NetworkGatewayResponse, Error>) -> Void)
+    func performRequest(requestId: NetworkRequestId, request: BaseNetworkRequest, completion: @escaping (Result<NetworkGatewayResponse, Error>) -> Void)
 
     /**
      Preformed after canceled request.
@@ -61,7 +61,7 @@ public protocol NetworkGateway: class {
 
      - Parameter requestId: Id for canceled.
      */
-    func canceledRequest(requestId: UInt64)
+    func canceledRequest(requestId: NetworkRequestId)
 
     /**
      Process raw data from storage.
@@ -79,7 +79,7 @@ public protocol NetworkGateway: class {
 
 #if os(iOS)
 #else
-extension Gateway {
+extension NetworkGateway {
     var useNetworkActivityIndicator: Bool { return false }
 }
 #endif

@@ -95,7 +95,7 @@ public final class NetworkStorageTask {
 // MARK: - Internal
 extension NetworkRequestTask {
     struct WorkData {
-        let requestId: UInt64
+        let requestId: NetworkRequestId
         let gatewayIndex: Int
         let cancelHandler: (_ neededInGatewayCancel: Bool, NetworkRequestCanceledReason) -> Void
     }

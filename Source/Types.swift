@@ -27,6 +27,26 @@ public protocol EmptyNetworkRequest: NetworkRequest {
 public protocol NetworkStorageRawData { }
 extension Data: NetworkStorageRawData { }
 
+/// RequestId for gateway
+public struct NetworkRequestId: RawRepresentable, Hashable, Comparable {
+    public let value: UInt64
+    public init(_ value: UInt64) {
+        self.value = value
+    }
+
+    public init?(rawValue: UInt64) {
+        self.value = rawValue
+    }
+
+    public var rawValue: UInt64 {
+        return value
+    }
+
+    public static func < (lhs: NetworkRequestId, rhs: NetworkRequestId) -> Bool {
+        return lhs.value < rhs.value
+    }
+}
+
 /**
  General error enum for requests
  
