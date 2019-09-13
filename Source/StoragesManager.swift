@@ -16,14 +16,9 @@ final class StoragesManager {
     private lazy var rawDataProcessingHandler: (NetworkRequestBaseStorable, NetworkStorageRawData, @escaping (Result<Any, Error>) -> Void) -> Void
         = { fatalError("Need setup StorageHandler before use") }()
 
-    init(storages: [NetworkStorage], queueForResponse: DispatchQueue) {
-        self.storages = storages
-        self.queueForResponse = queueForResponse
-    }
-
-    init(copyConfigurationFrom manager: StoragesManager) {
-        self.storages = manager.storages
-        self.queueForResponse = manager.queueForResponse
+    init(config: NetworkSessionConfiguration) {
+        self.storages = config.storages
+        self.queueForResponse = config.queueForResponse
     }
 
     func setup(rawDataProcessingHandler: @escaping (NetworkRequestBaseStorable, NetworkStorageRawData, @escaping (Result<Any, Error>) -> Void) -> Void) {

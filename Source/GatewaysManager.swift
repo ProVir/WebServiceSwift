@@ -24,25 +24,19 @@ final class RequestIdProvider {
 }
 
 final class GatewaysManager {
-    var disableNetworkActivityIndicator = false
-
     private let gateways: [NetworkGateway]
     private let tasksStorage = TasksStorage()
 
+    private let disableNetworkActivityIndicator: Bool
     private let queueForResponse: DispatchQueue
     private let queueForStorageDefault: DispatchQueue = .global(qos: .utility)
 
     private lazy var saveToStorageHandler: (BaseNetworkRequest, NetworkStorageRawData?, _ value: Any) -> Void = { _, _, _ in }
 
-    init(gateways: [NetworkGateway], queueForResponse: DispatchQueue) {
-        self.gateways = gateways
-        self.queueForResponse = queueForResponse
-    }
-
-    init(copyConfigurationFrom manager: GatewaysManager) {
-        self.gateways = manager.gateways
-        self.queueForResponse = manager.queueForResponse
-        self.disableNetworkActivityIndicator = manager.disableNetworkActivityIndicator
+    init(config: NetworkSessionConfiguration) {
+        self.gateways = config.gateways
+        self.queueForResponse = config.queueForResponse
+        self.disableNetworkActivityIndicator = config.disableNetworkActivityIndicator
     }
 
     func setup(saveToStorageHandler: @escaping (BaseNetworkRequest, NetworkStorageRawData?, _ value: Any) -> Void) {

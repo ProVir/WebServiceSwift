@@ -8,36 +8,34 @@
 
 import Foundation
 
-final class Session {
+public struct NetworkSessionConfiguration {
+    public var gateways: [NetworkGateway]
+    public var storages: [NetworkStorage]
+
     /// Perform response closures and delegates in dispath queue. Default: main thread.
-    public let queueForResponse: DispatchQueue
+    public var queueForResponse: DispatchQueue
 
-    /// Ignore gateway parameter ans always don't use networkActivityIndicator in statusBar when requests in process.
-    public var disableNetworkActivityIndicator: Bool {
-        get { return gatewaysManager.disableNetworkActivityIndicator }
-        set { gatewaysManager.disableNetworkActivityIndicator = newValue }
+    /// Ignore gateway parameter and always don't use networkActivityIndicator in statusBar when requests in process.
+    public var disableNetworkActivityIndicator: Bool
+
+    public init(gateways: [NetworkGateway],
+                storages: [NetworkStorage],
+                queueForResponse: DispatchQueue = .main,
+                disableNetworkActivityIndicator: Bool = false) {
+        self.gateways = gateways
+        self.storages = storages
+        self.queueForResponse = queueForResponse
+        self.disableNetworkActivityIndicator = disableNetworkActivityIndicator
     }
+}
 
+final class NetworkSession {
     private let gatewaysManager: GatewaysManager
     private let storagesManager: StoragesManager
 
-    public convenience init(gateways: [NetworkGateway], storages: [NetworkStorage], queueForResponse: DispatchQueue = DispatchQueue.main) {
-        let gatewaysManager = GatewaysManager(gateways: gateways, queueForResponse: queueForResponse)
-        let storagesManager = StoragesManager(storages: storages, queueForResponse: queueForResponse)
-        self.init(gatewaysManager: gatewaysManager, storagesManager: storagesManager, queueForResponse: queueForResponse)
-    }
-
-    /// Copy with only list gateways, storages and queueForResponse.
-    public convenience init(copyConfigurationFrom session: Session) {
-        let gatewaysManager = GatewaysManager(copyConfigurationFrom: session.gatewaysManager)
-        let storagesManager = StoragesManager(copyConfigurationFrom: session.storagesManager)
-        self.init(gatewaysManager: gatewaysManager, storagesManager: storagesManager, queueForResponse: session.queueForResponse)
-    }
-
-    init(gatewaysManager: GatewaysManager, storagesManager: StoragesManager, queueForResponse: DispatchQueue) {
-        self.gatewaysManager = gatewaysManager
-        self.storagesManager = storagesManager
-        self.queueForResponse = queueForResponse
+    public init(_ config: NetworkSessionConfiguration) {
+        self.gatewaysManager = GatewaysManager(config: config)
+        self.storagesManager = StoragesManager(config: config)
 
         gatewaysManager.setup(saveToStorageHandler: { [weak storagesManager] (request, rawData, value) in
             if let request = request as? NetworkRequestBaseStorable {
