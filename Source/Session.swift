@@ -84,14 +84,14 @@ final class NetworkSession {
 
     // MARK: Read storage
     @discardableResult
-    func fetch(baseRequest: NetworkRequestBaseStorable, handler: @escaping (_ timeStamp: Date?, _ response: NetworkResponse<Any>) -> Void) -> NetworkStorageTask {
+    func fetch(baseRequest: NetworkRequestBaseStorable, handler: @escaping (_ timeStamp: Date?, _ response: NetworkStorageResponse<Any>) -> Void) -> NetworkStorageTask {
         return storagesManager.fetch(request: baseRequest, handler: handler)
     }
 
     @discardableResult
     func fetch<RequestType: NetworkRequest & NetworkRequestBaseStorable>(
         request: RequestType,
-        handler: @escaping (_ timeStamp: Date?, _ response: NetworkResponse<RequestType.ResultType>) -> Void
+        handler: @escaping (_ timeStamp: Date?, _ response: NetworkStorageResponse<RequestType.ResultType>) -> Void
     ) -> NetworkStorageTask {
         return storagesManager.fetch(request: request, handler: { handler( $0, $1.convert() ) })
     }

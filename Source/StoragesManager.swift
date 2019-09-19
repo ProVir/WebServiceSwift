@@ -13,7 +13,7 @@ final class StoragesManager {
     private let storages: [NetworkStorage]
     private let queueForResponse: DispatchQueue
 
-    private lazy var rawDataProcessingHandler: (NetworkRequestBaseStorable, NetworkStorageRawData, @escaping (Result<Any, Error>) -> Void) -> Void
+    private lazy var rawDataProcessingHandler: (NetworkRequestBaseStorable, NetworkStorageRawData, @escaping (Result<Any, NetworkStorageError>) -> Void) -> Void
         = { fatalError("Need setup StorageHandler before use") }()
 
     init(config: NetworkSessionConfiguration) {
@@ -21,7 +21,7 @@ final class StoragesManager {
         self.queueForResponse = config.queueForResponse
     }
 
-    func setup(rawDataProcessingHandler: @escaping (NetworkRequestBaseStorable, NetworkStorageRawData, @escaping (Result<Any, Error>) -> Void) -> Void) {
+    func setup(rawDataProcessingHandler: @escaping (NetworkRequestBaseStorable, NetworkStorageRawData, @escaping (Result<Any, NetworkStorageError>) -> Void) -> Void) {
         self.rawDataProcessingHandler = rawDataProcessingHandler
     }
 
@@ -32,18 +32,18 @@ final class StoragesManager {
 
     func fetch(
         request: NetworkRequestBaseStorable,
-        handler: @escaping (_ timeStamp: Date?, _ response: NetworkResponse<Any>) -> Void
+        handler: @escaping (_ timeStamp: Date?, _ response: NetworkStorageResponse<Any>) -> Void
     ) -> NetworkStorageTask {
         let task = NetworkStorageTask(request: request)
 
         guard let storage = findStorage(request: request) else {
-            handler(nil, .failure(NetworkRequestError.notFoundStorage))
+            handler(nil, .failure(NetworkStorageError.notFoundStorage))
             task.setStateFromStorage(.failure)
             return task
         }
 
         //1. Wrapped handler
-        let completionAsyncHandler = { [queueForResponse] (timeStamp: Date?, response: NetworkResponse<Any>) in
+        let completionAsyncHandler = { [queueForResponse] (timeStamp: Date?, response: NetworkStorageResponse<Any>) in
             queueForResponse.async {
                 if task.isCanceled {
                     handler(nil, .canceled(task.requestCanceledReason))
@@ -82,8 +82,11 @@ final class StoragesManager {
             case let .value(value, timeStamp):
                 completionAsyncHandler(timeStamp, .success(value))
 
-            case let .error(error):
-                completionAsyncHandler(nil, .failure(error))
+            case .notFoundData:
+                completionAsyncHandler(nil, .failure(NetworkStorageError.notFoundData))
+
+            case let .failure(error):
+                completionAsyncHandler(nil, .failure(NetworkStorageError.failureFetch(error)))
             }
         }
 

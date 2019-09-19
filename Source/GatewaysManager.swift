@@ -86,7 +86,7 @@ final class GatewaysManager {
         //2. Find Gateway and Storage
         guard let (gateway, gatewayIndex) = findGateway(request: request) else {
             task.setState(.failure, canceledReason: nil, finishTask: true)
-            completionHandler(.failure(NetworkRequestError.notFoundGateway))
+            completionHandler(.failure(NetworkError.notFoundGateway))
             return task
         }
 
@@ -160,15 +160,17 @@ final class GatewaysManager {
         return task
     }
 
-    func rawDataProcessing(request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData, completion: @escaping (Result<Any, Error>) -> Void) {
+    func rawDataProcessing(request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData, completion: @escaping (Result<Any, NetworkStorageError>) -> Void) {
         guard let (gateway, _) = findGateway(request: request, forDataProcessingFromStorage: type(of: rawData)) else {
-            completion(.failure(NetworkRequestError.notFoundGateway))
+            completion(.failure(.notFoundGateway))
             return
         }
 
         let queue = gateway.queueForDataProcessingFromStorage ?? queueForStorageDefault
         queue.async {
-            completion(.init { try gateway.dataProcessingFromStorage(request: request, rawData: rawData) })
+            let result = Result { try gateway.dataProcessingFromStorage(request: request, rawData: rawData) }
+                .mapError { NetworkStorageError.failureDataProcessing($0) }
+            completion(result)
         }
     }
 

@@ -62,36 +62,44 @@ public struct NetworkRequestId: RawRepresentable, Hashable, Comparable {
 }
 
 /**
- General error enum for requests
- 
+ General errors
+
  - `noFoundGateway`: If gateway not found in `[gateways]` for request
- - `noFoundStorage`: If storage not found in `[storages]` for request
- - `notSupportRequest`: If request after test fot gateway contains invalid query or etc.
- - `notSupportDataHandler`: If request don't support data handler
- - `invalidRequest`: Validation request and create request to server failed.
- - `gatewayInternal`: Internal error in gateway.
+ - `notSupportRequest`: If request after test fot gateway contains invalid query or etc
+ - `invalidTypeResult`: Invalid result type from gateway
+ - `unknown`: Unknown error in gateway
  */
-public enum NetworkRequestError: Error {
+public enum NetworkError: Error {
     case notFoundGateway
-    case notFoundStorage
-    
     case notSupportRequest
-    case notSupportDataProcessing
-    
-    case invalidRequest(Error)
-    case gatewayInternal
+    case invalidTypeResult(Any.Type, require: Any.Type)
+    case unknown
 }
 
-/// General error enum for response
-public enum NetworkResponseError: Error {
-    /// Data from server invalid. Usually error value is `WebServiceResponse.ConvertError` or `DecoderError`
-    case invalidData(Error)
+/**
+ Storage errors
 
-    /// Data not found in storage
+ - `notFoundData`: Data not found in storage
+ - `noFoundStorage`: If storage not found in `[storages]` for request
+ - `noFoundGateway`: If gateway not found in `[gateways]` for data processing readed raw data
+ - `failureFetch`: Error fetch in storage
+ - `failureDataProcessing`: Error data processing readed raw data in gateway
+  - `invalidTypeResult`: Invalid result type from storage or gateway
+ */
+public enum NetworkStorageError: Error {
     case notFoundData
-    
-    /// General error http status code (usually when != 200)
-    case httpStatusCode(Int)
+    case notFoundStorage
+    case notFoundGateway
+    case failureFetch(Error)
+    case failureDataProcessing(Error)
+    case invalidTypeResult(Any.Type, require: Any.Type)
+
+    public var isNotFoundData: Bool {
+        switch self {
+        case .notFoundData: return true
+        default: return false
+        }
+    }
 }
 
 public enum NetworkRequestCanceledReason: Hashable {
@@ -109,9 +117,9 @@ public enum NetworkRequestCanceledReason: Hashable {
  - `canceledRequest`: Reqest canceled (called `WebService.cancelRequests()` method for this request)
  - `duplicateRequest`: If `excludeDuplicate == true` and this request contained in queue
  */
-public enum NetworkResponse<T> {
+public enum NetworkBaseResponse<T, E: Error> {
     case success(T)
-    case failure(Error)
+    case failure(E)
     case canceled(NetworkRequestCanceledReason)
 
     /// Data if success response
@@ -121,15 +129,15 @@ public enum NetworkResponse<T> {
         default: return nil
         }
     }
-    
+
     /// Error if response completed with error
-    public var error: Error? {
+    public var error: E? {
         switch self {
         case .failure(let err): return err
         default: return nil
         }
     }
-    
+
     /// Is canceled request, also true when duplicated request
     public var isCanceled: Bool {
         switch self {
@@ -137,7 +145,7 @@ public enum NetworkResponse<T> {
         default: return false
         }
     }
-    
+
     /// Canceled reason if canceled
     public var canceledReason: NetworkRequestCanceledReason? {
         switch self {
@@ -147,13 +155,12 @@ public enum NetworkResponse<T> {
     }
 }
 
+public typealias NetworkResponse<T> = NetworkBaseResponse<T, Error>
+public typealias NetworkStorageResponse<T> = NetworkBaseResponse<T, NetworkStorageError>
+
+
 ///Response from other type
-public extension NetworkResponse {
-    struct ConvertError: Error {
-        let from: Any.Type
-        let to: Any.Type
-    }
-    
+public extension NetworkBaseResponse where E == Error {
     ///Convert to response with other type data automatic.
     func convert<T>() -> NetworkResponse<T> {
         return convert(T.self)
@@ -171,7 +178,7 @@ public extension NetworkResponse {
             if let data = data as? T {
                 return .success(data)
             } else {
-                return .failure(NetworkResponseError.invalidData(ConvertError(from: type(of: data), to: T.self)))
+                return .failure(NetworkError.invalidTypeResult(type(of: data), require: T.self))
             }
             
         case .failure(let error):
@@ -179,6 +186,45 @@ public extension NetworkResponse {
             
         case .canceled(let reason):
             return .canceled(reason)
+        }
+    }
+}
+
+///Response from storage from other type
+public extension NetworkBaseResponse where E == NetworkStorageError {
+    ///Convert to response with other type data automatic.
+    func convert<T>() -> NetworkStorageResponse<T> {
+        return convert(T.self)
+    }
+
+    ///Convert to response with type from request
+    func convert<RequestType: NetworkRequest>(request: RequestType) -> NetworkStorageResponse<RequestType.ResultType> {
+        return convert(RequestType.ResultType.self)
+    }
+
+    ///Convert to response with concrete other type data.
+    func convert<T>(_ typeData: T.Type) -> NetworkStorageResponse<T> {
+        switch self {
+        case .success(let data):
+            if let data = data as? T {
+                return .success(data)
+            } else {
+                return .failure(.invalidTypeResult(type(of: data), require: T.self))
+            }
+
+        case .failure(let error):
+            return .failure(error)
+
+        case .canceled(let reason):
+            return .canceled(reason)
+        }
+    }
+
+    func convertFailure() -> NetworkResponse<T> {
+        switch self {
+        case .success(let r): return .success(r)
+        case .failure(let e): return .failure(e)
+        case .canceled(let r): return .canceled(r)
         }
     }
 }
