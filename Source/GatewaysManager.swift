@@ -24,7 +24,7 @@ final class RequestIdProvider {
 }
 
 final class GatewaysManager {
-    private let gateways: [NetworkGateway]
+    private let gateways: [NetworkBaseGateway]
     private let tasksStorage = TasksStorage()
 
     private let disableNetworkActivityIndicator: Bool
@@ -50,7 +50,7 @@ final class GatewaysManager {
         NetworkActivityIndicatorHandler.shared.removeRequests(requestListIds)
 
         //Cancel all requests for gateways
-        let requestsWithGateways = requestList.compactMap { (_, task) -> (NetworkRequestTask.WorkData, NetworkGateway)? in
+        let requestsWithGateways = requestList.compactMap { (_, task) -> (NetworkRequestTask.WorkData, NetworkBaseGateway)? in
             guard let request = task.workData else { return nil }
             return (request, self.gateways[request.gatewayIndex])
         }
@@ -135,7 +135,7 @@ final class GatewaysManager {
         let requestHandler = { [saveToStorageHandler] in
             gateway.performRequest(
                 requestId: requestId,
-                request: request,
+                baseRequest: request,
                 completion: { result in
                     if task.isFinished { return }
                     switch result {
@@ -168,7 +168,7 @@ final class GatewaysManager {
 
         let queue = gateway.queueForDataProcessingFromStorage ?? queueForStorageDefault
         queue.async {
-            let result = Result { try gateway.dataProcessingFromStorage(request: request, rawData: rawData) }
+            let result = Result { try gateway.dataProcessingFromStorage(baseRequest: request, rawData: rawData) }
                 .mapError { NetworkStorageError.failureDataProcessing($0) }
             completion(result)
         }
@@ -190,7 +190,7 @@ final class GatewaysManager {
     }
 
     // MARK: - Private
-    private func findGateway(request: NetworkBaseRequest, forDataProcessingFromStorage rawDataType: NetworkStorageRawData.Type? = nil) -> (NetworkGateway, Int)? {
+    private func findGateway(request: NetworkBaseRequest, forDataProcessingFromStorage rawDataType: NetworkStorageRawData.Type? = nil) -> (NetworkBaseGateway, Int)? {
         for (index, gateway) in self.gateways.enumerated() {
             if gateway.isSupportedRequest(request, forDataProcessingFromStorage: rawDataType) {
                 return (gateway, index)
@@ -200,7 +200,7 @@ final class GatewaysManager {
         return nil
     }
 
-    private func addRequest(requestId: NetworkRequestId, task: NetworkRequestTask, gateway: NetworkGateway) {
+    private func addRequest(requestId: NetworkRequestId, task: NetworkRequestTask, gateway: NetworkBaseGateway) {
         if disableNetworkActivityIndicator == false && gateway.useNetworkActivityIndicator {
             NetworkActivityIndicatorHandler.shared.addRequest(requestId)
         }

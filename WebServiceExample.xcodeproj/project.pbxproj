@@ -199,7 +199,6 @@
 			children = (
 				501D2AD91F4E8DF5000E3FA3 /* WebService.h */,
 				501D2ADA1F4E8DF5000E3FA3 /* Info.plist */,
-				8810AF932335195700546DBF /* Internal */,
 				887612FA233515C200B27525 /* Requests.swift */,
 				88E59A7522E85AB100CDAA90 /* CommonStoring.swift */,
 				887612FC233515F800B27525 /* Errors.swift */,
@@ -211,6 +210,10 @@
 				88E597CB22DE2CBE00CDAA90 /* Gateway.swift */,
 				88E597CD22DE792500CDAA90 /* Storage.swift */,
 				88B3D13122F88A720096B332 /* NetworkIndicator.swift */,
+				8853EF2122EA0AF200C93531 /* GatewaysManager.swift */,
+				884F84D12301BA29000D20BE /* StoragesManager.swift */,
+				888B5A76231FD6ED00BCD804 /* TasksStorage.swift */,
+				5054625620C066B500595948 /* PThreadMutexLock.swift */,
 				50D22B0E20DA9FA000C44198 /* General */,
 				5054625220C065B200595948 /* Alamofire */,
 			);
@@ -273,17 +276,6 @@
 				507529A62103321A008A167A /* WebServiceDataBaseStorage.xcdatamodeld */,
 			);
 			path = General;
-			sourceTree = "<group>";
-		};
-		8810AF932335195700546DBF /* Internal */ = {
-			isa = PBXGroup;
-			children = (
-				8853EF2122EA0AF200C93531 /* GatewaysManager.swift */,
-				884F84D12301BA29000D20BE /* StoragesManager.swift */,
-				888B5A76231FD6ED00BCD804 /* TasksStorage.swift */,
-				5054625620C066B500595948 /* PThreadMutexLock.swift */,
-			);
-			path = Internal;
 			sourceTree = "<group>";
 		};
 		9D14E7A17010FD744AF284AD /* Pods */ = {

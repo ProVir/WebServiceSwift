@@ -8,8 +8,17 @@
 
 import Foundation
 
-/// Protocol for gateway
-public protocol NetworkGateway: class {
+/// Generic protocol for gateway
+public protocol NetworkGateway: NetworkBaseGateway {
+    associatedtype RequestType: NetworkRequest
+
+    func performRequest(requestId: NetworkRequestId, request: RequestType, completion: @escaping (Result<NetworkGatewayResponse, Error>) -> Void)
+
+    func dataProcessingFromStorage(request: RequestType, rawData: NetworkStorageRawData) throws -> Any
+}
+
+/// Base protocol for gateway
+public protocol NetworkBaseGateway: class {
     /// Thread Dispatch Queue for `perofrmRequest()` and `cancelRequests()` methods.
     var queueForRequest: DispatchQueue? { get }
 
@@ -41,7 +50,7 @@ public protocol NetworkGateway: class {
      - request: Original request with data.
      - completionWithRawData: Result with raw data from server or error. RawData usually binary data and this data saved as rawData in storage.
      */
-    func performRequest(requestId: NetworkRequestId, request: NetworkBaseRequest, completion: @escaping (Result<NetworkGatewayResponse, Error>) -> Void)
+    func performRequest(requestId: NetworkRequestId, baseRequest request: NetworkBaseRequest, completion: @escaping (Result<NetworkGatewayResponse, Error>) -> Void)
 
     /**
      Preformed after canceled request.
@@ -63,12 +72,36 @@ public protocol NetworkGateway: class {
      - Throws: Error proccess data from storage to result.
      - Returns: Result data.
      */
-    func dataProcessingFromStorage(request: NetworkBaseRequest, rawData: NetworkStorageRawData) throws -> Any
+    func dataProcessingFromStorage(baseRequest request: NetworkBaseRequest, rawData: NetworkStorageRawData) throws -> Any
 }
+
+public extension NetworkGateway {
+    func isSupportedRequest(_ request: NetworkBaseRequest, forDataProcessingFromStorage rawDataType: NetworkStorageRawData.Type?) -> Bool {
+        return request is RequestType
+    }
+
+    func performRequest(requestId: NetworkRequestId, baseRequest request: NetworkBaseRequest, completion: @escaping (Result<NetworkGatewayResponse, Error>) -> Void) {
+        guard let request = request as? RequestType else {
+            completion(.failure(NetworkError.notSupportRequest))
+            return
+        }
+
+        performRequest(requestId: requestId, request: request, completion: completion)
+    }
+
+    func dataProcessingFromStorage(baseRequest request: NetworkBaseRequest, rawData: NetworkStorageRawData) throws -> Any {
+        guard let request = request as? RequestType else {
+            throw NetworkError.notSupportRequest
+        }
+
+        return try dataProcessingFromStorage(request: request, rawData: rawData)
+    }
+}
+
 
 #if os(iOS)
 #else
-extension NetworkGateway {
+extension NetworkBaseGateway {
     var useNetworkActivityIndicator: Bool { return false }
 }
 #endif

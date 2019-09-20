@@ -8,6 +8,15 @@
 
 import Foundation
 
+public protocol NetworkStorage: NetworkBaseStorage {
+    associatedtype RequestType: NetworkRequestBaseStorable
+
+    func fetch(request: NetworkRequestBaseStorable, completion: @escaping (_ response: NetworkStorageFetchResponse) -> Void)
+
+    func save(request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData?, value: Any)
+
+    func delete(request: NetworkRequestBaseStorable)
+}
 
 /**
  Protocol for storages in WebService. All requests need.
@@ -15,7 +24,7 @@ import Foundation
 
  RawData - data without process, original data from server
  */
-public protocol NetworkStorage: class {
+public protocol NetworkBaseStorage: class {
 
     /// Data classification support list. nil = support all.
     var supportDataClassification: Set<AnyHashable>? { get }
@@ -36,7 +45,7 @@ public protocol NetworkStorage: class {
      - completionHandler: After readed data need call with result data. This closure need call and only one. Be sure to call in the main thread.
      - response: Result response enum with data. 
      */
-    func fetch(request: NetworkRequestBaseStorable, completionHandler: @escaping (_ response: NetworkStorageFetchResponse) -> Void)
+    func fetch(baseRequest request: NetworkRequestBaseStorable, completion: @escaping (_ response: NetworkStorageFetchResponse) -> Void)
 
     /**
      Save data from server (gateway).
@@ -47,16 +56,46 @@ public protocol NetworkStorage: class {
      - rawData: Raw data for save - universal type, need process in gateway
      - value: Value type for save, no need process in gateway
      */
-    func save(request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData?, value: Any)
+    func save(baseRequest request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData?, value: Any)
 
     /**
      Delete data in storage for concrete request.
 
      - Parameter request: Original request.
      */
-    func delete(request: NetworkRequestBaseStorable)
+    func delete(baseRequest request: NetworkRequestBaseStorable)
 
     /// Delete all data in storage.
     func deleteAll()
 }
 
+public extension NetworkStorage {
+    func isSupportedRequest(_ request: NetworkRequestBaseStorable) -> Bool {
+        return request is RequestType
+    }
+
+    func fetch(baseRequest request: NetworkRequestBaseStorable, completion: @escaping (_ response: NetworkStorageFetchResponse) -> Void) {
+        guard let request = request as? RequestType else {
+            completion(.failure(NetworkError.notSupportRequest))
+            return
+        }
+
+        fetch(request: request, completion: completion)
+    }
+
+    func save(baseRequest request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData?, value: Any) {
+        guard let request = request as? RequestType else {
+            return
+        }
+
+        save(request: request, rawData: rawData, value: value)
+    }
+
+    func delete(baseRequest request: NetworkRequestBaseStorable) {
+        guard let request = request as? RequestType else {
+            return
+        }
+
+        delete(request: request)
+    }
+}

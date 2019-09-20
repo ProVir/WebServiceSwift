@@ -10,7 +10,7 @@ import Foundation
 
 final class StoragesManager {
     private let mutex = PThreadMutexLock()
-    private let storages: [NetworkStorage]
+    private let storages: [NetworkBaseStorage]
     private let queueForResponse: DispatchQueue
 
     private lazy var rawDataProcessingHandler: (NetworkRequestBaseStorable, NetworkStorageRawData, @escaping (Result<Any, NetworkStorageError>) -> Void) -> Void
@@ -27,7 +27,7 @@ final class StoragesManager {
 
     func save(request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData?, value: Any) {
         guard let storage = findStorage(request: request) else { return }
-        storage.save(request: request, rawData: rawData, value: value)
+        storage.save(baseRequest: request, rawData: rawData, value: value)
     }
 
     func fetch(
@@ -62,7 +62,7 @@ final class StoragesManager {
         }
 
         //2. Perform read
-        storage.fetch(request: request) { [weak self] response in
+        storage.fetch(baseRequest: request) { [weak self] response in
             guard let self = self, task.isCanceled == false else {
                 completionAsyncHandler(nil, .canceled(.unknown))
                 return
@@ -93,7 +93,7 @@ final class StoragesManager {
 
     func deleteInStorage(request: NetworkRequestBaseStorable) {
         if let storage = findStorage(request: request) {
-            storage.delete(request: request)
+            storage.delete(baseRequest: request)
         }
     }
 
@@ -122,7 +122,7 @@ final class StoragesManager {
     }
 
     // MARK: - Private
-    private func findStorage(request: NetworkRequestBaseStorable) -> NetworkStorage? {
+    private func findStorage(request: NetworkRequestBaseStorable) -> NetworkBaseStorage? {
         let dataClass = request.dataClassificationForStorage
         for storage in self.storages {
             let supportClasses = storage.supportDataClassification

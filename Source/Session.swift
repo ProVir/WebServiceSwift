@@ -9,8 +9,8 @@
 import Foundation
 
 public struct NetworkSessionConfiguration {
-    public var gateways: [NetworkGateway]
-    public var storages: [NetworkStorage]
+    public var gateways: [NetworkBaseGateway]
+    public var storages: [NetworkBaseStorage]
 
     /// Perform response closures and delegates in dispath queue. Default: main thread.
     public var queueForResponse: DispatchQueue
@@ -18,8 +18,8 @@ public struct NetworkSessionConfiguration {
     /// Ignore gateway parameter and always don't use networkActivityIndicator in statusBar when requests in process.
     public var disableNetworkActivityIndicator: Bool
 
-    public init(gateways: [NetworkGateway],
-                storages: [NetworkStorage],
+    public init(gateways: [NetworkBaseGateway],
+                storages: [NetworkBaseStorage],
                 queueForResponse: DispatchQueue = .main,
                 disableNetworkActivityIndicator: Bool = false) {
         self.gateways = gateways
