@@ -25,7 +25,7 @@ public extension NetworkRequestBaseStorable {
 public enum NetworkStorageFetchResponse {
     case rawData(NetworkStorageRawData, Date?)
     case value(Any, Date?)
-    case notFoundData
+    case notFound
     case failure(Error)
 }
 
@@ -54,7 +54,7 @@ public protocol NetworkStorage: class {
      - Parameters:
      - request: Original request.
      - completionHandler: After readed data need call with result data. This closure need call and only one. Be sure to call in the main thread.
-     - response: Result response enum with data. If not data - use .error(WebServiceResponseError.notFoundData)
+     - response: Result response enum with data. 
      */
     func fetch(request: NetworkRequestBaseStorable, completionHandler: @escaping (_ response: NetworkStorageFetchResponse) -> Void)
 

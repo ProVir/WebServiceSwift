@@ -138,6 +138,17 @@ extension NetworkStorageTask {
         }
     }
 
+    var storageCanceledReason: NetworkStorageCanceledReason {
+        guard let reason = canceledReason else { return .unknown }
+        switch reason {
+        case .user: return .user
+        case .request(.success, _): return .dependSuccess
+        case .request(.failure, _): return .dependFailure
+        case .request(_, .some(let r)): return .dependCanceled(r)
+        case .request(_, .none): return .unknown
+        }
+    }
+
     func setStateFromStorage(_ state: NetworkTaskState) {
         mutex.synchronized {
             self.unsafeState = state

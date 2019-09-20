@@ -46,17 +46,15 @@ final class StoragesManager {
         let completionAsyncHandler = { [queueForResponse] (timeStamp: Date?, response: NetworkStorageResponse<Any>) in
             queueForResponse.async {
                 if task.isCanceled {
-                    handler(nil, .canceled(task.requestCanceledReason))
+                    handler(nil, .canceled(task.storageCanceledReason))
                     return
                 }
 
                 switch response {
-                case .success:
-                    task.setStateFromStorage(.success)
-                case .failure:
-                    task.setStateFromStorage(.failure)
-                case .canceled:
-                    task.setStateFromStorage(.canceled)
+                case .success: task.setStateFromStorage(.success)
+                case .notFound: task.setStateFromStorage(.failure)
+                case .failure: task.setStateFromStorage(.failure)
+                case .canceled: task.setStateFromStorage(.canceled)
                 }
 
                 handler(timeStamp, response)
@@ -82,8 +80,8 @@ final class StoragesManager {
             case let .value(value, timeStamp):
                 completionAsyncHandler(timeStamp, .success(value))
 
-            case .notFoundData:
-                completionAsyncHandler(nil, .failure(NetworkStorageError.notFoundData))
+            case .notFound:
+                completionAsyncHandler(nil, .notFound)
 
             case let .failure(error):
                 completionAsyncHandler(nil, .failure(NetworkStorageError.failureFetch(error)))

@@ -67,19 +67,20 @@ public struct NetworkRequestId: RawRepresentable, Hashable, Comparable {
  - `noFoundGateway`: If gateway not found in `[gateways]` for request
  - `notSupportRequest`: If request after test fot gateway contains invalid query or etc
  - `invalidTypeResult`: Invalid result type from gateway
+ - `notFoundDataInStorage`: Data not found in storage
  - `unknown`: Unknown error in gateway
  */
 public enum NetworkError: Error {
     case notFoundGateway
     case notSupportRequest
     case invalidTypeResult(Any.Type, require: Any.Type)
+    case notFoundDataInStorage
     case unknown
 }
 
 /**
  Storage errors
 
- - `notFoundData`: Data not found in storage
  - `noFoundStorage`: If storage not found in `[storages]` for request
  - `noFoundGateway`: If gateway not found in `[gateways]` for data processing readed raw data
  - `failureFetch`: Error fetch in storage
@@ -87,25 +88,25 @@ public enum NetworkError: Error {
   - `invalidTypeResult`: Invalid result type from storage or gateway
  */
 public enum NetworkStorageError: Error {
-    case notFoundData
     case notFoundStorage
     case notFoundGateway
     case failureFetch(Error)
     case failureDataProcessing(Error)
     case invalidTypeResult(Any.Type, require: Any.Type)
-
-    public var isNotFoundData: Bool {
-        switch self {
-        case .notFoundData: return true
-        default: return false
-        }
-    }
 }
 
 public enum NetworkRequestCanceledReason: Hashable {
     case duplicate
     case user
     case destroyed
+    case unknown
+}
+
+public enum NetworkStorageCanceledReason: Hashable {
+    case user
+    case dependSuccess
+    case dependFailure
+    case dependCanceled(NetworkRequestCanceledReason)
     case unknown
 }
 
@@ -117,9 +118,9 @@ public enum NetworkRequestCanceledReason: Hashable {
  - `canceledRequest`: Reqest canceled (called `WebService.cancelRequests()` method for this request)
  - `duplicateRequest`: If `excludeDuplicate == true` and this request contained in queue
  */
-public enum NetworkBaseResponse<T, E: Error> {
+public enum NetworkResponse<T> {
     case success(T)
-    case failure(E)
+    case failure(Error)
     case canceled(NetworkRequestCanceledReason)
 
     /// Data if success response
@@ -131,7 +132,7 @@ public enum NetworkBaseResponse<T, E: Error> {
     }
 
     /// Error if response completed with error
-    public var error: E? {
+    public var error: Error? {
         switch self {
         case .failure(let err): return err
         default: return nil
@@ -155,12 +156,55 @@ public enum NetworkBaseResponse<T, E: Error> {
     }
 }
 
-public typealias NetworkResponse<T> = NetworkBaseResponse<T, Error>
-public typealias NetworkStorageResponse<T> = NetworkBaseResponse<T, NetworkStorageError>
 
+public enum NetworkStorageResponse<T> {
+    case success(T)
+    case notFound
+    case failure(NetworkStorageError)
+    case canceled(NetworkStorageCanceledReason)
+
+    /// Data if success response
+    public var result: T? {
+        switch self {
+        case .success(let r): return r
+        default: return nil
+        }
+    }
+
+    public var isNotFound: Bool {
+        switch self {
+        case .notFound: return true
+        default: return false
+        }
+    }
+
+    /// Error if response completed with error
+    public var error: NetworkStorageError? {
+        switch self {
+        case .failure(let err): return err
+        default: return nil
+        }
+    }
+
+    /// Is canceled request, also true when duplicated request
+    public var isCanceled: Bool {
+        switch self {
+        case .canceled: return true
+        default: return false
+        }
+    }
+
+    /// Canceled reason if canceled
+    public var canceledReason: NetworkStorageCanceledReason? {
+        switch self {
+        case .canceled(let reason): return reason
+        default: return nil
+        }
+    }
+}
 
 ///Response from other type
-public extension NetworkBaseResponse where E == Error {
+public extension NetworkResponse {
     ///Convert to response with other type data automatic.
     func convert<T>() -> NetworkResponse<T> {
         return convert(T.self)
@@ -181,17 +225,14 @@ public extension NetworkBaseResponse where E == Error {
                 return .failure(NetworkError.invalidTypeResult(type(of: data), require: T.self))
             }
             
-        case .failure(let error):
-            return .failure(error)
-            
-        case .canceled(let reason):
-            return .canceled(reason)
+        case .failure(let error): return .failure(error)
+        case .canceled(let reason): return .canceled(reason)
         }
     }
 }
 
 ///Response from storage from other type
-public extension NetworkBaseResponse where E == NetworkStorageError {
+public extension NetworkStorageResponse {
     ///Convert to response with other type data automatic.
     func convert<T>() -> NetworkStorageResponse<T> {
         return convert(T.self)
@@ -212,19 +253,24 @@ public extension NetworkBaseResponse where E == NetworkStorageError {
                 return .failure(.invalidTypeResult(type(of: data), require: T.self))
             }
 
-        case .failure(let error):
-            return .failure(error)
-
-        case .canceled(let reason):
-            return .canceled(reason)
+        case .notFound: return .notFound
+        case .failure(let error): return .failure(error)
+        case .canceled(let reason): return .canceled(reason)
         }
     }
 
-    func convertFailure() -> NetworkResponse<T> {
+    func convertToCommon() -> NetworkResponse<T> {
         switch self {
         case .success(let r): return .success(r)
+        case .notFound: return .failure(NetworkError.notFoundDataInStorage)
         case .failure(let e): return .failure(e)
-        case .canceled(let r): return .canceled(r)
+        case .canceled(let r):
+            switch r {
+            case .user: return .canceled(.user)
+            case .dependSuccess, .dependFailure: return .canceled(.unknown)
+            case .dependCanceled(let r): return .canceled(r)
+            case .unknown: return .canceled(.unknown)
+            }
         }
     }
 }
