@@ -8,17 +8,6 @@
 
 import Foundation
 
-/// Response from gateway when success
-public struct NetworkGatewayResponse {
-    let result: Any
-    let rawDataForStorage: NetworkStorageRawData?
-
-    public init(result: Any, rawDataForStorage: NetworkStorageRawData?) {
-        self.result = result
-        self.rawDataForStorage = rawDataForStorage
-    }
-}
-
 /// Protocol for gateway
 public protocol NetworkGateway: class {
     /// Thread Dispatch Queue for `perofrmRequest()` and `cancelRequests()` methods.

@@ -8,26 +8,6 @@
 
 import Foundation
 
-/// Default data classification for storages.
-public let defaultDataClassification = "default"
-
-/// Base protocol for all requests with support storages
-public protocol NetworkRequestBaseStorable: NetworkBaseRequest {
-    /// Data classification to distinguish between storage
-    var dataClassificationForStorage: AnyHashable { get }
-}
-
-public extension NetworkRequestBaseStorable {
-    var dataClassificationForStorage: AnyHashable { return defaultDataClassification }
-}
-
-/// Response from storage
-public enum NetworkStorageFetchResponse {
-    case rawData(NetworkStorageRawData, Date?)
-    case value(Any, Date?)
-    case notFound
-    case failure(Error)
-}
 
 /**
  Protocol for storages in WebService. All requests need.

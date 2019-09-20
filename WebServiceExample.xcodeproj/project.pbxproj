@@ -19,7 +19,6 @@
 		501D2AF21F5188CC000E3FA3 /* WebServiceHtmlGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501D2AEF1F4EA1EC000E3FA3 /* WebServiceHtmlGateway.swift */; };
 		5054625820C066FD00595948 /* PThreadMutexLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5054625620C066B500595948 /* PThreadMutexLock.swift */; };
 		505528A82107925800D57FC4 /* WebServiceHtmlV2Gateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 505528A72107925800D57FC4 /* WebServiceHtmlV2Gateway.swift */; };
-		506CAFCF2084D729008AB016 /* Types.swift in Sources */ = {isa = PBXBuildFile; fileRef = 506CAFCD2084D707008AB016 /* Types.swift */; };
 		50AB6AB020883C2F00C1E093 /* SiteWebProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50AB6AAF20883C2F00C1E093 /* SiteWebProvider.swift */; };
 		50AB6AB220883F3100C1E093 /* WebService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50AB6AB120883F3100C1E093 /* WebService.swift */; };
 		50E9C1BF21077598003E6D4E /* SiteWebServiceHTMLHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E9C1BE21077598003E6D4E /* SiteWebServiceHTMLHandler.swift */; };
@@ -34,9 +33,14 @@
 		884F84D22301BA29000D20BE /* StoragesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 884F84D12301BA29000D20BE /* StoragesManager.swift */; };
 		884F862A23058E6F000D20BE /* Tasks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 884F862923058E6F000D20BE /* Tasks.swift */; };
 		8853EF2222EA0AF200C93531 /* GatewaysManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8853EF2122EA0AF200C93531 /* GatewaysManager.swift */; };
+		887612FB233515C300B27525 /* Requests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 887612FA233515C200B27525 /* Requests.swift */; };
+		887612FD233515F800B27525 /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 887612FC233515F800B27525 /* Errors.swift */; };
+		887612FF2335162700B27525 /* Response.swift in Sources */ = {isa = PBXBuildFile; fileRef = 887612FE2335162700B27525 /* Response.swift */; };
 		888B5A5A231D6DBA00BCD804 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = 888B5A22231D670800BCD804 /* Session.swift */; };
 		888B5A77231FD6ED00BCD804 /* TasksStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 888B5A76231FD6ED00BCD804 /* TasksStorage.swift */; };
 		88B3D13222F88A720096B332 /* NetworkIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B3D13122F88A720096B332 /* NetworkIndicator.swift */; };
+		88C8532523351765002E883B /* RequestFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88C8532423351765002E883B /* RequestFilter.swift */; };
+		88C85327233517DE002E883B /* GeneralTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88C85326233517DE002E883B /* GeneralTypes.swift */; };
 		F7FE9D6708B7621E6DEBF692 /* libPods-WebServiceSwift.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 24A0CD2C446B67E36EF3409D /* libPods-WebServiceSwift.a */; };
 /* End PBXBuildFile section */
 
@@ -86,7 +90,6 @@
 		5054625920C1026800595948 /* AlamofireSimpleGateway.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlamofireSimpleGateway.swift; sourceTree = "<group>"; };
 		5054625B20C1884200595948 /* WebServiceSimpleGateway.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceSimpleGateway.swift; sourceTree = "<group>"; };
 		505528A72107925800D57FC4 /* WebServiceHtmlV2Gateway.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceHtmlV2Gateway.swift; sourceTree = "<group>"; };
-		506CAFCD2084D707008AB016 /* Types.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Types.swift; sourceTree = "<group>"; };
 		507529A421032E61008A167A /* WebServiceDataBaseStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebServiceDataBaseStorage.swift; sourceTree = "<group>"; };
 		507529A72103321A008A167A /* WebServiceDataBaseStorage.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = WebServiceDataBaseStorage.xcdatamodel; sourceTree = "<group>"; };
 		50A1C664224D7365003A8554 /* Cartfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Cartfile; sourceTree = "<group>"; };
@@ -108,9 +111,14 @@
 		884F84D12301BA29000D20BE /* StoragesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoragesManager.swift; sourceTree = "<group>"; };
 		884F862923058E6F000D20BE /* Tasks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tasks.swift; sourceTree = "<group>"; };
 		8853EF2122EA0AF200C93531 /* GatewaysManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatewaysManager.swift; sourceTree = "<group>"; };
+		887612FA233515C200B27525 /* Requests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Requests.swift; sourceTree = "<group>"; };
+		887612FC233515F800B27525 /* Errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Errors.swift; sourceTree = "<group>"; };
+		887612FE2335162700B27525 /* Response.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Response.swift; sourceTree = "<group>"; };
 		888B5A22231D670800BCD804 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
 		888B5A76231FD6ED00BCD804 /* TasksStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasksStorage.swift; sourceTree = "<group>"; };
 		88B3D13122F88A720096B332 /* NetworkIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkIndicator.swift; sourceTree = "<group>"; };
+		88C8532423351765002E883B /* RequestFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestFilter.swift; sourceTree = "<group>"; };
+		88C85326233517DE002E883B /* GeneralTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralTypes.swift; sourceTree = "<group>"; };
 		88E597CB22DE2CBE00CDAA90 /* Gateway.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gateway.swift; sourceTree = "<group>"; };
 		88E597CD22DE792500CDAA90 /* Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
 		88E59A7522E85AB100CDAA90 /* CommonStoring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommonStoring.swift; sourceTree = "<group>"; };
@@ -191,19 +199,18 @@
 			children = (
 				501D2AD91F4E8DF5000E3FA3 /* WebService.h */,
 				501D2ADA1F4E8DF5000E3FA3 /* Info.plist */,
-				506CAFCD2084D707008AB016 /* Types.swift */,
+				8810AF932335195700546DBF /* Internal */,
+				887612FA233515C200B27525 /* Requests.swift */,
+				88E59A7522E85AB100CDAA90 /* CommonStoring.swift */,
+				887612FC233515F800B27525 /* Errors.swift */,
+				887612FE2335162700B27525 /* Response.swift */,
+				88C8532423351765002E883B /* RequestFilter.swift */,
+				88C85326233517DE002E883B /* GeneralTypes.swift */,
 				884F862923058E6F000D20BE /* Tasks.swift */,
 				888B5A22231D670800BCD804 /* Session.swift */,
-				88B3D13122F88A720096B332 /* NetworkIndicator.swift */,
-				8853EF2122EA0AF200C93531 /* GatewaysManager.swift */,
-				884F84D12301BA29000D20BE /* StoragesManager.swift */,
-				888B5A76231FD6ED00BCD804 /* TasksStorage.swift */,
 				88E597CB22DE2CBE00CDAA90 /* Gateway.swift */,
 				88E597CD22DE792500CDAA90 /* Storage.swift */,
-				88E59A7522E85AB100CDAA90 /* CommonStoring.swift */,
-				5054625620C066B500595948 /* PThreadMutexLock.swift */,
-				501D2AE41F4E8FA2000E3FA3 /* WebService.swift */,
-				50BFAFF7208F4C8A007E8FBD /* RequestProvider.swift */,
+				88B3D13122F88A720096B332 /* NetworkIndicator.swift */,
 				50D22B0E20DA9FA000C44198 /* General */,
 				5054625220C065B200595948 /* Alamofire */,
 			);
@@ -255,6 +262,8 @@
 		50D22B0E20DA9FA000C44198 /* General */ = {
 			isa = PBXGroup;
 			children = (
+				50BFAFF7208F4C8A007E8FBD /* RequestProvider.swift */,
+				501D2AE41F4E8FA2000E3FA3 /* WebService.swift */,
 				50D22B0A20D7F91800C44198 /* WebServiceMemoryStorage.swift */,
 				501D2AEB1F4E92A1000E3FA3 /* WebServiceFileStorage.swift */,
 				507529A421032E61008A167A /* WebServiceDataBaseStorage.swift */,
@@ -264,6 +273,17 @@
 				507529A62103321A008A167A /* WebServiceDataBaseStorage.xcdatamodeld */,
 			);
 			path = General;
+			sourceTree = "<group>";
+		};
+		8810AF932335195700546DBF /* Internal */ = {
+			isa = PBXGroup;
+			children = (
+				8853EF2122EA0AF200C93531 /* GatewaysManager.swift */,
+				884F84D12301BA29000D20BE /* StoragesManager.swift */,
+				888B5A76231FD6ED00BCD804 /* TasksStorage.swift */,
+				5054625620C066B500595948 /* PThreadMutexLock.swift */,
+			);
+			path = Internal;
 			sourceTree = "<group>";
 		};
 		9D14E7A17010FD744AF284AD /* Pods */ = {
@@ -456,13 +476,17 @@
 			files = (
 				888B5A5A231D6DBA00BCD804 /* Session.swift in Sources */,
 				88B3D13222F88A720096B332 /* NetworkIndicator.swift in Sources */,
-				506CAFCF2084D729008AB016 /* Types.swift in Sources */,
 				884F862A23058E6F000D20BE /* Tasks.swift in Sources */,
+				88C85327233517DE002E883B /* GeneralTypes.swift in Sources */,
 				8843E6F923181C6D00131390 /* Gateway.swift in Sources */,
 				884F84D22301BA29000D20BE /* StoragesManager.swift in Sources */,
+				887612FF2335162700B27525 /* Response.swift in Sources */,
 				8843E6FB2318233E00131390 /* CommonStoring.swift in Sources */,
+				887612FD233515F800B27525 /* Errors.swift in Sources */,
 				888B5A77231FD6ED00BCD804 /* TasksStorage.swift in Sources */,
 				8853EF2222EA0AF200C93531 /* GatewaysManager.swift in Sources */,
+				88C8532523351765002E883B /* RequestFilter.swift in Sources */,
+				887612FB233515C300B27525 /* Requests.swift in Sources */,
 				5054625820C066FD00595948 /* PThreadMutexLock.swift in Sources */,
 				8843E6FA23181C6F00131390 /* Storage.swift in Sources */,
 			);
