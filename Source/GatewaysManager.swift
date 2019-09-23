@@ -72,21 +72,21 @@ final class GatewaysManager {
         key: NetworkBaseRequestKey?,
         excludeDuplicate: Bool,
         storageDependency: NetworkStorageDependency?,
-        completionHandler: @escaping (_ response: NetworkResponse<Any>) -> Void
+        completion: @escaping (_ response: NetworkResponse<Any>) -> Void
     ) -> NetworkRequestTask {
         let task = NetworkRequestTask(request: request, key: key, storageDependency: storageDependency)
 
         //1. Test duplicate requests
         if excludeDuplicate && tasksStorage.containsDuplicate(task: task) {
             task.setState(.canceled, canceledReason: .duplicate, finishTask: true)
-            completionHandler(.canceled(.duplicate))
+            completion(.canceled(.duplicate))
             return task
         }
 
         //2. Find Gateway and Storage
         guard let (gateway, gatewayIndex) = findGateway(request: request) else {
             task.setState(.failure, canceledReason: nil, finishTask: true)
-            completionHandler(.failure(NetworkError.notFoundGateway))
+            completion(.failure(NetworkError.notFoundGateway))
             return task
         }
 
@@ -104,15 +104,15 @@ final class GatewaysManager {
                 switch response {
                 case .success(let data):
                     task.setState(.success, canceledReason: nil, finishTask: true)
-                    completionHandler(.success(data))
+                    completion(.success(data))
 
                 case .failure(let error):
                     task.setState(.failure, canceledReason: nil, finishTask: true)
-                    completionHandler(.failure(error))
+                    completion(.failure(error))
 
                 case .canceled(let reason):
                     task.setState(.canceled, canceledReason: reason, finishTask: true)
-                    completionHandler(.canceled(reason))
+                    completion(.canceled(reason))
                 }
             }
         }

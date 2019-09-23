@@ -32,12 +32,12 @@ final class StoragesManager {
 
     func fetch(
         request: NetworkRequestBaseStorable,
-        handler: @escaping (_ timeStamp: Date?, _ response: NetworkStorageResponse<Any>) -> Void
+        completion: @escaping (_ timeStamp: Date?, _ response: NetworkStorageResponse<Any>) -> Void
     ) -> NetworkStorageTask {
         let task = NetworkStorageTask(request: request)
 
         guard let storage = findStorage(request: request) else {
-            handler(nil, .failure(NetworkStorageError.notFoundStorage))
+            completion(nil, .failure(NetworkStorageError.notFoundStorage))
             task.setStateFromStorage(.failure)
             return task
         }
@@ -46,7 +46,7 @@ final class StoragesManager {
         let completionAsyncHandler = { [queueForResponse] (timeStamp: Date?, response: NetworkStorageResponse<Any>) in
             queueForResponse.async {
                 if task.isCanceled {
-                    handler(nil, .canceled(task.storageCanceledReason))
+                    completion(nil, .canceled(task.storageCanceledReason))
                     return
                 }
 
@@ -57,7 +57,7 @@ final class StoragesManager {
                 case .canceled: task.setStateFromStorage(.canceled)
                 }
 
-                handler(timeStamp, response)
+                completion(timeStamp, response)
             }
         }
 

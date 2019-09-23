@@ -29,7 +29,7 @@ public struct NetworkSessionConfiguration {
     }
 }
 
-final class NetworkSession {
+public final class NetworkSession {
     private let gatewaysManager: GatewaysManager
     private let storagesManager: StoragesManager
 
@@ -54,14 +54,14 @@ final class NetworkSession {
         key: NetworkBaseRequestKey?,
         excludeDuplicate: Bool,
         storageDependency: NetworkStorageDependency?,
-        completionHandler: @escaping (_ response: NetworkResponse<Any>) -> Void
+        completion: @escaping (_ response: NetworkResponse<Any>) -> Void
     ) -> NetworkRequestTask {
         return gatewaysManager.perform(
             request: baseRequest,
             key: key,
             excludeDuplicate: excludeDuplicate,
             storageDependency: storageDependency,
-            completionHandler: completionHandler
+            completion: completion
         )
     }
 
@@ -71,42 +71,59 @@ final class NetworkSession {
         key: NetworkBaseRequestKey? = nil,
         excludeDuplicate: Bool = false,
         storageDependency: NetworkStorageDependency? = nil,
-        completionHandler: @escaping (_ response: NetworkResponse<RequestType.ResultType>) -> Void
+        completion: @escaping (_ response: NetworkResponse<RequestType.ResultType>) -> Void
     ) -> NetworkRequestTask {
         return gatewaysManager.perform(
             request: request,
             key: key,
             excludeDuplicate: excludeDuplicate,
             storageDependency: storageDependency,
-            completionHandler: { completionHandler( $0.convert() ) }
+            completion: { completion( $0.convert() ) }
         )
     }
 
     // MARK: Read storage
     @discardableResult
-    func fetch(baseRequest: NetworkRequestBaseStorable, handler: @escaping (_ timeStamp: Date?, _ response: NetworkStorageResponse<Any>) -> Void) -> NetworkStorageTask {
-        return storagesManager.fetch(request: baseRequest, handler: handler)
+    public func fetch(baseRequest: NetworkRequestBaseStorable, completion: @escaping (_ timeStamp: Date?, _ response: NetworkStorageResponse<Any>) -> Void) -> NetworkStorageTask {
+        return storagesManager.fetch(request: baseRequest, completion: completion)
     }
 
     @discardableResult
-    func fetch<RequestType: NetworkRequest & NetworkRequestBaseStorable>(
+    public func fetch<RequestType: NetworkRequest & NetworkRequestBaseStorable>(
         request: RequestType,
-        handler: @escaping (_ timeStamp: Date?, _ response: NetworkStorageResponse<RequestType.ResultType>) -> Void
+        completion: @escaping (_ timeStamp: Date?, _ response: NetworkStorageResponse<RequestType.ResultType>) -> Void
     ) -> NetworkStorageTask {
-        return storagesManager.fetch(request: request, handler: { handler( $0, $1.convert() ) })
+        return storagesManager.fetch(request: request, completion: { completion( $0, $1.convert() ) })
     }
 
     // MARK: Control requests
-    func tasks(filter: NetworkRequestFilter?) -> [NetworkRequestTask] {
+    public func tasks(filter: NetworkRequestFilter?) -> [NetworkRequestTask] {
         return gatewaysManager.tasks(filter: filter)
     }
 
-    func containsRequest(filter: NetworkRequestFilter?) -> Bool {
+    public func containsRequest(filter: NetworkRequestFilter?) -> Bool {
         return gatewaysManager.contains(filter: filter)
     }
 
     @discardableResult
-    func cancelRequests(filter: NetworkRequestFilter?) -> [NetworkRequestTask] {
+    public func cancelRequests(filter: NetworkRequestFilter?) -> [NetworkRequestTask] {
         return gatewaysManager.cancel(filter: filter)
+    }
+
+    // MARK: Delete in storage
+    public func deleteInStorage(request: NetworkRequestBaseStorable) {
+        storagesManager.deleteInStorage(request: request)
+    }
+
+    public func deleteAllInStorages(withDataClassification dataClassification: AnyHashable) {
+        storagesManager.deleteAllInStorages(withDataClassification: dataClassification)
+    }
+
+    public func deleteAllInStoragesWithAnyDataClassification() {
+        storagesManager.deleteAllInStoragesWithAnyDataClassification()
+    }
+
+    public func deleteAllInStorages() {
+        storagesManager.deleteAllInStorages()
     }
 }
