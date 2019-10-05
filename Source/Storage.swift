@@ -13,7 +13,7 @@ public protocol NetworkStorage: NetworkBaseStorage {
 
     func fetch(request: NetworkRequestBaseStorable, completion: @escaping (_ response: NetworkStorageFetchResponse) -> Void)
 
-    func save(request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData?, value: Any)
+    func save(request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData?, value: Any, completion: @escaping (NetworkStorageSaveResult) -> Void)
 
     func delete(request: NetworkRequestBaseStorable)
 }
@@ -52,11 +52,11 @@ public protocol NetworkBaseStorage: class {
      Warning: Usually used not in main thread.
 
      - Parameters:
-     - request: Original request.
-     - rawData: Raw data for save - universal type, need process in gateway
-     - value: Value type for save, no need process in gateway
+        - request: Original request.
+        - rawData: Raw data for save - universal type, need process in gateway
+        - value: Value type for save, no need process in gateway
      */
-    func save(baseRequest request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData?, value: Any)
+    func save(baseRequest request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData?, value: Any, completion: @escaping (NetworkStorageSaveResult) -> Void)
 
     /**
      Delete data in storage for concrete request.
@@ -83,12 +83,12 @@ public extension NetworkStorage {
         fetch(request: request, completion: completion)
     }
 
-    func save(baseRequest request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData?, value: Any) {
+    func save(baseRequest request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData?, value: Any, completion: @escaping (NetworkStorageSaveResult) -> Void) {
         guard let request = request as? RequestType else {
             return
         }
 
-        save(request: request, rawData: rawData, value: value)
+        save(request: request, rawData: rawData, value: value, completion: completion)
     }
 
     func delete(baseRequest request: NetworkRequestBaseStorable) {

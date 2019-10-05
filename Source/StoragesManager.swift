@@ -27,7 +27,11 @@ final class StoragesManager {
 
     func save(request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData?, value: Any) {
         guard let storage = findStorage(request: request) else { return }
-        storage.save(baseRequest: request, rawData: rawData, value: value)
+        storage.save(baseRequest: request, rawData: rawData, value: value) { [weak storage] result in
+            if case .failure(let error) = result, request.shouldDeleteInStorageWhenSaveFailure(error) {
+                storage?.delete(baseRequest: request)
+            }
+        }
     }
 
     func fetch(

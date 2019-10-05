@@ -50,3 +50,10 @@ public enum NetworkStorageFetchResponse {
     case notFound
     case failure(Error)
 }
+
+/// Response from storage
+public enum NetworkStorageSaveResult {
+    case success
+    case notSupport
+    case failure(Error)
+}

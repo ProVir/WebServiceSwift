@@ -45,8 +45,12 @@ public let defaultDataClassification = "default"
 public protocol NetworkRequestBaseStorable: NetworkBaseRequest {
     /// Data classification to distinguish between storage
     var dataClassificationForStorage: AnyHashable { get }
+    
+    func shouldDeleteInStorageWhenSaveFailure(_ error: Error) -> Bool
 }
 
 public extension NetworkRequestBaseStorable {
     var dataClassificationForStorage: AnyHashable { return defaultDataClassification }
+    
+    func shouldDeleteInStorageWhenSaveFailure(_ error: Error) -> Bool { return true }
 }

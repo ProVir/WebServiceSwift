@@ -183,7 +183,7 @@ public extension NetworkStorageResponse {
     func convertToCommon() -> NetworkResponse<T> {
         switch self {
         case .success(let r): return .success(r)
-        case .notFound: return .failure(NetworkError.notFoundDataInStorage)
+        case .notFound: return .failure(NetworkStorageError.notFoundData)
         case .failure(let e): return .failure(e)
         case .canceled(let r):
             switch r {
