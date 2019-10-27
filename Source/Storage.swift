@@ -11,7 +11,7 @@ import Foundation
 public protocol NetworkStorage: NetworkBaseStorage {
     associatedtype RequestType: NetworkRequestBaseStorable
 
-    func fetch(request: NetworkRequestBaseStorable, completion: @escaping (_ response: NetworkStorageFetchResponse) -> Void)
+    func fetch(request: NetworkRequestBaseStorable, completion: @escaping (_ result: NetworkStorageFetchResult) -> Void)
 
     func save(request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData?, value: Any, completion: @escaping (NetworkStorageSaveResult) -> Void)
 
@@ -43,9 +43,9 @@ public protocol NetworkBaseStorage: class {
      - Parameters:
      - request: Original request.
      - completionHandler: After readed data need call with result data. This closure need call and only one. Be sure to call in the main thread.
-     - response: Result response enum with data. 
+     - result: Result response enum with data.
      */
-    func fetch(baseRequest request: NetworkRequestBaseStorable, completion: @escaping (_ response: NetworkStorageFetchResponse) -> Void)
+    func fetch(baseRequest request: NetworkRequestBaseStorable, completion: @escaping (_ result: NetworkStorageFetchResult) -> Void)
 
     /**
      Save data from server (gateway).
@@ -74,7 +74,7 @@ public extension NetworkStorage {
         return request is RequestType
     }
 
-    func fetch(baseRequest request: NetworkRequestBaseStorable, completion: @escaping (_ response: NetworkStorageFetchResponse) -> Void) {
+    func fetch(baseRequest request: NetworkRequestBaseStorable, completion: @escaping (_ result: NetworkStorageFetchResult) -> Void) {
         guard let request = request as? RequestType else {
             completion(.failure(NetworkError.notSupportRequest))
             return

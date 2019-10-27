@@ -27,7 +27,7 @@ public final class NetworkRequestPerfomer<RequestType: NetworkRequest>: NetworkP
     public func perform(
         request: RequestType,
         storageDependency: NetworkStorageDependency? = nil,
-        completion: @escaping (_ response: NetworkResponse<RequestType.ResultType>) -> Void
+        completion: @escaping (_ result: NetworkResult<RequestType.ResponseType>) -> Void
         ) -> NetworkRequestTask {
         return session.perform(request: request,
                                excludeDuplicate: internalExcludeDuplicateDefault,
@@ -41,7 +41,7 @@ public final class NetworkRequestPerfomer<RequestType: NetworkRequest>: NetworkP
         key: NetworkBaseRequestKey,
         excludeDuplicate: Bool,
         storageDependency: NetworkStorageDependency? = nil,
-        completion: @escaping (_ response: NetworkResponse<RequestType.ResultType>) -> Void
+        completion: @escaping (_ result: NetworkResult<RequestType.ResponseType>) -> Void
         ) -> NetworkRequestTask {
         return session.perform(request: request,
                                key: key,
@@ -77,7 +77,7 @@ extension NetworkRequestPerfomer where RequestType: NetworkEmptyRequest {
     @discardableResult
     public func perform(
         storageDependency: NetworkStorageDependency? = nil,
-        completion: @escaping (_ response: NetworkResponse<RequestType.ResultType>) -> Void
+        completion: @escaping (_ result: NetworkResult<RequestType.ResponseType>) -> Void
         ) -> NetworkRequestTask {
         return session.perform(request: RequestType(),
                                excludeDuplicate: internalExcludeDuplicateDefault,
@@ -99,7 +99,7 @@ extension NetworkRequestPerfomer where RequestType: Hashable {
         request: RequestType,
         excludeDuplicate: Bool,
         storageDependency: NetworkStorageDependency? = nil,
-        completion: @escaping (_ response: NetworkResponse<RequestType.ResultType>) -> Void
+        completion: @escaping (_ result: NetworkResult<RequestType.ResponseType>) -> Void
         ) -> NetworkRequestTask {
         return session.perform(request: request,
                                excludeDuplicate: excludeDuplicate,
@@ -113,7 +113,7 @@ extension NetworkRequestPerfomer where RequestType: NetworkRequestBaseStorable {
     @discardableResult
     public func fetch(
         request: RequestType,
-        completion: @escaping (_ timeStamp: Date?, _ response: NetworkStorageResponse<RequestType.ResultType>) -> Void
+        completion: @escaping (_ timeStamp: Date?, _ result: NetworkStorageResult<RequestType.ResponseType>) -> Void
         ) -> NetworkStorageTask {
         return session.fetch(request: request, completion: completion)
     }
@@ -126,7 +126,7 @@ extension NetworkRequestPerfomer where RequestType: NetworkRequestBaseStorable {
 extension NetworkRequestPerfomer where RequestType: NetworkRequestBaseStorable, RequestType: NetworkEmptyRequest {
     @discardableResult
     public func fetch(
-        completion: @escaping (_ timeStamp: Date?, _ response: NetworkStorageResponse<RequestType.ResultType>) -> Void
+        completion: @escaping (_ timeStamp: Date?, _ result: NetworkStorageResult<RequestType.ResponseType>) -> Void
         ) -> NetworkStorageTask {
         return session.fetch(request: RequestType(), completion: completion)
     }

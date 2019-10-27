@@ -32,19 +32,22 @@ public struct NetworkRequestId: RawRepresentable, Hashable, Comparable {
     }
 }
 
-/// Response from gateway when success
-public struct NetworkGatewayResponse {
-    let result: Any
-    let rawDataForStorage: NetworkStorageRawData?
+/// Result from gateway when success
+public enum NetworkGatewayResult {
+    case success(Any, rawDataForStorage: NetworkStorageRawData?)
+    case failure(Error, isContent: Bool)
 
-    public init(result: Any, rawDataForStorage: NetworkStorageRawData?) {
-        self.result = result
-        self.rawDataForStorage = rawDataForStorage
+    public static func failureCommon(_ error: Error) -> NetworkGatewayResult {
+        return .failure(error, isContent: false)
+    }
+
+    public static func failureAsContent(_ error: Error) -> NetworkGatewayResult {
+        return .failure(error, isContent: true)
     }
 }
 
 /// Response from storage
-public enum NetworkStorageFetchResponse {
+public enum NetworkStorageFetchResult {
     case rawData(NetworkStorageRawData, Date?)
     case value(Any, Date?)
     case notFound

@@ -13,13 +13,13 @@ import Foundation
 
  - `noFoundGateway`: If gateway not found in `[gateways]` for request
  - `notSupportRequest`: If request after test fot gateway contains invalid query or etc
- - `invalidTypeResult`: Invalid result type from gateway
+ - `invalidTypeResponse`: Invalid result type from gateway
  - `unknown`: Unknown error in gateway
  */
 public enum NetworkError: Error {
     case notFoundGateway
     case notSupportRequest
-    case invalidTypeResult(Any.Type, require: Any.Type)
+    case invalidTypeResponse(Any.Type, require: Any.Type)
     case unknown
 }
 
@@ -31,7 +31,7 @@ public enum NetworkError: Error {
  - `notFoundData`: Data not found in storage
  - `failureFetch`: Error fetch in storage
  - `failureDataProcessing`: Error data processing readed raw data in gateway
- - `invalidTypeResult`: Invalid result type from storage or gateway
+ - `invalidTypeResponse`: Invalid result type from storage or gateway
  */
 public enum NetworkStorageError: Error {
     case notFoundStorage
@@ -39,5 +39,5 @@ public enum NetworkStorageError: Error {
     case notFoundData
     case failureFetch(Error)
     case failureDataProcessing(Error)
-    case invalidTypeResult(Any.Type, require: Any.Type)
+    case invalidTypeResponse(Any.Type, require: Any.Type)
 }

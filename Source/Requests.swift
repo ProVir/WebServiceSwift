@@ -14,7 +14,7 @@ public protocol NetworkBaseRequest { }
 /// Generic protocol with information result type for all types request.
 public protocol NetworkRequest: NetworkBaseRequest {
     /// Type for response data when success. For data without data you can use Void or Any?
-    associatedtype ResultType
+    associatedtype ResponseType
 }
 
 /// Generic protocol without parameters for server and with information result type for all types request.
@@ -38,6 +38,12 @@ public extension NetworkRequestKey {
 
 
 // MARK: Storage
+public enum NetworkRequestStorePolicyLevel: Int {
+    case anyOfLast = 0
+    case onlyLastSuccessResult
+    case noStoreWhenErrorIsContent
+}
+
 /// Default data classification for storages.
 public let defaultDataClassification = "default"
 
@@ -45,12 +51,30 @@ public let defaultDataClassification = "default"
 public protocol NetworkRequestBaseStorable: NetworkBaseRequest {
     /// Data classification to distinguish between storage
     var dataClassificationForStorage: AnyHashable { get }
-    
-    func shouldDeleteInStorageWhenSaveFailure(_ error: Error) -> Bool
+
+    var storePolicyLevel: NetworkRequestStorePolicyLevel { get }
 }
 
 public extension NetworkRequestBaseStorable {
     var dataClassificationForStorage: AnyHashable { return defaultDataClassification }
-    
-    func shouldDeleteInStorageWhenSaveFailure(_ error: Error) -> Bool { return true }
+    var storePolicyLevel: NetworkRequestStorePolicyLevel { return .onlyLastSuccessResult }
+}
+
+
+extension NetworkRequestStorePolicyLevel {
+    func shouldDeleteWhenFailureSave() -> Bool {
+        switch self {
+        case .anyOfLast: return false
+        case .onlyLastSuccessResult,
+             .noStoreWhenErrorIsContent: return true
+        }
+    }
+
+    func shouldDeleteWhenErrorIsContent() -> Bool {
+        switch self {
+        case .anyOfLast,
+             .onlyLastSuccessResult: return false
+        case .noStoreWhenErrorIsContent: return true
+        }
+    }
 }

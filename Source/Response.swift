@@ -24,32 +24,32 @@ public enum NetworkStorageCanceledReason: Hashable {
 }
 
 
-// MARK: Responses
+// MARK: Results
 /**
  Result response for concrete type from gateway
 
- - `data(T)`: Success response with data with require type
+ - `data(Response)`: Success response with data with require type
  - `error(Error)`: Error response
  - `canceledRequest`: Reqest canceled (called `WebService.cancelRequests()` method for this request)
  - `duplicateRequest`: If `excludeDuplicate == true` and this request contained in queue
  */
-public enum NetworkResponse<T> {
-    case success(T)
+public enum NetworkResult<Response> {
+    case success(Response)
     case failure(Error)
     case canceled(NetworkRequestCanceledReason)
 }
 
 
-public enum NetworkStorageResponse<T> {
-    case success(T)
+public enum NetworkStorageResult<Response> {
+    case success(Response)
     case notFound
     case failure(NetworkStorageError)
     case canceled(NetworkStorageCanceledReason)
 }
 
-public extension NetworkResponse {
+public extension NetworkResult {
     /// Data if success response
-    var result: T? {
+    var response: Response? {
         switch self {
         case .success(let r): return r
         default: return nil
@@ -81,9 +81,9 @@ public extension NetworkResponse {
     }
 }
 
-public extension NetworkStorageResponse {
+public extension NetworkStorageResult {
     /// Data if success response
-    var result: T? {
+    var response: Response? {
         switch self {
         case .success(let r): return r
         default: return nil
@@ -125,25 +125,25 @@ public extension NetworkStorageResponse {
 // MARK: Converters
 
 ///Response from other type
-public extension NetworkResponse {
+public extension NetworkResult {
     ///Convert to response with other type data automatic.
-    func convert<T>() -> NetworkResponse<T> {
+    func convert<T>() -> NetworkResult<T> {
         return convert(T.self)
     }
 
     ///Convert to response with type from request
-    func convert<RequestType: NetworkRequest>(request: RequestType) -> NetworkResponse<RequestType.ResultType> {
-        return convert(RequestType.ResultType.self)
+    func convert<RequestType: NetworkRequest>(request: RequestType) -> NetworkResult<RequestType.ResponseType> {
+        return convert(RequestType.ResponseType.self)
     }
 
     ///Convert to response with concrete other type data.
-    func convert<T>(_ typeData: T.Type) -> NetworkResponse<T> {
+    func convert<T>(_ typeData: T.Type) -> NetworkResult<T> {
         switch self {
         case .success(let data):
             if let data = data as? T {
                 return .success(data)
             } else {
-                return .failure(NetworkError.invalidTypeResult(type(of: data), require: T.self))
+                return .failure(NetworkError.invalidTypeResponse(type(of: data), require: T.self))
             }
 
         case .failure(let error): return .failure(error)
@@ -153,25 +153,25 @@ public extension NetworkResponse {
 }
 
 ///Response from storage from other type
-public extension NetworkStorageResponse {
+public extension NetworkStorageResult {
     ///Convert to response with other type data automatic.
-    func convert<T>() -> NetworkStorageResponse<T> {
+    func convert<T>() -> NetworkStorageResult<T> {
         return convert(T.self)
     }
 
     ///Convert to response with type from request
-    func convert<RequestType: NetworkRequest>(request: RequestType) -> NetworkStorageResponse<RequestType.ResultType> {
-        return convert(RequestType.ResultType.self)
+    func convert<RequestType: NetworkRequest>(request: RequestType) -> NetworkStorageResult<RequestType.ResponseType> {
+        return convert(RequestType.ResponseType.self)
     }
 
     ///Convert to response with concrete other type data.
-    func convert<T>(_ typeData: T.Type) -> NetworkStorageResponse<T> {
+    func convert<T>(_ typeData: T.Type) -> NetworkStorageResult<T> {
         switch self {
         case .success(let data):
             if let data = data as? T {
                 return .success(data)
             } else {
-                return .failure(.invalidTypeResult(type(of: data), require: T.self))
+                return .failure(.invalidTypeResponse(type(of: data), require: T.self))
             }
 
         case .notFound: return .notFound
@@ -180,7 +180,7 @@ public extension NetworkStorageResponse {
         }
     }
 
-    func convertToCommon() -> NetworkResponse<T> {
+    func convertToCommon() -> NetworkResult<Response> {
         switch self {
         case .success(let r): return .success(r)
         case .notFound: return .failure(NetworkStorageError.notFoundData)

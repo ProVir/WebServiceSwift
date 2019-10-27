@@ -22,21 +22,21 @@ public protocol NetworkRequestCommonValueStorable: NetworkRequestCommonValueBase
 
     /**
      Encoding data from custom type to binary data.
-     Support default implementation when ResultType is Codable
+     Support default implementation when ResponseType is Codable
 
      - Parameter value: Value from response.
      - Results: Binary data after encoding if supported.
      */
-    func encodeToBinaryForStorage(value: ResultType) throws -> Data
+    func encodeToBinaryForStorage(value: ResponseType) throws -> Data
 
     /**
      Decoding from binary data to custom type.
-     Support default implementation when ResultType is Codable
+     Support default implementation when ResponseType is Codable
 
      - Parameter data: Binary data from storage.
      - Results: Custom type after decoding if supported.
      */
-    func decodeToValueFromStorage(binary: Data) throws -> ResultType
+    func decodeToValueFromStorage(binary: Data) throws -> ResponseType
 }
 
 /// No generic protocol for requests support storages
@@ -50,10 +50,10 @@ public protocol NetworkRequestCommonValueBaseStorable: NetworkRequestBaseStorabl
 
 public extension NetworkRequestCommonValueStorable {
     func encodeToBinaryForStorage(anyValue: Any) throws -> Data {
-        if let value = anyValue as? ResultType {
+        if let value = anyValue as? ResponseType {
             return try encodeToBinaryForStorage(value: value)
         } else {
-            throw NetworkStorageError.invalidTypeResult(type(of: anyValue), require: ResultType.self)
+            throw NetworkStorageError.invalidTypeResponse(type(of: anyValue), require: ResponseType.self)
         }
     }
 
@@ -62,15 +62,15 @@ public extension NetworkRequestCommonValueStorable {
     }
 }
 
-public extension NetworkRequestCommonValueStorable where ResultType: Codable {
-    func encodeToBinaryForStorage(value: ResultType) throws -> Data {
+public extension NetworkRequestCommonValueStorable where ResponseType: Codable {
+    func encodeToBinaryForStorage(value: ResponseType) throws -> Data {
         let encoder = PropertyListEncoder()
         encoder.outputFormat = .binary
         return try encoder.encode(value)
     }
 
-    func decodeToValueFromStorage(binary: Data) throws -> ResultType {
+    func decodeToValueFromStorage(binary: Data) throws -> ResponseType {
         let decoder = PropertyListDecoder()
-        return try decoder.decode(ResultType.self, from: binary)
+        return try decoder.decode(ResponseType.self, from: binary)
     }
 }

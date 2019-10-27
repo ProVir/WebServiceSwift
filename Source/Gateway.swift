@@ -12,7 +12,7 @@ import Foundation
 public protocol NetworkGateway: NetworkBaseGateway {
     associatedtype RequestType: NetworkRequest
 
-    func performRequest(requestId: NetworkRequestId, request: RequestType, completion: @escaping (Result<NetworkGatewayResponse, Error>) -> Void)
+    func performRequest(requestId: NetworkRequestId, request: RequestType, completion: @escaping (NetworkGatewayResult) -> Void)
 
     func dataProcessingFromStorage(request: RequestType, rawData: NetworkStorageRawData) throws -> Any
 }
@@ -27,6 +27,9 @@ public protocol NetworkBaseGateway: class {
 
     /// When `true`, showed networkActivityIndicator in statusBar when requests in process.
     var useNetworkActivityIndicator: Bool { get }
+
+    /// If dataProcessingFromStorage return Error, delete data in storage if true
+    var deleteInvalidRawDataInStorage: Bool { get }
 
     /**
      Asks whether the request supports this gateway.
@@ -50,7 +53,7 @@ public protocol NetworkBaseGateway: class {
      - request: Original request with data.
      - completionWithRawData: Result with raw data from server or error. RawData usually binary data and this data saved as rawData in storage.
      */
-    func performRequest(requestId: NetworkRequestId, baseRequest request: NetworkBaseRequest, completion: @escaping (Result<NetworkGatewayResponse, Error>) -> Void)
+    func performRequest(requestId: NetworkRequestId, baseRequest request: NetworkBaseRequest, completion: @escaping (NetworkGatewayResult) -> Void)
 
     /**
      Preformed after canceled request.
@@ -80,9 +83,9 @@ public extension NetworkGateway {
         return request is RequestType
     }
 
-    func performRequest(requestId: NetworkRequestId, baseRequest request: NetworkBaseRequest, completion: @escaping (Result<NetworkGatewayResponse, Error>) -> Void) {
+    func performRequest(requestId: NetworkRequestId, baseRequest request: NetworkBaseRequest, completion: @escaping (NetworkGatewayResult) -> Void) {
         guard let request = request as? RequestType else {
-            completion(.failure(NetworkError.notSupportRequest))
+            completion(.failureCommon(NetworkError.notSupportRequest))
             return
         }
 
@@ -98,10 +101,9 @@ public extension NetworkGateway {
     }
 }
 
-
 #if os(iOS)
 #else
-extension NetworkBaseGateway {
+public extension NetworkBaseGateway {
     var useNetworkActivityIndicator: Bool { return false }
 }
 #endif

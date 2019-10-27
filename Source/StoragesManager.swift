@@ -13,30 +13,36 @@ final class StoragesManager {
     private let storages: [NetworkBaseStorage]
     private let queueForResponse: DispatchQueue
 
-    private lazy var rawDataProcessingHandler: (NetworkRequestBaseStorable, NetworkStorageRawData, @escaping (Result<Any, NetworkStorageError>) -> Void) -> Void
-        = { fatalError("Need setup StorageHandler before use") }()
+    private lazy var rawDataProcessingHandler: (
+        NetworkRequestBaseStorable,
+        NetworkStorageRawData,
+        @escaping (Result<Any, NetworkStorageError>, _ needDelete: Bool) -> Void
+    ) -> Void  = { fatalError("Need setup StorageHandler before use") }()
 
     init(config: NetworkSessionConfiguration) {
         self.storages = config.storages
         self.queueForResponse = config.queueForResponse
     }
 
-    func setup(rawDataProcessingHandler: @escaping (NetworkRequestBaseStorable, NetworkStorageRawData, @escaping (Result<Any, NetworkStorageError>) -> Void) -> Void) {
+    func setup(rawDataProcessingHandler: @escaping (NetworkRequestBaseStorable, NetworkStorageRawData, @escaping (Result<Any, NetworkStorageError>, _ needDelete: Bool) -> Void) -> Void) {
         self.rawDataProcessingHandler = rawDataProcessingHandler
     }
 
-    func save(request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData?, value: Any) {
-        guard let storage = findStorage(request: request) else { return }
-        storage.save(baseRequest: request, rawData: rawData, value: value) { [weak storage] result in
-            if case .failure(let error) = result, request.shouldDeleteInStorageWhenSaveFailure(error) {
-                storage?.delete(baseRequest: request)
+    func handleResponse(request: NetworkRequestBaseStorable, result: NetworkGatewayResult) {
+        switch result {
+        case let .success(value, rawData):
+            save(request: request, rawData: rawData, value: value)
+
+        case let .failure(_, isContent):
+            if isContent, request.storePolicyLevel.shouldDeleteWhenErrorIsContent() {
+                deleteInStorage(request: request)
             }
         }
     }
 
     func fetch(
         request: NetworkRequestBaseStorable,
-        completion: @escaping (_ timeStamp: Date?, _ response: NetworkStorageResponse<Any>) -> Void
+        completion: @escaping (_ timeStamp: Date?, _ result: NetworkStorageResult<Any>) -> Void
     ) -> NetworkStorageTask {
         let task = NetworkStorageTask(request: request)
 
@@ -47,26 +53,26 @@ final class StoragesManager {
         }
 
         //1. Wrapped handler
-        let completionAsyncHandler = { [queueForResponse] (timeStamp: Date?, response: NetworkStorageResponse<Any>) in
+        let completionAsyncHandler = { [queueForResponse] (timeStamp: Date?, result: NetworkStorageResult<Any>) in
             queueForResponse.async {
                 if task.isCanceled {
                     completion(nil, .canceled(task.storageCanceledReason))
                     return
                 }
 
-                switch response {
+                switch result {
                 case .success: task.setStateFromStorage(.success)
                 case .notFound: task.setStateFromStorage(.failure)
                 case .failure: task.setStateFromStorage(.failure)
                 case .canceled: task.setStateFromStorage(.canceled)
                 }
 
-                completion(timeStamp, response)
+                completion(timeStamp, result)
             }
         }
 
         //2. Perform read
-        storage.fetch(baseRequest: request) { [weak self] response in
+        storage.fetch(baseRequest: request) { [weak self, weak storage] response in
             guard let self = self, task.isCanceled == false else {
                 completionAsyncHandler(nil, .canceled(.unknown))
                 return
@@ -74,10 +80,14 @@ final class StoragesManager {
 
             switch response {
             case let .rawData(rawData, timeStamp):
-                self.rawDataProcessingHandler(request, rawData) { result in
+                self.rawDataProcessingHandler(request, rawData) { (result, needDelete) in
                     switch result {
                     case .success(let data): completionAsyncHandler(timeStamp, .success(data))
                     case .failure(let error): completionAsyncHandler(nil, .failure(error))
+                    }
+
+                    if needDelete {
+                        storage?.delete(baseRequest: request)
                     }
                 }
 
@@ -136,5 +146,14 @@ final class StoragesManager {
         }
 
         return nil
+    }
+
+    private func save(request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData?, value: Any) {
+        guard let storage = findStorage(request: request) else { return }
+        storage.save(baseRequest: request, rawData: rawData, value: value) { [weak storage] result in
+            if case .failure = result, request.storePolicyLevel.shouldDeleteWhenFailureSave() {
+                storage?.delete(baseRequest: request)
+            }
+        }
     }
 }

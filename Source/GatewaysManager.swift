@@ -31,7 +31,7 @@ final class GatewaysManager {
     private let queueForResponse: DispatchQueue
     private let queueForStorageDefault: DispatchQueue = .global(qos: .utility)
 
-    private lazy var saveToStorageHandler: (NetworkBaseRequest, NetworkStorageRawData?, _ value: Any) -> Void = { _, _, _ in }
+    private lazy var responseExternalHandler: (NetworkBaseRequest, NetworkGatewayResult) -> Void = { _, _ in }
 
     init(config: NetworkSessionConfiguration) {
         self.gateways = config.gateways
@@ -39,8 +39,8 @@ final class GatewaysManager {
         self.disableNetworkActivityIndicator = config.disableNetworkActivityIndicator
     }
 
-    func setup(saveToStorageHandler: @escaping (NetworkBaseRequest, NetworkStorageRawData?, _ value: Any) -> Void) {
-        self.saveToStorageHandler = saveToStorageHandler
+    func setup(responseExternalHandler: @escaping (NetworkBaseRequest, NetworkGatewayResult) -> Void) {
+        self.responseExternalHandler = responseExternalHandler
     }
 
     deinit {
@@ -72,7 +72,7 @@ final class GatewaysManager {
         key: NetworkBaseRequestKey?,
         excludeDuplicate: Bool,
         storageDependency: NetworkStorageDependency?,
-        completion: @escaping (_ response: NetworkResponse<Any>) -> Void
+        completion: @escaping (_ result: NetworkResult<Any>) -> Void
     ) -> NetworkRequestTask {
         let task = NetworkRequestTask(request: request, key: key, storageDependency: storageDependency)
 
@@ -94,14 +94,14 @@ final class GatewaysManager {
         let requestId = RequestIdProvider.shared.generateRequestId()
 
         //Step #3 of 3: Call this closure with result response
-        let completionHandlerResponse: (NetworkResponse<Any>) -> Void = { [weak self, queueForResponse = self.queueForResponse] response in
+        let completionHandlerResponse: (NetworkResult<Any>) -> Void = { [weak self, queueForResponse = self.queueForResponse] result in
             //Usually main thread
             queueForResponse.async {
                 if task.isFinished { return }
 
                 self?.removeRequest(requestId: requestId)
 
-                switch response {
+                switch result {
                 case .success(let data):
                     task.setState(.success, canceledReason: nil, finishTask: true)
                     completion(.success(data))
@@ -132,19 +132,17 @@ final class GatewaysManager {
         addRequest(requestId: requestId, task: task, gateway: gateway)
 
         //Step #2 of 3: Begin request closure
-        let requestHandler = { [saveToStorageHandler] in
+        let requestHandler = { [responseExternalHandler] in
             gateway.performRequest(
                 requestId: requestId,
                 baseRequest: request,
                 completion: { result in
                     if task.isFinished { return }
-                    switch result {
-                    case .success(let response):
-                        saveToStorageHandler(request, response.rawDataForStorage, response.result)
-                        completionHandlerResponse(.success(response.result))
 
-                    case .failure(let error):
-                        completionHandlerResponse(.failure(error))
+                    responseExternalHandler(request, result)
+                    switch result {
+                    case let .success(responseResult, _): completionHandlerResponse(.success(responseResult))
+                    case let .failure(error, _): completionHandlerResponse(.failure(error))
                     }
                 }
             )
@@ -160,17 +158,25 @@ final class GatewaysManager {
         return task
     }
 
-    func rawDataProcessing(request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData, completion: @escaping (Result<Any, NetworkStorageError>) -> Void) {
+    func rawDataProcessing(
+        request: NetworkRequestBaseStorable,
+        rawData: NetworkStorageRawData,
+        completion: @escaping (Result<Any, NetworkStorageError>, _ needDelete: Bool) -> Void
+    ) {
         guard let (gateway, _) = findGateway(request: request, forDataProcessingFromStorage: type(of: rawData)) else {
-            completion(.failure(.notFoundGateway))
+            completion(.failure(.notFoundGateway), false)
             return
         }
 
         let queue = gateway.queueForDataProcessingFromStorage ?? queueForStorageDefault
         queue.async {
-            let result = Result { try gateway.dataProcessingFromStorage(baseRequest: request, rawData: rawData) }
-                .mapError { NetworkStorageError.failureDataProcessing($0) }
-            completion(result)
+            do {
+                let response = try gateway.dataProcessingFromStorage(baseRequest: request, rawData: rawData)
+                completion(.success(response), false)
+            } catch {
+                let needDelete = gateway.deleteInvalidRawDataInStorage
+                completion(.failure(.failureDataProcessing(error)), needDelete)
+            }
         }
     }
 

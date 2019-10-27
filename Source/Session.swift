@@ -37,11 +37,12 @@ public final class NetworkSession {
         self.gatewaysManager = GatewaysManager(config: config)
         self.storagesManager = StoragesManager(config: config)
 
-        gatewaysManager.setup(saveToStorageHandler: { [weak storagesManager] (request, rawData, value) in
+        gatewaysManager.setup(responseExternalHandler: { [weak storagesManager] (request, result) in
             if let request = request as? NetworkRequestBaseStorable {
-                storagesManager?.save(request: request, rawData: rawData, value: value)
+                storagesManager?.handleResponse(request: request, result: result)
             }
         })
+
         storagesManager.setup(rawDataProcessingHandler: { [weak gatewaysManager] (request, rawData, completion) in
             gatewaysManager?.rawDataProcessing(request: request, rawData: rawData, completion: completion)
         })
@@ -54,7 +55,7 @@ public final class NetworkSession {
         key: NetworkBaseRequestKey?,
         excludeDuplicate: Bool,
         storageDependency: NetworkStorageDependency?,
-        completion: @escaping (_ response: NetworkResponse<Any>) -> Void
+        completion: @escaping (_ result: NetworkResult<Any>) -> Void
     ) -> NetworkRequestTask {
         return gatewaysManager.perform(
             request: baseRequest,
@@ -71,7 +72,7 @@ public final class NetworkSession {
         key: NetworkBaseRequestKey? = nil,
         excludeDuplicate: Bool = false,
         storageDependency: NetworkStorageDependency? = nil,
-        completion: @escaping (_ response: NetworkResponse<RequestType.ResultType>) -> Void
+        completion: @escaping (_ result: NetworkResult<RequestType.ResponseType>) -> Void
     ) -> NetworkRequestTask {
         return gatewaysManager.perform(
             request: request,
@@ -84,14 +85,14 @@ public final class NetworkSession {
 
     // MARK: Read storage
     @discardableResult
-    public func fetch(baseRequest: NetworkRequestBaseStorable, completion: @escaping (_ timeStamp: Date?, _ response: NetworkStorageResponse<Any>) -> Void) -> NetworkStorageTask {
+    public func fetch(baseRequest: NetworkRequestBaseStorable, completion: @escaping (_ timeStamp: Date?, _ result: NetworkStorageResult<Any>) -> Void) -> NetworkStorageTask {
         return storagesManager.fetch(request: baseRequest, completion: completion)
     }
 
     @discardableResult
     public func fetch<RequestType: NetworkRequest & NetworkRequestBaseStorable>(
         request: RequestType,
-        completion: @escaping (_ timeStamp: Date?, _ response: NetworkStorageResponse<RequestType.ResultType>) -> Void
+        completion: @escaping (_ timeStamp: Date?, _ result: NetworkStorageResult<RequestType.ResponseType>) -> Void
     ) -> NetworkStorageTask {
         return storagesManager.fetch(request: request, completion: { completion( $0, $1.convert() ) })
     }
