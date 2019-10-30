@@ -48,6 +48,43 @@ public final class NetworkSession {
         })
     }
 
+    // MARK: Make tasks for perform later
+    public func makeTask(
+        baseRequest: NetworkBaseRequest,
+        key: NetworkBaseRequestKey?,
+        excludeDuplicate: Bool,
+        storageDependency: NetworkStorageDependency?,
+        canRepeat: Bool,
+        completion: @escaping (_ result: NetworkResult<Any>) -> Void
+    ) -> NetworkRequestTask {
+        return gatewaysManager.makeTask(
+            request: baseRequest,
+            key: key,
+            excludeDuplicate: excludeDuplicate,
+            storageDependency: storageDependency,
+            canRepeat: canRepeat,
+            completion: completion
+        )
+    }
+
+    public func makeTask<RequestType: NetworkRequest>(
+        request: RequestType,
+        key: NetworkBaseRequestKey? = nil,
+        excludeDuplicate: Bool = false,
+        storageDependency: NetworkStorageDependency? = nil,
+        canRepeat: Bool = false,
+        completion: @escaping (_ result: NetworkResult<RequestType.ResponseType>) -> Void
+    ) -> NetworkRequestTask {
+        return gatewaysManager.makeTask(
+            request: request,
+            key: key,
+            excludeDuplicate: excludeDuplicate,
+            storageDependency: storageDependency,
+            canRepeat: canRepeat,
+            completion: { completion( $0.convert() ) }
+        )
+    }
+
     // MARK: Perform requests
     @discardableResult
     public func perform(

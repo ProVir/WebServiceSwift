@@ -67,6 +67,27 @@ final class GatewaysManager {
         }
     }
 
+    func makeTask(
+        request: NetworkBaseRequest,
+        key: NetworkBaseRequestKey?,
+        excludeDuplicate: Bool,
+        storageDependency: NetworkStorageDependency?,
+        canRepeat: Bool,
+        completion: @escaping (_ result: NetworkResult<Any>) -> Void
+    ) -> NetworkRequestTask {
+        let handler: (NetworkRequestTask) -> Void = { [weak self] task in
+            self?.perform(task: task, excludeDuplicate: excludeDuplicate, completion: completion)
+        }
+        return NetworkRequestTask(
+            request: request,
+            key: key,
+            storageDependency: storageDependency,
+            canRepeat: canRepeat,
+            beginState: .ready,
+            performHandler: handler
+        )
+    }
+
     func perform(
         request: NetworkBaseRequest,
         key: NetworkBaseRequestKey?,
@@ -74,20 +95,71 @@ final class GatewaysManager {
         storageDependency: NetworkStorageDependency?,
         completion: @escaping (_ result: NetworkResult<Any>) -> Void
     ) -> NetworkRequestTask {
-        let task = NetworkRequestTask(request: request, key: key, storageDependency: storageDependency)
+        let task = NetworkRequestTask(
+            request: request,
+            key: key,
+            storageDependency: storageDependency,
+            canRepeat: false,
+            beginState: .inProgress,
+            performHandler: nil
+        )
+        perform(task: task, excludeDuplicate: excludeDuplicate, completion: completion)
+        return task
+    }
+
+    func rawDataProcessing(
+        request: NetworkRequestBaseStorable,
+        rawData: NetworkStorageRawData,
+        completion: @escaping (Result<Any, NetworkStorageError>, _ needDelete: Bool) -> Void
+    ) {
+        guard let (gateway, _) = findGateway(request: request, forDataProcessingFromStorage: type(of: rawData)) else {
+            completion(.failure(.notFoundGateway), false)
+            return
+        }
+
+        let queue = gateway.queueForDataProcessingFromStorage ?? queueForStorageDefault
+        queue.async {
+            do {
+                let response = try gateway.dataProcessingFromStorage(baseRequest: request, rawData: rawData)
+                completion(.success(response), false)
+            } catch {
+                let needDelete = gateway.deleteInvalidRawDataInStorage
+                completion(.failure(.failureDataProcessing(error)), needDelete)
+            }
+        }
+    }
+
+    // MARK: Tasks
+    func tasks(filter: NetworkRequestFilter?) -> [NetworkRequestTask] {
+        return tasksStorage.tasks(filter: filter)
+    }
+
+    func contains(filter: NetworkRequestFilter?) -> Bool {
+        return tasksStorage.contains(filter: filter)
+    }
+
+    func cancel(filter: NetworkRequestFilter?) -> [NetworkRequestTask] {
+        let tasks = tasksStorage.tasks(filter: filter)
+        tasks.forEach { $0.cancel() }
+        return tasks
+    }
+
+    // MARK: - Private
+    private func perform(task: NetworkRequestTask, excludeDuplicate: Bool, completion: @escaping (_ result: NetworkResult<Any>) -> Void) {
+        let request = task.request
 
         //1. Test duplicate requests
         if excludeDuplicate && tasksStorage.containsDuplicate(task: task) {
             task.setState(.canceled, canceledReason: .duplicate, finishTask: true)
             completion(.canceled(.duplicate))
-            return task
+            return
         }
 
         //2. Find Gateway and Storage
         guard let (gateway, gatewayIndex) = findGateway(request: request) else {
             task.setState(.failure, canceledReason: nil, finishTask: true)
             completion(.failure(NetworkError.notFoundGateway))
-            return task
+            return
         }
 
         //3. Request in memory database and perform request (Step #0 -> Step #4)
@@ -154,48 +226,9 @@ final class GatewaysManager {
         } else {
             requestHandler()
         }
-
-        return task
     }
 
-    func rawDataProcessing(
-        request: NetworkRequestBaseStorable,
-        rawData: NetworkStorageRawData,
-        completion: @escaping (Result<Any, NetworkStorageError>, _ needDelete: Bool) -> Void
-    ) {
-        guard let (gateway, _) = findGateway(request: request, forDataProcessingFromStorage: type(of: rawData)) else {
-            completion(.failure(.notFoundGateway), false)
-            return
-        }
 
-        let queue = gateway.queueForDataProcessingFromStorage ?? queueForStorageDefault
-        queue.async {
-            do {
-                let response = try gateway.dataProcessingFromStorage(baseRequest: request, rawData: rawData)
-                completion(.success(response), false)
-            } catch {
-                let needDelete = gateway.deleteInvalidRawDataInStorage
-                completion(.failure(.failureDataProcessing(error)), needDelete)
-            }
-        }
-    }
-
-    // MARK: Tasks
-    func tasks(filter: NetworkRequestFilter?) -> [NetworkRequestTask] {
-        return tasksStorage.tasks(filter: filter)
-    }
-
-    func contains(filter: NetworkRequestFilter?) -> Bool {
-        return tasksStorage.contains(filter: filter)
-    }
-
-    func cancel(filter: NetworkRequestFilter?) -> [NetworkRequestTask] {
-        let tasks = tasksStorage.tasks(filter: filter)
-        tasks.forEach { $0.cancel() }
-        return tasks
-    }
-
-    // MARK: - Private
     private func findGateway(request: NetworkBaseRequest, forDataProcessingFromStorage rawDataType: NetworkStorageRawData.Type? = nil) -> (NetworkBaseGateway, Int)? {
         for (index, gateway) in self.gateways.enumerated() {
             if gateway.isSupportedRequest(request, forDataProcessingFromStorage: rawDataType) {
