@@ -40,16 +40,66 @@ final class StoragesManager {
         }
     }
 
+    func makeFetchTask(
+        request: NetworkRequestBaseStorable,
+        completion: @escaping (_ timeStamp: Date?, _ result: NetworkStorageResult<Any>) -> Void
+    ) -> NetworkStorageTask {
+        let handler: (NetworkStorageTask) -> Void = { [weak self] task in
+            self?.fetch(task: task, completion: completion)
+        }
+        return NetworkStorageTask(request: request, beginState: .ready, performHandler: handler)
+    }
+
     func fetch(
         request: NetworkRequestBaseStorable,
         completion: @escaping (_ timeStamp: Date?, _ result: NetworkStorageResult<Any>) -> Void
     ) -> NetworkStorageTask {
-        let task = NetworkStorageTask(request: request)
+        let task = NetworkStorageTask(request: request, beginState: .inProgress, performHandler: nil)
+        fetch(task: task, completion: completion)
+        return task
+    }
+
+    func deleteInStorage(request: NetworkRequestBaseStorable) {
+        if let storage = findStorage(request: request) {
+            storage.delete(baseRequest: request)
+        }
+    }
+
+    func deleteAllInStorages(withDataClassification dataClassification: AnyHashable) {
+        for storage in self.storages {
+            let supportClasses = storage.supportDataClassification
+            if supportClasses?.contains(dataClassification) ?? false {
+                storage.deleteAll()
+            }
+        }
+    }
+
+    func deleteAllInStoragesWithAnyDataClassification() {
+        for storage in self.storages {
+            let supportClasses = storage.supportDataClassification
+            if supportClasses == nil {
+                storage.deleteAll()
+            }
+        }
+    }
+
+    func deleteAllInStorages() {
+        for storage in self.storages {
+            storage.deleteAll()
+        }
+    }
+
+    // MARK: - Private
+    private func fetch(
+        task: NetworkStorageTask,
+        completion: @escaping (_ timeStamp: Date?, _ result: NetworkStorageResult<Any>) -> Void
+    ) {
+        let request = task.request
 
         guard let storage = findStorage(request: request) else {
             completion(nil, .failure(NetworkStorageError.notFoundStorage))
             task.setStateFromStorage(.failure)
-            return task
+            return
         }
 
         //1. Wrapped handler
@@ -101,41 +151,9 @@ final class StoragesManager {
                 completionAsyncHandler(nil, .failure(NetworkStorageError.failureFetch(error)))
             }
         }
-
-        return task
     }
 
-    func deleteInStorage(request: NetworkRequestBaseStorable) {
-        if let storage = findStorage(request: request) {
-            storage.delete(baseRequest: request)
-        }
-    }
 
-    func deleteAllInStorages(withDataClassification dataClassification: AnyHashable) {
-        for storage in self.storages {
-            let supportClasses = storage.supportDataClassification
-            if supportClasses?.contains(dataClassification) ?? false {
-                storage.deleteAll()
-            }
-        }
-    }
-
-    func deleteAllInStoragesWithAnyDataClassification() {
-        for storage in self.storages {
-            let supportClasses = storage.supportDataClassification
-            if supportClasses == nil {
-                storage.deleteAll()
-            }
-        }
-    }
-
-    func deleteAllInStorages() {
-        for storage in self.storages {
-            storage.deleteAll()
-        }
-    }
-
-    // MARK: - Private
     private func findStorage(request: NetworkRequestBaseStorable) -> NetworkBaseStorage? {
         let dataClass = request.dataClassificationForStorage
         for storage in self.storages {

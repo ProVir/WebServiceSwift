@@ -103,6 +103,7 @@ final class GatewaysManager {
             beginState: .inProgress,
             performHandler: nil
         )
+        task.storageDependencyStateHandler(state: .inProgress)
         perform(task: task, excludeDuplicate: excludeDuplicate, completion: completion)
         return task
     }

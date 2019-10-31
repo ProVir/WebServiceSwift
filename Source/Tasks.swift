@@ -24,23 +24,41 @@ public enum NetworkTaskState: Hashable, CaseIterable {
 }
 
 public struct NetworkStorageDependency {
-    public enum Regime {
-        case dependSuccessResult
-        case dependFull
+    public enum PerformPolicy {
+        case auto
+        case manual
+        case requestFailure
+        case requestFailureOrCanceled
+    }
+
+    public enum CancelPolicy {
+        case requestSuccess
+        case requestSuccessOrCanceled
     }
 
     public let task: NetworkStorageTask
-    public let regime: Regime
+    public let performPolicy: PerformPolicy
+    public let cancelPolicy: CancelPolicy
 
-    init(task: NetworkStorageTask, regime: Regime = .dependSuccessResult) {
+    public init(task: NetworkStorageTask, cancelPolicy: CancelPolicy = .requestSuccess, performPolicy: PerformPolicy = .auto) {
         self.task = task
-        self.regime = regime
+        self.cancelPolicy = cancelPolicy
+        self.performPolicy = performPolicy
+    }
+
+    func shouldPerform(requestState state: NetworkTaskState) -> Bool {
+        switch performPolicy {
+        case .auto: return state == .inProgress
+        case .manual: return false
+        case .requestFailure: return state == .failure
+        case .requestFailureOrCanceled: return state == .failure || state == .canceled
+        }
     }
 
     func shouldCancel(requestState state: NetworkTaskState) -> Bool {
-        switch regime {
-        case .dependSuccessResult: return state == .success
-        case .dependFull: return state == .success || state == .canceled
+        switch cancelPolicy {
+        case .requestSuccess: return state == .success
+        case .requestSuccessOrCanceled: return state == .success || state == .canceled
         }
     }
 }
@@ -59,8 +77,10 @@ public final class NetworkRequestTask {
     }
 
     public func perform() {
-        let handler = mutex.synchronized { self.unsafeHandlerForPerform() }
-        handler?(self)
+        guard let (handler, state) = mutex.synchronized({ self.unsafePrepareForPerform() }) else { return }
+
+        storageDependencyStateHandler(state: state)
+        handler(self)
     }
 
     public func cancel() {
@@ -96,18 +116,18 @@ public final class NetworkRequestTask {
     private var unsafeStorageDependency: NetworkStorageDependency?
     private var unsafePerformHandler: ((NetworkRequestTask) -> Void)?
 
-    private func unsafeHandlerForPerform() -> ((NetworkRequestTask) -> Void)? {
+    private func unsafePrepareForPerform() -> ((NetworkRequestTask) -> Void, NetworkTaskState)? {
         if self.state == .ready, let handler = unsafePerformHandler {
             if self.canRepeat == false {
                 unsafePerformHandler = nil
             }
             self.unsafeState = .inProgress
-            return handler
+            return (handler, .inProgress)
 
         } else if self.state.isFinished, self.canRepeat, let handler = unsafePerformHandler {
             self.unsafeRestoreToRepeat()
             self.unsafeState = .inProgress
-            return handler
+            return (handler, .inProgress)
 
         } else {
             return nil
@@ -127,10 +147,15 @@ public final class NetworkStorageTask {
         case request(NetworkTaskState, NetworkRequestCanceledReason?)
     }
 
-    public let request: NetworkBaseRequest
+    public let request: NetworkRequestBaseStorable
 
     public var state: NetworkTaskState { return mutex.synchronized { self.unsafeState } }
     public var canceledReason: CanceledReason? { return mutex.synchronized { self.unsafeCanceledReason } }
+
+    public func perform() {
+        guard let handler = mutex.synchronized({ self.unsafePrepareForPerform() }) else { return }
+        handler(self)
+    }
 
     public func cancel() {
         mutex.synchronized {
@@ -139,13 +164,31 @@ public final class NetworkStorageTask {
         }
     }
 
-    init(request: NetworkBaseRequest) {
+    init(
+        request: NetworkRequestBaseStorable,
+        beginState: NetworkTaskState,
+        performHandler: ((NetworkStorageTask) -> Void)?
+    ) {
         self.request = request
+        self.unsafeState = beginState
+        self.unsafePerformHandler = performHandler
     }
 
     private let mutex = PThreadMutexLock()
     private var unsafeState: NetworkTaskState = .ready
     private var unsafeCanceledReason: CanceledReason?
+
+    private var unsafePerformHandler: ((NetworkStorageTask) -> Void)?
+
+    private func unsafePrepareForPerform() -> ((NetworkStorageTask) -> Void)? {
+        if self.state == .ready, let handler = unsafePerformHandler {
+            unsafePerformHandler = nil
+            self.unsafeState = .inProgress
+            return handler
+        } else {
+            return nil
+        }
+    }
 }
 
 // MARK: - Internal
@@ -176,8 +219,17 @@ extension NetworkRequestTask {
             }
         }
 
-        if let storageDependency = storageDependency, storageDependency.shouldCancel(requestState: state) {
+        storageDependencyStateHandler(state: state)
+    }
+
+    func storageDependencyStateHandler(state: NetworkTaskState) {
+        guard let storageDependency = storageDependency else { return }
+
+        if storageDependency.shouldCancel(requestState: state) {
             storageDependency.task.cancelFromRequest(reason: canceledReason)
+
+        } else if storageDependency.shouldPerform(requestState: state) {
+            storageDependency.task.perform()
         }
     }
 }
