@@ -68,16 +68,16 @@ public final class NetworkRequestTask {
     public let key: NetworkBaseRequestKey?
     public let canRepeat: Bool
 
-    public var storageDependency: NetworkStorageDependency? { return mutex.synchronized { self.unsafeStorageDependency } }
-    public var state: NetworkTaskState { return mutex.synchronized { self.unsafeState } }
-    public var canceledReason: NetworkRequestCanceledReason? { return mutex.synchronized { self.unsafeCanceledReason } }
+    public var storageDependency: NetworkStorageDependency? { return lock.read { self.unsafeStorageDependency } }
+    public var state: NetworkTaskState { return lock.read { self.unsafeState } }
+    public var canceledReason: NetworkRequestCanceledReason? { return lock.read { self.unsafeCanceledReason } }
 
     public func setStorageDependency(_ value: NetworkStorageDependency) {
-        mutex.synchronized { self.unsafeStorageDependency = value }
+        lock.write { self.unsafeStorageDependency = value }
     }
 
     public func perform() {
-        guard let (handler, state) = mutex.synchronized({ self.unsafePrepareForPerform() }) else { return }
+        guard let (handler, state) = lock.write({ self.unsafePrepareForPerform() }) else { return }
 
         storageDependencyStateHandler(state: state)
         handler(self)
@@ -107,7 +107,7 @@ public final class NetworkRequestTask {
         self.unsafePerformHandler = performHandler
     }
 
-    private let mutex = PThreadMutexLock()
+    private let lock = DispatchQueueLock(label: "ru.provir.soneta.NetworkRequestTask")
     private var unsafeState: NetworkTaskState
     private var unsafeCanceledReason: NetworkRequestCanceledReason?
     private var unsafeWorkData: WorkData?
@@ -149,16 +149,16 @@ public final class NetworkStorageTask {
 
     public let request: NetworkRequestBaseStorable
 
-    public var state: NetworkTaskState { return mutex.synchronized { self.unsafeState } }
-    public var canceledReason: CanceledReason? { return mutex.synchronized { self.unsafeCanceledReason } }
+    public var state: NetworkTaskState { return lock.read { self.unsafeState } }
+    public var canceledReason: CanceledReason? { return lock.read { self.unsafeCanceledReason } }
 
     public func perform() {
-        guard let handler = mutex.synchronized({ self.unsafePrepareForPerform() }) else { return }
+        guard let handler = lock.write({ self.unsafePrepareForPerform() }) else { return }
         handler(self)
     }
 
     public func cancel() {
-        mutex.synchronized {
+        lock.write {
             self.unsafeState = .canceled
             self.unsafeCanceledReason = .user
         }
@@ -174,7 +174,7 @@ public final class NetworkStorageTask {
         self.unsafePerformHandler = performHandler
     }
 
-    private let mutex = PThreadMutexLock()
+    private let lock = DispatchQueueLock(label: "ru.provir.soneta.NetworkStorageTask")
     private var unsafeState: NetworkTaskState = .ready
     private var unsafeCanceledReason: CanceledReason?
 
@@ -200,16 +200,16 @@ extension NetworkRequestTask {
     }
 
     var workData: WorkData? {
-        get { return mutex.synchronized { self.unsafeWorkData } }
-        set { mutex.synchronized { self.unsafeWorkData = newValue } }
+        get { return lock.read { self.unsafeWorkData } }
+        set { lock.write { self.unsafeWorkData = newValue } }
     }
 
     var isFinished: Bool {
-        return mutex.synchronized { unsafeFinished }
+        return lock.read { unsafeFinished }
     }
 
     func setState(_ state: NetworkTaskState, canceledReason: NetworkRequestCanceledReason?, finishTask: Bool) {
-        mutex.synchronized {
+        lock.write {
             self.unsafeState = state
             self.unsafeCanceledReason = canceledReason
 
@@ -236,7 +236,7 @@ extension NetworkRequestTask {
 
 extension NetworkStorageTask {
     var isCanceled: Bool {
-        return mutex.synchronized { unsafeState == .canceled }
+        return lock.read { unsafeState == .canceled }
     }
 
     var requestCanceledReason: NetworkRequestCanceledReason {
@@ -258,13 +258,13 @@ extension NetworkStorageTask {
     }
 
     func setStateFromStorage(_ state: NetworkTaskState) {
-        mutex.synchronized {
+        lock.write {
             self.unsafeState = state
         }
     }
 
     func cancelFromRequest(reason: NetworkRequestCanceledReason?) {
-        mutex.synchronized {
+        lock.write {
             self.unsafeState = .canceled
             self.unsafeCanceledReason = .request(state, reason)
         }

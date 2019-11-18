@@ -24,24 +24,24 @@ public final class NetworkActivityIndicatorHandler {
     }
 
     public func setHandler(_ handler: @escaping (_ isVisible: Bool) -> Void) {
-        mutex.synchronized { self.handler = handler }
+        lock.sync { self.handler = handler }
     }
 
     // MARK: Internal
     func addRequest(_ requestId: NetworkRequestId) {
-        mutex.synchronized { listRequestId.insert(requestId) }
+        lock.sync { listRequestId.insert(requestId) }
     }
 
     func removeRequest(_ requestId: NetworkRequestId) {
-        mutex.synchronized { listRequestId.remove(requestId) }
+        lock.sync { listRequestId.remove(requestId) }
     }
 
     func removeRequests(_ requestListIds: Set<NetworkRequestId>) {
-        mutex.synchronized { listRequestId.subtract(requestListIds) }
+        lock.sync { listRequestId.subtract(requestListIds) }
     }
 
     // MARK: Private
-    private let mutex = PThreadMutexLock()
+    private let lock = DispatchQueueLock(label: "ru.provir.soneta.NetworkActivityIndicatorHandler", concurrentRead: false)
 
     private var listRequestId = Set<NetworkRequestId>() {
         didSet { self.isVisible = listRequestId.isEmpty == false }

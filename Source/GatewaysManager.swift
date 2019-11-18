@@ -11,15 +11,14 @@ import Foundation
 final class RequestIdProvider {
     static let shared = RequestIdProvider()
 
-    private let mutex = PThreadMutexLock()
+    private let lock = DispatchQueueLock(label: "ru.provir.soneta.RequestIdProvider", concurrentRead: false)
     private var lastRequestId: NetworkRequestId = .init(0)
 
     func generateRequestId() -> NetworkRequestId {
-        mutex.lock()
-        defer { mutex.unlock() }
-
-        lastRequestId = .init(lastRequestId.value &+ 1)
-        return lastRequestId
+        return lock.sync {
+            lastRequestId = .init(lastRequestId.value &+ 1)
+            return lastRequestId
+        }
     }
 }
 

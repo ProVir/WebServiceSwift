@@ -9,7 +9,6 @@
 import Foundation
 
 final class StoragesManager {
-    private let mutex = PThreadMutexLock()
     private let storages: [NetworkBaseStorage]
     private let queueForResponse: DispatchQueue
 

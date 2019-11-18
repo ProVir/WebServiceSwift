@@ -9,56 +9,54 @@
 import Foundation
 
 final class TasksStorage {
-    private let mutex = PThreadMutexLock()
+    private let lock = DispatchQueueLock(label: "ru.provir.soneta.TasksStorage")
 
-    private var tasks: [NetworkRequestId: NetworkRequestTask] = [:]               //All requests
+    private var tasks: [NetworkRequestId: NetworkRequestTask] = [:]           //All requests
     private var mapRequestTypes: [String: Set<NetworkRequestId>] = [:]        //[Request.Type: [Id]]
     private var mapRequestHashs: [AnyHashable: Set<NetworkRequestId>] = [:]   //[Request<Hashable>: [Id]]
     private var mapRequestKeys: [NetworkRequestKeyWrapper: Set<NetworkRequestId>] = [:]   //[Key: [Id]]
 
     func addTask(requestId: NetworkRequestId, task: NetworkRequestTask) {
-        mutex.lock()
-        defer { mutex.unlock() }
+        lock.write {
+            tasks[requestId] = task
+            mapRequestTypes[keyForMapRequestTypes(task), default: []].insert(requestId)
 
-        tasks[requestId] = task
-        mapRequestTypes[keyForMapRequestTypes(task), default: []].insert(requestId)
+            if let key = keyForMapRequestHashs(task) {
+                mapRequestHashs[key, default: []].insert(requestId)
+            }
 
-        if let key = keyForMapRequestHashs(task) {
-            mapRequestHashs[key, default: []].insert(requestId)
-        }
-
-        if let key = keyForMapRequestKeys(task) {
-            mapRequestKeys[key, default: []].insert(requestId)
+            if let key = keyForMapRequestKeys(task) {
+                mapRequestKeys[key, default: []].insert(requestId)
+            }
         }
     }
 
     func removeTask(requestId: NetworkRequestId) {
-        mutex.lock()
-        defer { mutex.unlock() }
-
-        guard let task = tasks.removeValue(forKey: requestId) else { return }
-        removeFromMapRequest(&mapRequestTypes, key: keyForMapRequestTypes(task), requestId: requestId)
-        removeFromMapRequest(&mapRequestHashs, key: keyForMapRequestHashs(task), requestId: requestId)
-        removeFromMapRequest(&mapRequestKeys, key: keyForMapRequestKeys(task), requestId: requestId)
+        lock.write {
+            guard let task = tasks.removeValue(forKey: requestId) else { return }
+            removeFromMapRequest(&mapRequestTypes, key: keyForMapRequestTypes(task), requestId: requestId)
+            removeFromMapRequest(&mapRequestHashs, key: keyForMapRequestHashs(task), requestId: requestId)
+            removeFromMapRequest(&mapRequestKeys, key: keyForMapRequestKeys(task), requestId: requestId)
+        }
     }
 
     func allTasks() -> [(requestId: NetworkRequestId, task: NetworkRequestTask)] {
-        return mutex.synchronized {
+        return lock.read {
             tasks.map { ($0.key, $0.value) }.sorted { $0.0 < $1.0 }
         }
     }
 
     func fetch(requestId: NetworkRequestId) -> NetworkRequestTask? {
-        return mutex.synchronized { tasks[requestId] }
+        return lock.read { tasks[requestId] }
     }
 
     func containsDuplicate(task: NetworkRequestTask) -> Bool {
         if let key = keyForMapRequestKeys(task) {
-            return mutex.synchronized {
+            return lock.read {
                 (mapRequestKeys[key]?.isEmpty ?? true) == false
             }
         } else if let key = keyForMapRequestHashs(task) {
-            return mutex.synchronized {
+            return lock.read {
                 (mapRequestHashs[key]?.isEmpty ?? true) == false
             }
         } else {
@@ -67,7 +65,7 @@ final class TasksStorage {
     }
 
     func tasks(filter: NetworkRequestFilter?) -> [NetworkRequestTask] {
-        return mutex.synchronized {
+        return lock.read {
             if let filter = filter {
                 return findIds(use: filter.value, onlyFirst: false)
                     .sorted(by: <)
@@ -79,7 +77,7 @@ final class TasksStorage {
     }
 
     func contains(filter: NetworkRequestFilter?) -> Bool {
-        return mutex.synchronized {
+        return lock.read {
             if let filter = filter {
                 return self.findIds(use: filter.value, onlyFirst: true).isEmpty == false
             } else {
