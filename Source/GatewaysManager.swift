@@ -82,7 +82,6 @@ final class GatewaysManager {
             key: key,
             storageDependency: storageDependency,
             canRepeat: canRepeat,
-            beginState: .ready,
             performHandler: handler
         )
     }
@@ -99,10 +98,8 @@ final class GatewaysManager {
             key: key,
             storageDependency: storageDependency,
             canRepeat: false,
-            beginState: .inProgress,
             performHandler: nil
         )
-        task.storageDependencyStateHandler(state: .inProgress)
         perform(task: task, excludeDuplicate: excludeDuplicate, completion: completion)
         return task
     }
@@ -164,6 +161,7 @@ final class GatewaysManager {
 
         //3. Request in memory database and perform request (Step #0 -> Step #4)
         let requestId = RequestIdProvider.shared.generateRequestId()
+        task.setState(.inProgress, canceledReason: nil, finishTask: false)
 
         //Step #3 of 3: Call this closure with result response
         let completionHandlerResponse: (NetworkResult<Any>) -> Void = { [weak self, queueForResponse = self.queueForResponse] result in

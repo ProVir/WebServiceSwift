@@ -45,22 +45,6 @@ public struct NetworkStorageDependency {
         self.cancelPolicy = cancelPolicy
         self.performPolicy = performPolicy
     }
-
-    func shouldPerform(requestState state: NetworkTaskState) -> Bool {
-        switch performPolicy {
-        case .auto: return state == .inProgress
-        case .manual: return false
-        case .requestFailure: return state == .failure
-        case .requestFailureOrCanceled: return state == .failure || state == .canceled
-        }
-    }
-
-    func shouldCancel(requestState state: NetworkTaskState) -> Bool {
-        switch cancelPolicy {
-        case .requestSuccess: return state == .success
-        case .requestSuccessOrCanceled: return state == .success || state == .canceled
-        }
-    }
 }
 
 public final class NetworkRequestTask {
@@ -77,9 +61,9 @@ public final class NetworkRequestTask {
     }
 
     public func perform() {
-        guard let (handler, state) = lock.write({ self.unsafePrepareForPerform() }) else { return }
-
-        storageDependencyStateHandler(state: state)
+        guard let handler = lock.write({ self.unsafePrepareForPerform() }) else {
+            return
+        }
         handler(self)
     }
 
@@ -95,7 +79,6 @@ public final class NetworkRequestTask {
         key: NetworkBaseRequestKey?,
         storageDependency: NetworkStorageDependency?,
         canRepeat: Bool,
-        beginState: NetworkTaskState,
         performHandler: ((NetworkRequestTask) -> Void)?
     ) {
         self.request = request
@@ -103,12 +86,11 @@ public final class NetworkRequestTask {
         self.canRepeat = canRepeat
 
         self.unsafeStorageDependency = storageDependency
-        self.unsafeState = beginState
         self.unsafePerformHandler = performHandler
     }
 
     private let lock = DispatchQueueLock(label: "ru.provir.soneta.NetworkRequestTask")
-    private var unsafeState: NetworkTaskState
+    private var unsafeState: NetworkTaskState = .ready
     private var unsafeCanceledReason: NetworkRequestCanceledReason?
     private var unsafeWorkData: WorkData?
     private var unsafeFinished: Bool = false
@@ -116,18 +98,17 @@ public final class NetworkRequestTask {
     private var unsafeStorageDependency: NetworkStorageDependency?
     private var unsafePerformHandler: ((NetworkRequestTask) -> Void)?
 
-    private func unsafePrepareForPerform() -> ((NetworkRequestTask) -> Void, NetworkTaskState)? {
+    private func unsafePrepareForPerform() -> ((NetworkRequestTask) -> Void)? {
         if self.state == .ready, let handler = unsafePerformHandler {
             if self.canRepeat == false {
                 unsafePerformHandler = nil
             }
-            self.unsafeState = .inProgress
-            return (handler, .inProgress)
+            return handler
 
         } else if self.state.isFinished, self.canRepeat, let handler = unsafePerformHandler {
             self.unsafeRestoreToRepeat()
-            self.unsafeState = .inProgress
-            return (handler, .inProgress)
+            self.unsafeState = .ready
+            return handler
 
         } else {
             return nil
@@ -153,7 +134,9 @@ public final class NetworkStorageTask {
     public var canceledReason: CanceledReason? { return lock.read { self.unsafeCanceledReason } }
 
     public func perform() {
-        guard let handler = lock.write({ self.unsafePrepareForPerform() }) else { return }
+        guard let handler = lock.write({ self.unsafePrepareForPerform() }) else {
+            return
+        }
         handler(self)
     }
 
@@ -192,6 +175,24 @@ public final class NetworkStorageTask {
 }
 
 // MARK: - Internal
+extension NetworkStorageDependency {
+    func shouldPerform(requestState state: NetworkTaskState, fromReady: Bool) -> Bool {
+        switch performPolicy {
+        case .auto: return state == .inProgress || fromReady
+        case .manual: return false
+        case .requestFailure: return state == .failure
+        case .requestFailureOrCanceled: return state == .failure || state == .canceled
+        }
+    }
+
+    func shouldCancel(requestState state: NetworkTaskState) -> Bool {
+        switch cancelPolicy {
+        case .requestSuccess: return state == .success
+        case .requestSuccessOrCanceled: return state == .success || state == .canceled
+        }
+    }
+}
+
 extension NetworkRequestTask {
     struct WorkData {
         let requestId: NetworkRequestId
@@ -209,7 +210,9 @@ extension NetworkRequestTask {
     }
 
     func setState(_ state: NetworkTaskState, canceledReason: NetworkRequestCanceledReason?, finishTask: Bool) {
-        lock.write {
+        let oldState: NetworkTaskState = lock.write {
+            let oldState = self.unsafeState
+
             self.unsafeState = state
             self.unsafeCanceledReason = canceledReason
 
@@ -217,18 +220,20 @@ extension NetworkRequestTask {
                 self.unsafeFinished = true
                 self.unsafeWorkData = nil
             }
+
+            return oldState
         }
 
-        storageDependencyStateHandler(state: state)
+        storageDependencyStateHandler(state: state, fromReady: oldState == .ready)
     }
 
-    func storageDependencyStateHandler(state: NetworkTaskState) {
+    private func storageDependencyStateHandler(state: NetworkTaskState, fromReady: Bool) {
         guard let storageDependency = storageDependency else { return }
 
         if storageDependency.shouldCancel(requestState: state) {
             storageDependency.task.cancelFromRequest(reason: canceledReason)
 
-        } else if storageDependency.shouldPerform(requestState: state) {
+        } else if storageDependency.shouldPerform(requestState: state, fromReady: fromReady) {
             storageDependency.task.perform()
         }
     }
