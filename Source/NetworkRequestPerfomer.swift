@@ -184,7 +184,7 @@ extension NetworkRequestPerfomer where RequestType: Hashable {
 extension NetworkRequestPerfomer where RequestType: NetworkRequestBaseStorable {
     public func makeFetchTask(
         request: RequestType,
-        completion: @escaping (_ timeStamp: Date?, _ result: NetworkStorageResult<RequestType.ResponseType>) -> Void
+        completion: @escaping (NetworkStorageResult<RequestType.ResponseType>) -> Void
     ) -> NetworkStorageTask {
         return session.makeFetchTask(request: request, completion: completion)
     }
@@ -192,7 +192,7 @@ extension NetworkRequestPerfomer where RequestType: NetworkRequestBaseStorable {
     @discardableResult
     public func fetch(
         request: RequestType,
-        completion: @escaping (_ timeStamp: Date?, _ result: NetworkStorageResult<RequestType.ResponseType>) -> Void
+        completion: @escaping (NetworkStorageResult<RequestType.ResponseType>) -> Void
     ) -> NetworkStorageTask {
         return session.fetch(request: request, completion: completion)
     }
@@ -204,14 +204,14 @@ extension NetworkRequestPerfomer where RequestType: NetworkRequestBaseStorable {
 
 extension NetworkRequestPerfomer where RequestType: NetworkRequestBaseStorable, RequestType: NetworkEmptyRequest {
     public func makeFetchTask(
-        completion: @escaping (_ timeStamp: Date?, _ result: NetworkStorageResult<RequestType.ResponseType>) -> Void
+        completion: @escaping (NetworkStorageResult<RequestType.ResponseType>) -> Void
     ) -> NetworkStorageTask {
         return session.makeFetchTask(request: RequestType(), completion: completion)
     }
 
     @discardableResult
     public func fetch(
-        completion: @escaping (_ timeStamp: Date?, _ result: NetworkStorageResult<RequestType.ResponseType>) -> Void
+        completion: @escaping (NetworkStorageResult<RequestType.ResponseType>) -> Void
     ) -> NetworkStorageTask {
         return session.fetch(request: RequestType(), completion: completion)
     }

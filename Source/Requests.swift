@@ -44,6 +44,16 @@ public enum NetworkRequestStorePolicyLevel: Int {
     case noStoreWhenErrorIsContent
 }
 
+public enum NetworkRequestStoreAgeLimit {
+    case unknown
+    case none
+    case seconds(TimeInterval)
+    case minutes(Int)
+    case hours(Int)
+    case days(Int)
+    case weeks(Int)
+}
+
 /// Default data classification for storages.
 public let defaultDataClassification = "default"
 
@@ -53,13 +63,34 @@ public protocol NetworkRequestBaseStorable: NetworkBaseRequest {
     var dataClassificationForStorage: AnyHashable { get }
 
     var storePolicyLevel: NetworkRequestStorePolicyLevel { get }
+    var storeAgeLimit: NetworkRequestStoreAgeLimit { get }
 }
 
 public extension NetworkRequestBaseStorable {
     var dataClassificationForStorage: AnyHashable { return defaultDataClassification }
     var storePolicyLevel: NetworkRequestStorePolicyLevel { return .onlyLastSuccessResult }
+    var storeAgeLimit: NetworkRequestStoreAgeLimit { return .unknown }
 }
 
+public extension NetworkRequestStoreAgeLimit {
+    var isUnknown: Bool {
+        switch self {
+        case .unknown: return true
+        default: return false
+        }
+    }
+
+    var timeInterval: TimeInterval? {
+        switch self {
+        case .unknown, .none: return nil
+        case .seconds(let time): return time
+        case .minutes(let time): return TimeInterval(time) * 60     //60s
+        case .hours(let time): return TimeInterval(time) * 3_600    //60s * 60m
+        case .days(let time): return TimeInterval(time) * 86_400    //60s * 60m * 24h
+        case .weeks(let time): return TimeInterval(time) * 604_800  //60s * 60m * 24h * 7d
+        }
+    }
+}
 
 extension NetworkRequestStorePolicyLevel {
     func shouldDeleteWhenFailureSave() -> Bool {
@@ -78,3 +109,4 @@ extension NetworkRequestStorePolicyLevel {
         }
     }
 }
+

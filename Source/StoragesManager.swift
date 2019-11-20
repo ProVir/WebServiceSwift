@@ -41,7 +41,7 @@ final class StoragesManager {
 
     func makeFetchTask(
         request: NetworkRequestBaseStorable,
-        completion: @escaping (_ timeStamp: Date?, _ result: NetworkStorageResult<Any>) -> Void
+        completion: @escaping (NetworkStorageResult<Any>) -> Void
     ) -> NetworkStorageTask {
         let handler: (NetworkStorageTask) -> Void = { [weak self] task in
             self?.fetch(task: task, completion: completion)
@@ -51,7 +51,7 @@ final class StoragesManager {
 
     func fetch(
         request: NetworkRequestBaseStorable,
-        completion: @escaping (_ timeStamp: Date?, _ result: NetworkStorageResult<Any>) -> Void
+        completion: @escaping (NetworkStorageResult<Any>) -> Void
     ) -> NetworkStorageTask {
         let task = NetworkStorageTask(request: request, beginState: .inProgress, performHandler: nil)
         fetch(task: task, completion: completion)
@@ -91,21 +91,21 @@ final class StoragesManager {
     // MARK: - Private
     private func fetch(
         task: NetworkStorageTask,
-        completion: @escaping (_ timeStamp: Date?, _ result: NetworkStorageResult<Any>) -> Void
+        completion: @escaping (NetworkStorageResult<Any>) -> Void
     ) {
         let request = task.request
 
         guard let storage = findStorage(request: request) else {
-            completion(nil, .failure(NetworkStorageError.notFoundStorage))
+            completion(.failure(NetworkStorageError.notFoundStorage))
             task.setStateFromStorage(.failure)
             return
         }
 
         //1. Wrapped handler
-        let completionAsyncHandler = { [queueForResponse] (timeStamp: Date?, result: NetworkStorageResult<Any>) in
+        let completionAsyncHandler = { [queueForResponse] (result: NetworkStorageResult<Any>) in
             queueForResponse.async {
                 if task.isCanceled {
-                    completion(nil, .canceled(task.storageCanceledReason))
+                    completion(.canceled(task.storageCanceledReason))
                     return
                 }
 
@@ -116,23 +116,29 @@ final class StoragesManager {
                 case .canceled: task.setStateFromStorage(.canceled)
                 }
 
-                completion(timeStamp, result)
+                completion(result)
             }
         }
 
         //2. Perform read
         storage.fetch(baseRequest: request) { [weak self, weak storage] response in
             guard let self = self, task.isCanceled == false else {
-                completionAsyncHandler(nil, .canceled(.unknown))
+                completionAsyncHandler(.canceled(.unknown))
                 return
             }
 
             switch response {
             case let .rawData(rawData, timeStamp):
+                guard self.validateAge(request: request, storage: storage, saved: timeStamp) else {
+                    completionAsyncHandler(.notFound)
+                    storage?.delete(baseRequest: request)
+                    return
+                }
+
                 self.rawDataProcessingHandler(request, rawData) { (result, needDelete) in
                     switch result {
-                    case .success(let data): completionAsyncHandler(timeStamp, .success(data))
-                    case .failure(let error): completionAsyncHandler(nil, .failure(error))
+                    case .success(let data): completionAsyncHandler(.success(data, saved: timeStamp))
+                    case .failure(let error): completionAsyncHandler(.failure(error))
                     }
 
                     if needDelete {
@@ -141,13 +147,18 @@ final class StoragesManager {
                 }
 
             case let .value(value, timeStamp):
-                completionAsyncHandler(timeStamp, .success(value))
+                if self.validateAge(request: request, storage: storage, saved: timeStamp) {
+                    completionAsyncHandler(.success(value, saved: timeStamp))
+                } else {
+                    completionAsyncHandler(.notFound)
+                    storage?.delete(baseRequest: request)
+                }
 
             case .notFound:
-                completionAsyncHandler(nil, .notFound)
+                completionAsyncHandler(.notFound)
 
             case let .failure(error):
-                completionAsyncHandler(nil, .failure(NetworkStorageError.failureFetch(error)))
+                completionAsyncHandler(.failure(NetworkStorageError.failureFetch(error)))
             }
         }
     }
@@ -167,10 +178,30 @@ final class StoragesManager {
 
     private func save(request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData?, value: Any) {
         guard let storage = findStorage(request: request) else { return }
-        storage.save(baseRequest: request, rawData: rawData, value: value) { [weak storage] result in
+
+        let saved = Date()
+        let expired = expiredTime(request: request, storage: storage, saved: saved)
+        storage.save(baseRequest: request, saved: saved, expired: expired, rawData: rawData, value: value) { [weak storage] result in
             if case .failure = result, request.storePolicyLevel.shouldDeleteWhenFailureSave() {
                 storage?.delete(baseRequest: request)
             }
         }
     }
+
+    private func validateAge(request: NetworkRequestBaseStorable, storage: NetworkBaseStorage?, saved: Date?) -> Bool {
+        guard let timeStamp = saved,
+            let limitTime = ageLimitTime(request: request, storage: storage) else { return true }
+        return Date().timeIntervalSince(timeStamp) < limitTime
+    }
+
+    private func expiredTime(request: NetworkRequestBaseStorable, storage: NetworkBaseStorage?, saved: Date) -> Date? {
+        guard let limitTime = ageLimitTime(request: request, storage: storage) else { return nil }
+        return saved.addingTimeInterval(limitTime)
+    }
+
+    private func ageLimitTime(request: NetworkRequestBaseStorable, storage: NetworkBaseStorage?) -> TimeInterval? {
+        let ageLimitRequest = request.storeAgeLimit
+        return ageLimitRequest.isUnknown ? storage?.defaultAgeLimit.timeInterval : ageLimitRequest.timeInterval
+    }
 }
+

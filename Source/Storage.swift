@@ -13,7 +13,7 @@ public protocol NetworkStorage: NetworkBaseStorage {
 
     func fetch(request: NetworkRequestBaseStorable, completion: @escaping (_ result: NetworkStorageFetchResult) -> Void)
 
-    func save(request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData?, value: Any, completion: @escaping (NetworkStorageSaveResult) -> Void)
+    func save(request: NetworkRequestBaseStorable, saved: Date, expired: Date?, rawData: NetworkStorageRawData?, value: Any, completion: @escaping (NetworkStorageSaveResult) -> Void)
 
     func delete(request: NetworkRequestBaseStorable)
 }
@@ -28,6 +28,9 @@ public protocol NetworkBaseStorage: class {
 
     /// Data classification support list. nil = support all.
     var supportDataClassification: Set<AnyHashable>? { get }
+
+    /// Default age limit for unknown case in requests.
+    var defaultAgeLimit: NetworkRequestStoreAgeLimit { get }
 
     /**
      Asks whether the request supports this storage.
@@ -53,10 +56,11 @@ public protocol NetworkBaseStorage: class {
 
      - Parameters:
         - request: Original request.
+        - expired: Expired time for valid data
         - rawData: Raw data for save - universal type, need process in gateway
         - value: Value type for save, no need process in gateway
      */
-    func save(baseRequest request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData?, value: Any, completion: @escaping (NetworkStorageSaveResult) -> Void)
+    func save(baseRequest request: NetworkRequestBaseStorable, saved: Date, expired: Date?, rawData: NetworkStorageRawData?, value: Any, completion: @escaping (NetworkStorageSaveResult) -> Void)
 
     /**
      Delete data in storage for concrete request.
@@ -83,12 +87,12 @@ public extension NetworkStorage {
         fetch(request: request, completion: completion)
     }
 
-    func save(baseRequest request: NetworkRequestBaseStorable, rawData: NetworkStorageRawData?, value: Any, completion: @escaping (NetworkStorageSaveResult) -> Void) {
+    func save(baseRequest request: NetworkRequestBaseStorable, saved: Date, expired: Date?, rawData: NetworkStorageRawData?, value: Any, completion: @escaping (NetworkStorageSaveResult) -> Void) {
         guard let request = request as? RequestType else {
             return
         }
 
-        save(request: request, rawData: rawData, value: value, completion: completion)
+        save(request: request, saved: saved, expired: expired, rawData: rawData, value: value, completion: completion)
     }
 
     func delete(baseRequest request: NetworkRequestBaseStorable) {

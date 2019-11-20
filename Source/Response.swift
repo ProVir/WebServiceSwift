@@ -41,7 +41,7 @@ public enum NetworkResult<Response> {
 
 
 public enum NetworkStorageResult<Response> {
-    case success(Response)
+    case success(Response, saved: Date?)
     case notFound
     case failure(NetworkStorageError)
     case canceled(NetworkStorageCanceledReason)
@@ -85,7 +85,14 @@ public extension NetworkStorageResult {
     /// Data if success response
     var response: Response? {
         switch self {
-        case .success(let r): return r
+        case let .success(r, _): return r
+        default: return nil
+        }
+    }
+
+    var timeStamp: Date? {
+        switch self {
+        case let .success(_, t): return t
         default: return nil
         }
     }
@@ -167,9 +174,9 @@ public extension NetworkStorageResult {
     ///Convert to response with concrete other type data.
     func convert<T>(_ typeData: T.Type) -> NetworkStorageResult<T> {
         switch self {
-        case .success(let data):
+        case let .success(data, timeStamp):
             if let data = data as? T {
-                return .success(data)
+                return .success(data, saved: timeStamp)
             } else {
                 return .failure(.invalidTypeResponse(type(of: data), require: T.self))
             }
@@ -182,7 +189,7 @@ public extension NetworkStorageResult {
 
     func convertToCommon() -> NetworkResult<Response> {
         switch self {
-        case .success(let r): return .success(r)
+        case .success(let r, _): return .success(r)
         case .notFound: return .failure(NetworkStorageError.notFoundData)
         case .failure(let e): return .failure(e)
         case .canceled(let r):

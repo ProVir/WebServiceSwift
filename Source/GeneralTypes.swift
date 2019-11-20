@@ -48,7 +48,7 @@ public enum NetworkGatewayResult {
 
 /// Response from storage
 public enum NetworkStorageFetchResult {
-    case rawData(NetworkStorageRawData, Date?)
+    case rawData(NetworkStorageRawData, saved: Date?)
     case value(Any, Date?)
     case notFound
     case failure(Error)
