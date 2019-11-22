@@ -27,13 +27,14 @@
 		50E9C1C721077979003E6D4E /* SiteWebServiceStoring.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E9C1C621077979003E6D4E /* SiteWebServiceStoring.swift */; };
 		61461D4A3EF74DD8EA170CF1 /* libPods-WebServiceExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 097DC5181F8BC28E4BC049B9 /* libPods-WebServiceExample.a */; };
 		8801FA572382F40A0058B26E /* DispatchQueueLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8801FA562382F40A0058B26E /* DispatchQueueLock.swift */; };
+		8808DF1D23883EEF008F10A7 /* RequestTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8808DF1B23883EEA008F10A7 /* RequestTask.swift */; };
+		8808DF1F23883F83008F10A7 /* StorageTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8808DF1E23883F83008F10A7 /* StorageTask.swift */; };
 		8810AF952335485600546DBF /* NetworkPerfomer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8810AF942335485600546DBF /* NetworkPerfomer.swift */; };
 		8810AF972335493700546DBF /* NetworkRequestPerfomer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8810AF962335493700546DBF /* NetworkRequestPerfomer.swift */; };
 		8843E6F923181C6D00131390 /* Gateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88E597CB22DE2CBE00CDAA90 /* Gateway.swift */; };
 		8843E6FA23181C6F00131390 /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88E597CD22DE792500CDAA90 /* Storage.swift */; };
 		8843E6FB2318233E00131390 /* CommonStoring.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88E59A7522E85AB100CDAA90 /* CommonStoring.swift */; };
 		884F84D22301BA29000D20BE /* StoragesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 884F84D12301BA29000D20BE /* StoragesManager.swift */; };
-		884F862A23058E6F000D20BE /* Tasks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 884F862923058E6F000D20BE /* Tasks.swift */; };
 		8853EF2222EA0AF200C93531 /* GatewaysManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8853EF2122EA0AF200C93531 /* GatewaysManager.swift */; };
 		887612FB233515C300B27525 /* Requests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 887612FA233515C200B27525 /* Requests.swift */; };
 		887612FD233515F800B27525 /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 887612FC233515F800B27525 /* Errors.swift */; };
@@ -111,10 +112,11 @@
 		83873141EF5334067DE0C2D6 /* Pods-WebServiceSwift.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WebServiceSwift.release.xcconfig"; path = "Pods/Target Support Files/Pods-WebServiceSwift/Pods-WebServiceSwift.release.xcconfig"; sourceTree = "<group>"; };
 		85924404FE98C539DF31A8DB /* Pods-WebServiceExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WebServiceExample.debug.xcconfig"; path = "Pods/Target Support Files/Pods-WebServiceExample/Pods-WebServiceExample.debug.xcconfig"; sourceTree = "<group>"; };
 		8801FA562382F40A0058B26E /* DispatchQueueLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DispatchQueueLock.swift; sourceTree = "<group>"; };
+		8808DF1B23883EEA008F10A7 /* RequestTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestTask.swift; sourceTree = "<group>"; };
+		8808DF1E23883F83008F10A7 /* StorageTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageTask.swift; sourceTree = "<group>"; };
 		8810AF942335485600546DBF /* NetworkPerfomer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkPerfomer.swift; sourceTree = "<group>"; };
 		8810AF962335493700546DBF /* NetworkRequestPerfomer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkRequestPerfomer.swift; sourceTree = "<group>"; };
 		884F84D12301BA29000D20BE /* StoragesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoragesManager.swift; sourceTree = "<group>"; };
-		884F862923058E6F000D20BE /* Tasks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tasks.swift; sourceTree = "<group>"; };
 		8853EF2122EA0AF200C93531 /* GatewaysManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatewaysManager.swift; sourceTree = "<group>"; };
 		887612FA233515C200B27525 /* Requests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Requests.swift; sourceTree = "<group>"; };
 		887612FC233515F800B27525 /* Errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Errors.swift; sourceTree = "<group>"; };
@@ -210,7 +212,8 @@
 				887612FE2335162700B27525 /* Response.swift */,
 				88C8532423351765002E883B /* RequestFilter.swift */,
 				88C85326233517DE002E883B /* GeneralTypes.swift */,
-				884F862923058E6F000D20BE /* Tasks.swift */,
+				8808DF1B23883EEA008F10A7 /* RequestTask.swift */,
+				8808DF1E23883F83008F10A7 /* StorageTask.swift */,
 				888B5A22231D670800BCD804 /* Session.swift */,
 				8810AF942335485600546DBF /* NetworkPerfomer.swift */,
 				8810AF962335493700546DBF /* NetworkRequestPerfomer.swift */,
@@ -476,8 +479,8 @@
 			files = (
 				888B5A5A231D6DBA00BCD804 /* Session.swift in Sources */,
 				88B3D13222F88A720096B332 /* NetworkIndicator.swift in Sources */,
-				884F862A23058E6F000D20BE /* Tasks.swift in Sources */,
 				88C85327233517DE002E883B /* GeneralTypes.swift in Sources */,
+				8808DF1F23883F83008F10A7 /* StorageTask.swift in Sources */,
 				8843E6F923181C6D00131390 /* Gateway.swift in Sources */,
 				884F84D22301BA29000D20BE /* StoragesManager.swift in Sources */,
 				887612FF2335162700B27525 /* Response.swift in Sources */,
@@ -488,6 +491,7 @@
 				8801FA572382F40A0058B26E /* DispatchQueueLock.swift in Sources */,
 				8810AF952335485600546DBF /* NetworkPerfomer.swift in Sources */,
 				8853EF2222EA0AF200C93531 /* GatewaysManager.swift in Sources */,
+				8808DF1D23883EEF008F10A7 /* RequestTask.swift in Sources */,
 				88C8532523351765002E883B /* RequestFilter.swift in Sources */,
 				887612FB233515C300B27525 /* Requests.swift in Sources */,
 				8843E6FA23181C6F00131390 /* Storage.swift in Sources */,
