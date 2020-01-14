@@ -8,20 +8,20 @@
 
 import Foundation
 
-/// Protocol for requests with support storages as key -> value
+/// Protocol for requests with support storages as key -> value use rawData
 public protocol NetworkRequestCommonRawStorable: NetworkRequestBaseStorable {
-    /// Unique identificator for read and write data if current request support storage.
+    /// Unique identificator for read and write data, `nil` - request not support storage
     var identificatorForStorage: String? { get }
 }
 
 /// Conform to protocol if requests support storages
 public protocol NetworkRequestCommonValueStorable: NetworkRequestCommonValueBaseStorable, NetworkRequest {
 
-    /// Unique identificator for read and write data if current request support storage.
+    /// Unique identificator for read and write data, `nil` - request not support storage
     /*var identificatorForStorage: String? { get }*/
 
     /**
-     Encoding data from custom type to binary data.
+     Encoding data from response type to binary data.
      Support default implementation when ResponseType is Codable
 
      - Parameter value: Value from response.

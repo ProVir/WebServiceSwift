@@ -201,7 +201,7 @@ final class StoragesManager {
 
     private func ageLimitTime(request: NetworkRequestBaseStorable, storage: NetworkBaseStorage?) -> TimeInterval? {
         let ageLimitRequest = request.storeAgeLimit
-        return ageLimitRequest.isUnknown ? storage?.defaultAgeLimit.timeInterval : ageLimitRequest.timeInterval
+        return ageLimitRequest.isDefault ? storage?.defaultAgeLimit.timeInterval : ageLimitRequest.timeInterval
     }
 }
 

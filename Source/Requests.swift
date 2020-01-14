@@ -13,7 +13,7 @@ public protocol NetworkBaseRequest { }
 
 /// Generic protocol with information result type for all types request.
 public protocol NetworkRequest: NetworkBaseRequest {
-    /// Type for response data when success. For data without data you can use Void or Any?
+    /// Type for success response data. For empty data recommended use Void.
     associatedtype ResponseType
 }
 
@@ -22,6 +22,7 @@ public protocol NetworkEmptyRequest: NetworkRequest {
     init()
 }
 
+/// Protocol for keys, used for duplicate detect, find and cancel requests
 public protocol NetworkRequestKey: NetworkBaseRequestKey, Hashable { }
 
 public protocol NetworkBaseRequestKey {
@@ -38,14 +39,23 @@ public extension NetworkRequestKey {
 
 
 // MARK: Storage
+/**
+ Store policy level for old data when new response. .
+
+ - `anyOfLast`: No delete for any response and save result
+ - `onlyLastSuccessResult`: Delete when success response, but failure save
+ - `noStoreWhenErrorIsContent`: Delete when response as error with isContent=true or saved error
+
+ */
 public enum NetworkRequestStorePolicyLevel: Int {
     case anyOfLast = 0
     case onlyLastSuccessResult
     case noStoreWhenErrorIsContent
 }
 
+/// Max age for store responses. Case none - without limit, case default - use value from storage or none.
 public enum NetworkRequestStoreAgeLimit {
-    case unknown
+    case `default`
     case none
     case seconds(TimeInterval)
     case minutes(Int)
@@ -59,30 +69,35 @@ public let defaultDataClassification = "default"
 
 /// Base protocol for all requests with support storages
 public protocol NetworkRequestBaseStorable: NetworkBaseRequest {
-    /// Data classification to distinguish between storage
+    /// Data classification to distinguish between storage. Default - `defaultDataClassification`
     var dataClassificationForStorage: AnyHashable { get }
 
+    /// Store policy level for old data when new response. Default - `onlyLastSuccessResult`.
     var storePolicyLevel: NetworkRequestStorePolicyLevel { get }
+
+    /// Max age for store responses. Default - used value from storage.
     var storeAgeLimit: NetworkRequestStoreAgeLimit { get }
 }
 
 public extension NetworkRequestBaseStorable {
     var dataClassificationForStorage: AnyHashable { return defaultDataClassification }
     var storePolicyLevel: NetworkRequestStorePolicyLevel { return .onlyLastSuccessResult }
-    var storeAgeLimit: NetworkRequestStoreAgeLimit { return .unknown }
+    var storeAgeLimit: NetworkRequestStoreAgeLimit { return .default }
 }
 
+
+// MARK: Internal
 public extension NetworkRequestStoreAgeLimit {
-    var isUnknown: Bool {
+    var isDefault: Bool {
         switch self {
-        case .unknown: return true
+        case .default: return true
         default: return false
         }
     }
 
     var timeInterval: TimeInterval? {
         switch self {
-        case .unknown, .none: return nil
+        case .default, .none: return nil
         case .seconds(let time): return time
         case .minutes(let time): return TimeInterval(time) * 60     //60s
         case .hours(let time): return TimeInterval(time) * 3_600    //60s * 60m
