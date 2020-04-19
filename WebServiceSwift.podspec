@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "WebServiceSwift"
-  s.version      = "3.1.0"
+  s.version      = "3.1.1"
   s.summary      = "Network layer as Service."
   s.description  = <<-DESC
 			Written in Swift.

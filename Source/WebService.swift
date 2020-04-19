@@ -160,7 +160,7 @@ public class WebService {
         readStorageDependNextRequestWait = nil
         
         //2. Test duplicate requests
-        let requestHashable = request as? AnyHashable
+        let requestHashable = request.asHashable
         
         if excludeDuplicate, let key = key {
             if containsRequest(key: key) {

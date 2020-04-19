@@ -12,7 +12,17 @@ import Foundation
 //MARK: Requests
 
 /// Base protocol for all types request.
-public protocol WebServiceBaseRequesting { }
+public protocol WebServiceBaseRequesting {
+    var asHashable: AnyHashable? { get}
+}
+
+public extension WebServiceBaseRequesting {
+    var asHashable: AnyHashable? { return nil }
+}
+
+public extension WebServiceBaseRequesting where Self: Hashable {
+    var asHashable: AnyHashable? { return AnyHashable(self) }
+}
 
 /// Generic protocol with information result type for all types request.
 public protocol WebServiceRequesting: WebServiceBaseRequesting {
